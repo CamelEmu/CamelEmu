@@ -56,6 +56,30 @@ class _AppShellState extends ConsumerState<AppShell> {
     super.dispose();
   }
 
+  static const double _standardNavBarHeight = 80;
+
+  Widget _standardNavigationBar(BuildContext context) {
+    final destinations = AppNavDestination.of(context);
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: NavigationBar(
+        selectedIndex: widget.navigationShell.currentIndex,
+        onDestinationSelected: (index) => widget.navigationShell.goBranch(
+          index,
+          initialLocation: widget.navigationShell.currentIndex == index,
+        ),
+        destinations: [
+          for (final destination in destinations)
+            NavigationDestination(
+              icon: Icon(destination.icon),
+              label: destination.label,
+            ),
+        ],
+      ),
+    );
+  }
+
   bool _handleScrollNotification(ScrollUpdateNotification notification) {
     if (notification.metrics.axis != Axis.vertical ||
         notification.metrics.outOfRange) {
@@ -84,38 +108,17 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (ref.watch(isDesktopPlatformProvider)) {
       return DesktopAppShell(navigationShell: widget.navigationShell);
     }
-    if (ref.watch(
+    final standardNavBar = ref.watch(
       themeSettingsProvider.select(
         (settings) => settings.themeStyle == ThemeStyle.neumorphic,
       ),
-    )) {
-      final destinations = AppNavDestination.of(context);
-      return Scaffold(
-        body: Stack(
-          children: [
-            Positioned.fill(child: BackgroundBlobs(variant: blobVariant)),
-            GamepadNotificationColumn(child: widget.navigationShell),
-          ],
-        ),
-        bottomNavigationBar: GamepadFocusRegion(
-          child: NavigationBar(
-            selectedIndex: widget.navigationShell.currentIndex,
-            onDestinationSelected: (index) => widget.navigationShell.goBranch(
-              index,
-              initialLocation: widget.navigationShell.currentIndex == index,
-            ),
-            destinations: [
-              for (final destination in destinations)
-                NavigationDestination(
-                  icon: Icon(destination.icon),
-                  label: destination.label,
-                ),
-            ],
-          ),
-        ),
-      );
-    }
-    _hiddenDistance = navBarTheme.barHeight + navBarTheme.bottomMargin + 32;
+    );
+    final reservedHeight = standardNavBar
+        ? _standardNavBarHeight
+        : navBarTheme.contentHeight + navBarTheme.bottomMargin;
+    _hiddenDistance = standardNavBar
+        ? _standardNavBarHeight + MediaQuery.paddingOf(context).bottom + 32
+        : reservedHeight + 32;
     final branchIndex = widget.navigationShell.currentIndex;
     if (_lastBranchIndex != branchIndex) {
       if (_lastBranchIndex != null) {
@@ -134,17 +137,15 @@ class _AppShellState extends ConsumerState<AppShell> {
             GamepadNotificationColumn(
               child: Stack(
                 children: [
-                  if (navBarTheme.stretchToFullWidth)
-                    _NavBarInsets(
-                      navBarTheme: navBarTheme,
-                      child: widget.navigationShell,
-                    )
-                  else
-                    widget.navigationShell,
+                  _NavBarInsets(
+                    bottomInset: reservedHeight,
+                    addSystemInset: standardNavBar,
+                    child: widget.navigationShell,
+                  ),
                   Positioned(
-                    left: navBarTheme.horizontalMargin,
-                    right: navBarTheme.horizontalMargin,
-                    bottom: navBarTheme.bottomMargin,
+                    left: standardNavBar ? 0 : navBarTheme.horizontalMargin,
+                    right: standardNavBar ? 0 : navBarTheme.horizontalMargin,
+                    bottom: standardNavBar ? 0 : navBarTheme.bottomMargin,
                     child: ValueListenableBuilder<double>(
                       valueListenable: _navBarOffset,
                       builder: (context, offset, child) => Transform.translate(
@@ -152,7 +153,9 @@ class _AppShellState extends ConsumerState<AppShell> {
                         child: child,
                       ),
                       child: GamepadFocusRegion(
-                        child: navBarTheme.stretchToFullWidth
+                        child: standardNavBar
+                            ? _standardNavigationBar(context)
+                            : navBarTheme.stretchToFullWidth
                             ? AppNavBar(
                                 navigationShell: widget.navigationShell,
                                 animationDuration: animationDuration,
@@ -176,23 +179,28 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 }
 
-/// Grows the ambient [MediaQuery] bottom padding by the nav bar's height, so `SafeArea`s inside
-/// [child] leave room for the flush, opaque bar instead of being covered by it.
+/// Sets the ambient [MediaQuery] bottom padding to the height the overlaid nav bar covers from the
+/// bottom edge, so scrollable content can pad itself clear of the bar. The standard
+/// `NavigationBar` pads itself by the system inset, so [addSystemInset] adds it on top; the other
+/// bars sit over the system inset, which then must not be counted twice.
 class _NavBarInsets extends StatelessWidget {
-  const _NavBarInsets({required this.navBarTheme, required this.child});
+  const _NavBarInsets({
+    required this.bottomInset,
+    required this.addSystemInset,
+    required this.child,
+  });
 
-  final AppNavigationBarTheme navBarTheme;
+  final double bottomInset;
+  final bool addSystemInset;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final extraBottomInset = navBarTheme.barHeight + navBarTheme.bottomMargin;
+    final systemInset = addSystemInset ? mediaQuery.padding.bottom : 0;
     return MediaQuery(
       data: mediaQuery.copyWith(
-        padding: mediaQuery.padding.copyWith(
-          bottom: mediaQuery.padding.bottom + extraBottomInset,
-        ),
+        padding: mediaQuery.padding.copyWith(bottom: systemInset + bottomInset),
       ),
       child: child,
     );

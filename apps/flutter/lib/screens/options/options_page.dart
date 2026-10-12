@@ -53,6 +53,7 @@ class _OptionsPageState extends ConsumerState<OptionsPage> {
         if (!didPop) _handleClear();
       },
       child: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             GamepadFocusRegion(

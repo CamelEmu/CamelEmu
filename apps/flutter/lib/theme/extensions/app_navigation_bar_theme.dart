@@ -42,6 +42,8 @@ class AppNavigationBarTheme extends ThemeExtension<AppNavigationBarTheme> {
   final double horizontalMargin;
   final bool stretchToFullWidth;
 
+  double get contentHeight => barPadding.vertical + activeIndicatorSize.height;
+
   factory AppNavigationBarTheme.glass(ColorScheme colorScheme) {
     return AppNavigationBarTheme(
       backgroundColor: colorScheme.surface.withValues(alpha: 0.8),
