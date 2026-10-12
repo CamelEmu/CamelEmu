@@ -329,6 +329,38 @@ FlMethodResponse* HandleTakePendingLaunch(GtkWindow* window, FlValue* args) {
   return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
 }
 
+FlMethodResponse* HandleRestartApp(GtkWindow* window, FlValue* args) {
+  gchar* executable = g_file_read_link("/proc/self/exe", nullptr);
+  gchar* command_line = nullptr;
+  gsize command_line_length = 0;
+  if (executable == nullptr ||
+      !g_file_get_contents("/proc/self/cmdline", &command_line, &command_line_length, nullptr)) {
+    g_free(executable);
+    return FL_METHOD_RESPONSE(fl_method_error_response_new(
+        "restart_failed", "The command line of the app could not be read.", nullptr));
+  }
+  std::vector<gchar*> argv;
+  for (gsize offset = 0; offset < command_line_length;) {
+    argv.push_back(command_line + offset);
+    offset += std::char_traits<char>::length(command_line + offset) + 1;
+  }
+  if (!argv.empty()) {
+    argv[0] = executable;
+  }
+  argv.push_back(nullptr);
+  GError* error = nullptr;
+  const gboolean spawned =
+      g_spawn_async(nullptr, argv.data(), nullptr, G_SPAWN_DEFAULT, nullptr, nullptr, nullptr, &error);
+  g_free(command_line);
+  g_free(executable);
+  if (!spawned) {
+    g_autoptr(GError) owned_error = error;
+    return FL_METHOD_RESPONSE(
+        fl_method_error_response_new("restart_failed", owned_error->message, nullptr));
+  }
+  _exit(0);
+}
+
 FlMethodResponse* HandleSetConsoleLogEnabled(GtkWindow* window, FlValue* args) {
   Emulation::SetConsoleLogEnabled(BoolArgument(args, "enabled", true));
   return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
@@ -668,6 +700,7 @@ const std::unordered_map<std::string, BridgeMethodHandler>& BridgeMethodHandlers
       {"installCiaFiles", HandleInstallCiaFiles},
       {"showNotification", HandleShowNotification},
       {"takePendingLaunch", HandleTakePendingLaunch},
+      {"restartApp", HandleRestartApp},
       {"setConsoleLogEnabled", HandleSetConsoleLogEnabled},
       {"isFullConsoleLinked", HandleIsFullConsoleLinked},
       {"unlinkConsole", HandleUnlinkConsole},

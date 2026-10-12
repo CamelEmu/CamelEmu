@@ -9,6 +9,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:stack_trace/stack_trace.dart' as stack_trace;
 
 import 'app_services.dart';
+import 'data/flutter_restart_recovery.dart';
 import 'data/settings/debug_settings_provider.dart';
 import 'errors/app_exception.dart';
 import 'i18n/translations.g.dart';
@@ -44,6 +45,7 @@ void main(List<String> args) {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
       await initializeRust();
+      if (await recoverFromFlutterRestart()) return;
       await AppServices.prepareMasterDatabase();
       AppServices.loggingService.start();
       await _initializeProfiles();
