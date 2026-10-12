@@ -80,6 +80,11 @@ class NativeBridge {
     return _channel.invokeMethod<String>('takePendingLaunch');
   }
 
+  /// Starts the app anew in a fresh process and ends the current one.
+  Future<void> restartApp() {
+    return _channel.invokeMethod<void>('restartApp');
+  }
+
   Stream<CopyDirProgress> copyDirProgress() {
     return _copyProgressChannel.receiveBroadcastStream().map((event) {
       final map = (event as Map).cast<Object?, Object?>();

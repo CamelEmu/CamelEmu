@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/material.dart';
 
-import '../../games/widgets/game_icon.dart';
+import 'emulation_game_icon.dart';
 import 'game_title.dart';
 
 /// The header of the in-game drawer: the icon and the name of the running game, centered on each
@@ -85,13 +85,10 @@ class _EmulationDrawerHeaderState extends State<EmulationDrawerHeader>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          width: 96,
-                          height: 96,
-                          child: GameIcon(iconPath: widget.game?.iconPath),
-                        ),
+                      EmulationGameIcon(
+                        iconPath: widget.game?.iconPath,
+                        size: 96,
+                        radius: 16,
                       ),
                       const SizedBox(height: 16),
                       GameTitle(

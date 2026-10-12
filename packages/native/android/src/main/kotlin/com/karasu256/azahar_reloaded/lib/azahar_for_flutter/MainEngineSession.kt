@@ -4,6 +4,11 @@
 
 package com.karasu256.azahar_reloaded.lib.azahar_for_flutter
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Process
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.FragmentActivity
@@ -126,7 +131,7 @@ internal class MainEngineSession(
                 systemFilesController.handlers + wifiController.handlers +
                 userFilesController.handlers + systemVolumeController.handlers +
                 mediaNotificationController.handlers + gamepadController.handlers +
-                TakePendingLaunch())
+                TakePendingLaunch() + RestartApp())
                 .associateBy { it.name }
 
         val showMiiSelector = ShowMiiSelector(appletChannel)
@@ -241,7 +246,36 @@ internal class MainEngineSession(
         }
     }
 
+    /**
+     * Schedules the launch of the app and ends the process, so the app starts again in a fresh
+     * process with none of the native state of this one.
+     */
+    private inner class RestartApp : AzaharMethodHandler {
+        override val name = "restartApp"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            val launchIntent = activity.packageManager
+                .getLaunchIntentForPackage(activity.packageName)
+            if (launchIntent == null) {
+                result.error("no_launch_intent", "The app has no launch intent.", null)
+                return
+            }
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            val pending = PendingIntent.getActivity(
+                activity,
+                RESTART_REQUEST_CODE,
+                launchIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val alarms = activity.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarms.set(AlarmManager.RTC, System.currentTimeMillis() + RESTART_DELAY_MS, pending)
+            result.success(null)
+            Process.killProcess(Process.myPid())
+        }
+    }
+
     private companion object {
+        const val RESTART_REQUEST_CODE = 0x617a6172
+        const val RESTART_DELAY_MS = 200L
         const val CHANNEL = "org.citra.citra_emu/azahar_bridge"
         const val APPLET_CHANNEL = "org.citra.citra_emu/azahar_bridge/applet"
         const val COPY_PROGRESS_CHANNEL = "org.citra.citra_emu/azahar_bridge/copy_progress"
