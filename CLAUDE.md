@@ -23,3 +23,7 @@ Do not post a comment on a pull request, such as when closing one or after chang
 ## Do not copy or modify the pub local store
 
 Do not copy packages out of the pub local store (`~/.pub-cache`) into the repository, and do not modify the files inside it. When a dependency needs a change, make it in the dependency's own repository, added as a submodule.
+
+## Do not filter output by guessed patterns
+
+Do not filter the output of a build, a log or another command with patterns guessed in advance, such as `grep -E 'Built build|error:|FAILURE'`. Read the output itself with the Read tool, and judge the result from what it actually says.
