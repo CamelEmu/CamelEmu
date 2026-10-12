@@ -448,6 +448,9 @@ struct Values {
 
     // Core
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
+    // Experimental: runs the CPU and creates the memory in the Rust crates emu_cpu and emu_mem. It
+    // only has an effect on builds for Android arm64.
+    Setting<bool> use_rust_cpu{false, "use_rust_cpu"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
     SwitchableSetting<bool> lle_applets{true, "lle_applets"};

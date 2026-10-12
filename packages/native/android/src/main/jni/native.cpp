@@ -47,6 +47,7 @@
 #include "common/settings.h"
 #include "common/storage.h"
 #include "common/string_util.h"
+#include "core/arm/rust/rust_cpu.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
@@ -990,6 +991,11 @@ void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_
     std::string_view path = env->GetStringUTFChars(j_path, 0);
     LOG_INFO(Frontend, "User directory path: {}", path);
     env->ReleaseStringUTFChars(j_path, path.data());
+}
+
+jboolean Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_supportsRustCpu(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return CITRA_HAS_RUST_CPU ? JNI_TRUE : JNI_FALSE;
 }
 
 void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,

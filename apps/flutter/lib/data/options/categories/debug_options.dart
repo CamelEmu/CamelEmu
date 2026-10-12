@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../settings/debug_settings_provider.dart';
+import '../../settings/rust_cpu_provider.dart';
 import '../../settings/sections/debug_settings.dart';
 import '../abstract_base_option.dart';
 import '../option_category.dart';
@@ -69,6 +70,13 @@ final debugOptionsProvider = Provider<OptionCategory>(
             icon: Icons.memory,
             value: const StoreBoolValue(DebugSettingKeys.cpuJit),
           ),
+          if (ref.watch(rustCpuSupportedProvider).value ?? false)
+            BoolOption(
+              title: (t) => t.settings.debug.rustCpu,
+              description: (t) => t.settings.debug.rustCpuDescription,
+              icon: Icons.science_outlined,
+              value: const StoreBoolValue(DebugSettingKeys.rustCpu),
+            ),
           BoolOption(
             title: (t) => t.settings.debug.hwShaders,
             description: (t) => t.settings.debug.hwShadersDescription,
