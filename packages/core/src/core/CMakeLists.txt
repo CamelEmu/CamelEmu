@@ -14,6 +14,7 @@ add_library(citra_core STATIC
     arm/dyncom/arm_dyncom_trans.h
     arm/exclusive_monitor.cpp
     arm/exclusive_monitor.h
+    arm/rust/rust_cpu.h
     arm/skyeye_common/arm_regformat.h
     arm/skyeye_common/armstate.cpp
     arm/skyeye_common/armstate.h
@@ -533,6 +534,45 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
         arm/dynarmic/arm_tick_counts.h
     )
     target_link_libraries(citra_core PRIVATE dynarmic)
+endif()
+
+if (ENABLE_RUST_CPU AND ANDROID AND "arm64" IN_LIST ARCHITECTURE)
+    target_sources(citra_core PRIVATE
+        arm/rust/arm_rust.cpp
+        arm/rust/arm_rust.h
+        arm/rust/rust_exclusive_monitor.cpp
+        arm/rust/rust_exclusive_monitor.h
+    )
+    target_compile_definitions(citra_core PUBLIC CITRA_RUST_CPU)
+
+    # Each crate is its own shared library, since the library of the application already holds
+    # the Rust standard library of azahar_rust.
+    set(EMU_RUST_TARGET aarch64-linux-android)
+    set(EMU_RUST_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${EMU_RUST_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
+    find_program(CARGO_EXECUTABLE cargo REQUIRED)
+    foreach(crate emu_mem emu_cpu)
+        set(crate_dir "${AZAHAR_REPO_ROOT}/packages/${crate}")
+        set(crate_lib "${crate_dir}/target/${EMU_RUST_TARGET}/release/lib${crate}.so")
+        add_custom_target(${crate}_build
+            COMMAND ${CMAKE_COMMAND} -E env
+                "CC_aarch64_linux_android=${EMU_RUST_CLANG}"
+                "AR_aarch64_linux_android=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
+                "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${EMU_RUST_CLANG}"
+                "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type cdylib
+                --target ${EMU_RUST_TARGET}
+                -- -C link-arg=-Wl,-soname,lib${crate}.so
+                -C link-arg=-Wl,-z,max-page-size=16384
+                -C link-arg=-Wl,-z,noexecstack
+            WORKING_DIRECTORY "${crate_dir}"
+            BYPRODUCTS "${crate_lib}"
+            COMMENT "Building ${crate} for ${EMU_RUST_TARGET}"
+        )
+        add_library(${crate} SHARED IMPORTED GLOBAL)
+        set_target_properties(${crate} PROPERTIES IMPORTED_LOCATION "${crate_lib}")
+        target_include_directories(${crate} INTERFACE "${crate_dir}/include")
+        add_dependencies(${crate} ${crate}_build)
+        target_link_libraries(citra_core PRIVATE ${crate})
+    endforeach()
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

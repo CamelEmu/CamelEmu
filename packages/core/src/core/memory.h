@@ -3,13 +3,17 @@
 // Refer to the license.txt file included.
 
 #pragma once
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
+
+struct EmuMemPageTable;
 
 namespace Kernel {
 class Process;
@@ -34,7 +38,8 @@ constexpr u32 CITRA_PAGE_MASK = CITRA_PAGE_SIZE - 1;
 constexpr int CITRA_PAGE_BITS = 12;
 constexpr std::size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - CITRA_PAGE_BITS);
 
-enum class PageType {
+// The values are shared with the page tables of the emu_mem crate, which store them as bytes.
+enum class PageType : u8 {
     /// Page is unmapped and should cause an access error.
     Unmapped,
     /// Page is mapped to regular memory. This is the only type you can get pointers to.
@@ -49,8 +54,20 @@ enum class PageType {
  * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
  * fetching requirements when accessing. In the usual case of an access to regular memory, it only
  * requires an indexed fetch and a check for NULL.
+ *
+ * The 'raw' and 'attributes' arrays are owned by the emu_mem crate when the memory system uses it,
+ * and by this struct otherwise. Writes to the arrays of the crate go through its functions.
  */
 struct PageTable {
+    using PointerArray = std::array<u8*, PAGE_TABLE_NUM_ENTRIES>;
+    using AttributeArray = std::array<PageType, PAGE_TABLE_NUM_ENTRIES>;
+
+    PageTable();
+    ~PageTable();
+
+    PageTable(const PageTable&) = delete;
+    PageTable& operator=(const PageTable&) = delete;
+
     /**
      * Array of memory pointers backing each page. An entry can only be non-null if the
      * corresponding entry in the `attributes` array is of type `Memory`.
@@ -64,7 +81,7 @@ struct PageTable {
             Entry(Pointers& pointers_, VAddr idx_) : pointers(pointers_), idx(idx_) {}
 
             Entry& operator=(MemoryRef value) {
-                pointers.raw[idx] = value.GetPtr();
+                pointers.SetRaw(idx, value.GetPtr());
                 pointers.refs[idx] = std::move(value);
                 return *this;
             }
@@ -83,32 +100,87 @@ struct PageTable {
         }
 
     private:
-        std::array<u8*, PAGE_TABLE_NUM_ENTRIES> raw;
+        void SetRaw(VAddr idx, u8* value);
+
+        u8** raw = nullptr;
+        EmuMemPageTable* emu_mem = nullptr;
         std::array<MemoryRef, PAGE_TABLE_NUM_ENTRIES> refs;
         friend struct PageTable;
     };
-
-    Pointers pointers;
 
     /**
      * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
      * the corresponding entry in `pointers` MUST be set to null.
      */
-    std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
+    struct Attributes {
 
-    std::array<u8*, PAGE_TABLE_NUM_ENTRIES>& GetPointerArray() {
-        return pointers.raw;
+        struct Entry {
+            Entry(Attributes& attributes_, VAddr idx_) : attributes(attributes_), idx(idx_) {}
+
+            Entry& operator=(PageType value) {
+                attributes.Set(idx, value);
+                return *this;
+            }
+
+            operator PageType() const {
+                return attributes.raw[idx];
+            }
+
+        private:
+            Attributes& attributes;
+            VAddr idx;
+        };
+
+        Entry operator[](std::size_t idx) {
+            return Entry(*this, static_cast<VAddr>(idx));
+        }
+
+        PageType operator[](std::size_t idx) const {
+            return raw[idx];
+        }
+
+    private:
+        void Set(VAddr idx, PageType value);
+
+        PageType* raw = nullptr;
+        EmuMemPageTable* emu_mem = nullptr;
+        friend struct PageTable;
+    };
+
+    Pointers pointers;
+    Attributes attributes;
+
+    PointerArray& GetPointerArray() {
+        return *reinterpret_cast<PointerArray*>(pointers.raw);
+    }
+
+    /// Returns the page table of the emu_mem crate, or null if this struct owns the arrays.
+    EmuMemPageTable* GetEmuMem() const {
+        return emu_mem;
     }
 
     void Clear();
 
 private:
+    EmuMemPageTable* emu_mem = nullptr;
+    std::unique_ptr<PointerArray> owned_pointers;
+    std::unique_ptr<AttributeArray> owned_attributes;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & pointers.refs;
-        ar & attributes;
-        for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
-            pointers.raw[i] = pointers.refs[i].GetPtr();
+        // Serialized as the std::array it used to be, so that older save states still load.
+        auto attributes_copy = std::make_unique<AttributeArray>();
+        if constexpr (!Archive::is_loading::value) {
+            std::copy_n(attributes.raw, PAGE_TABLE_NUM_ENTRIES, attributes_copy->begin());
+        }
+        ar & *attributes_copy;
+        if constexpr (Archive::is_loading::value) {
+            for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
+                const auto idx = static_cast<VAddr>(i);
+                attributes.Set(idx, (*attributes_copy)[i]);
+                pointers.SetRaw(idx, pointers.refs[i].GetPtr());
+            }
         }
     }
     friend class boost::serialization::access;
@@ -239,6 +311,12 @@ class MemorySystem {
 public:
     explicit MemorySystem(Core::System& system);
     ~MemorySystem();
+
+    /**
+     * Returns whether the physical memory and the page tables are created by the emu_mem crate.
+     * It is decided once when the memory system is created.
+     */
+    bool IsEmuMemEnabled() const;
 
     /**
      * Maps an allocated buffer onto a region of the emulated process address space.

@@ -1896,6 +1896,11 @@ class _Translations$settings$debug$ja extends Translations$settings$debug$en {
   String get cpuJitDescription =>
       'CPUエミュレーションにJIT（Just-In-Time）コンパイラを使用します。無効にすると、代わりにはるかに低速なインタプリタが使用されます。';
   @override
+  String get rustCpu => 'Rust CPU（実験的）';
+  @override
+  String get rustCpuDescription =>
+      'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。';
+  @override
   String get hwShaders => 'ハードウェアシェーダー';
   @override
   String get hwShadersDescription =>
@@ -3234,6 +3239,9 @@ extension on TranslationsJa {
           'settings.debug.cpuJit' => 'CPU JIT',
           'settings.debug.cpuJitDescription' =>
             'CPUエミュレーションにJIT（Just-In-Time）コンパイラを使用します。無効にすると、代わりにはるかに低速なインタプリタが使用されます。',
+          'settings.debug.rustCpu' => 'Rust CPU（実験的）',
+          'settings.debug.rustCpuDescription' =>
+            'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。',
           'settings.debug.hwShaders' => 'ハードウェアシェーダー',
           'settings.debug.hwShadersDescription' =>
             'ソフトウェアレンダラーの代わりに、ハードウェアシェーダーで3DSのシェーダーをエミュレートします。無効にするとパフォーマンスが大きく低下します。',
