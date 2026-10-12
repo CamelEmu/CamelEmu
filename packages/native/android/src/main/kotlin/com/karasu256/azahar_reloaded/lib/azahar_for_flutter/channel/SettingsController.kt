@@ -8,6 +8,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.NativeLibrary
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.utils.EmulatorSettingsFile
+import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.utils.FileUtil
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.utils.SystemSaveGame
 
 class SettingsController {
@@ -20,8 +21,22 @@ class SettingsController {
         RegenerateConsoleId(),
         RegenerateMac(),
         GetCountryCompatibility(),
-        SetConsoleLogEnabled()
+        SetConsoleLogEnabled(),
+        SetDescriptorWarningSuppressed()
     )
+
+    private inner class SetDescriptorWarningSuppressed : AzaharMethodHandler {
+        override val name = "setDescriptorWarningSuppressed"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            val suppressed = call.argument<Boolean>("suppressed")
+            if (suppressed == null) {
+                result.error("invalid_argument", "suppressed is required", null)
+                return
+            }
+            FileUtil.suppressDescriptorWarning = suppressed
+            result.success(null)
+        }
+    }
 
     private inner class SetConsoleLogEnabled : AzaharMethodHandler {
         override val name = "setConsoleLogEnabled"

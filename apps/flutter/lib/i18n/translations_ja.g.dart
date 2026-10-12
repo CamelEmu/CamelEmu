@@ -1881,6 +1881,11 @@ class _Translations$settings$debug$ja extends Translations$settings$debug$en {
   @override
   String get logToConsoleDescription => 'ネイティブのログをFlutterの標準出力にも出力します。';
   @override
+  String get suppressDescriptorWarning => 'ファイル記述子の警告を抑制';
+  @override
+  String get suppressDescriptorWarningDescription =>
+      'ストレージのファイルを警告が出ない方法で閉じ、「Peer expected signal when closed」の警告でログが埋まるのを防ぎます。';
+  @override
   String get cpuClockSpeed => 'CPUクロック速度';
   @override
   String get cpuClockSpeedDescription =>
@@ -3218,6 +3223,9 @@ extension on TranslationsJa {
           'settings.debug.logToConsole' => '標準出力にログを出力',
           'settings.debug.logToConsoleDescription' =>
             'ネイティブのログをFlutterの標準出力にも出力します。',
+          'settings.debug.suppressDescriptorWarning' => 'ファイル記述子の警告を抑制',
+          'settings.debug.suppressDescriptorWarningDescription' =>
+            'ストレージのファイルを警告が出ない方法で閉じ、「Peer expected signal when closed」の警告でログが埋まるのを防ぎます。',
           'settings.debug.cpuClockSpeed' => 'CPUクロック速度',
           'settings.debug.cpuClockSpeedDescription' =>
             'エミュレートされたCPUをオーバークロック/アンダークロックします。推奨しません。',

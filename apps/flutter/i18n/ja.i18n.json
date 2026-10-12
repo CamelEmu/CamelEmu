@@ -793,6 +793,8 @@
       "warning": "これらの設定はデバッグ用途のみです。変更すると動作が不安定になる場合があります。",
       "logToConsole": "標準出力にログを出力",
       "logToConsoleDescription": "ネイティブのログをFlutterの標準出力にも出力します。",
+      "suppressDescriptorWarning": "ファイル記述子の警告を抑制",
+      "suppressDescriptorWarningDescription": "ストレージのファイルを警告が出ない方法で閉じ、「Peer expected signal when closed」の警告でログが埋まるのを防ぎます。",
       "cpuClockSpeed": "CPUクロック速度",
       "cpuClockSpeedDescription": "エミュレートされたCPUをオーバークロック/アンダークロックします。推奨しません。",
       "cpuJit": "CPU JIT",

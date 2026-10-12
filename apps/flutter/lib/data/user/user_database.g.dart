@@ -2842,8 +2842,27 @@ class $DebugSettingsTable extends DebugSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _suppressDescriptorWarningMeta =
+      const VerificationMeta('suppressDescriptorWarning');
   @override
-  List<GeneratedColumn> get $columns => [id, logToConsole];
+  late final GeneratedColumn<bool> suppressDescriptorWarning =
+      GeneratedColumn<bool>(
+        'suppress_descriptor_warning',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("suppress_descriptor_warning" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    logToConsole,
+    suppressDescriptorWarning,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2868,6 +2887,15 @@ class $DebugSettingsTable extends DebugSettings
         ),
       );
     }
+    if (data.containsKey('suppress_descriptor_warning')) {
+      context.handle(
+        _suppressDescriptorWarningMeta,
+        suppressDescriptorWarning.isAcceptableOrUnknown(
+          data['suppress_descriptor_warning']!,
+          _suppressDescriptorWarningMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2885,6 +2913,10 @@ class $DebugSettingsTable extends DebugSettings
         DriftSqlType.bool,
         data['${effectivePrefix}log_to_console'],
       )!,
+      suppressDescriptorWarning: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}suppress_descriptor_warning'],
+      )!,
     );
   }
 
@@ -2897,12 +2929,20 @@ class $DebugSettingsTable extends DebugSettings
 class DebugSetting extends DataClass implements Insertable<DebugSetting> {
   final int id;
   final bool logToConsole;
-  const DebugSetting({required this.id, required this.logToConsole});
+  final bool suppressDescriptorWarning;
+  const DebugSetting({
+    required this.id,
+    required this.logToConsole,
+    required this.suppressDescriptorWarning,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['log_to_console'] = Variable<bool>(logToConsole);
+    map['suppress_descriptor_warning'] = Variable<bool>(
+      suppressDescriptorWarning,
+    );
     return map;
   }
 
@@ -2910,6 +2950,7 @@ class DebugSetting extends DataClass implements Insertable<DebugSetting> {
     return DebugSettingsCompanion(
       id: Value(id),
       logToConsole: Value(logToConsole),
+      suppressDescriptorWarning: Value(suppressDescriptorWarning),
     );
   }
 
@@ -2921,6 +2962,9 @@ class DebugSetting extends DataClass implements Insertable<DebugSetting> {
     return DebugSetting(
       id: serializer.fromJson<int>(json['id']),
       logToConsole: serializer.fromJson<bool>(json['logToConsole']),
+      suppressDescriptorWarning: serializer.fromJson<bool>(
+        json['suppressDescriptorWarning'],
+      ),
     );
   }
   @override
@@ -2929,12 +2973,21 @@ class DebugSetting extends DataClass implements Insertable<DebugSetting> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'logToConsole': serializer.toJson<bool>(logToConsole),
+      'suppressDescriptorWarning': serializer.toJson<bool>(
+        suppressDescriptorWarning,
+      ),
     };
   }
 
-  DebugSetting copyWith({int? id, bool? logToConsole}) => DebugSetting(
+  DebugSetting copyWith({
+    int? id,
+    bool? logToConsole,
+    bool? suppressDescriptorWarning,
+  }) => DebugSetting(
     id: id ?? this.id,
     logToConsole: logToConsole ?? this.logToConsole,
+    suppressDescriptorWarning:
+        suppressDescriptorWarning ?? this.suppressDescriptorWarning,
   );
   DebugSetting copyWithCompanion(DebugSettingsCompanion data) {
     return DebugSetting(
@@ -2942,6 +2995,9 @@ class DebugSetting extends DataClass implements Insertable<DebugSetting> {
       logToConsole: data.logToConsole.present
           ? data.logToConsole.value
           : this.logToConsole,
+      suppressDescriptorWarning: data.suppressDescriptorWarning.present
+          ? data.suppressDescriptorWarning.value
+          : this.suppressDescriptorWarning,
     );
   }
 
@@ -2949,46 +3005,60 @@ class DebugSetting extends DataClass implements Insertable<DebugSetting> {
   String toString() {
     return (StringBuffer('DebugSetting(')
           ..write('id: $id, ')
-          ..write('logToConsole: $logToConsole')
+          ..write('logToConsole: $logToConsole, ')
+          ..write('suppressDescriptorWarning: $suppressDescriptorWarning')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, logToConsole);
+  int get hashCode => Object.hash(id, logToConsole, suppressDescriptorWarning);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DebugSetting &&
           other.id == this.id &&
-          other.logToConsole == this.logToConsole);
+          other.logToConsole == this.logToConsole &&
+          other.suppressDescriptorWarning == this.suppressDescriptorWarning);
 }
 
 class DebugSettingsCompanion extends UpdateCompanion<DebugSetting> {
   final Value<int> id;
   final Value<bool> logToConsole;
+  final Value<bool> suppressDescriptorWarning;
   const DebugSettingsCompanion({
     this.id = const Value.absent(),
     this.logToConsole = const Value.absent(),
+    this.suppressDescriptorWarning = const Value.absent(),
   });
   DebugSettingsCompanion.insert({
     this.id = const Value.absent(),
     this.logToConsole = const Value.absent(),
+    this.suppressDescriptorWarning = const Value.absent(),
   });
   static Insertable<DebugSetting> custom({
     Expression<int>? id,
     Expression<bool>? logToConsole,
+    Expression<bool>? suppressDescriptorWarning,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (logToConsole != null) 'log_to_console': logToConsole,
+      if (suppressDescriptorWarning != null)
+        'suppress_descriptor_warning': suppressDescriptorWarning,
     });
   }
 
-  DebugSettingsCompanion copyWith({Value<int>? id, Value<bool>? logToConsole}) {
+  DebugSettingsCompanion copyWith({
+    Value<int>? id,
+    Value<bool>? logToConsole,
+    Value<bool>? suppressDescriptorWarning,
+  }) {
     return DebugSettingsCompanion(
       id: id ?? this.id,
       logToConsole: logToConsole ?? this.logToConsole,
+      suppressDescriptorWarning:
+          suppressDescriptorWarning ?? this.suppressDescriptorWarning,
     );
   }
 
@@ -3001,6 +3071,11 @@ class DebugSettingsCompanion extends UpdateCompanion<DebugSetting> {
     if (logToConsole.present) {
       map['log_to_console'] = Variable<bool>(logToConsole.value);
     }
+    if (suppressDescriptorWarning.present) {
+      map['suppress_descriptor_warning'] = Variable<bool>(
+        suppressDescriptorWarning.value,
+      );
+    }
     return map;
   }
 
@@ -3008,7 +3083,8 @@ class DebugSettingsCompanion extends UpdateCompanion<DebugSetting> {
   String toString() {
     return (StringBuffer('DebugSettingsCompanion(')
           ..write('id: $id, ')
-          ..write('logToConsole: $logToConsole')
+          ..write('logToConsole: $logToConsole, ')
+          ..write('suppressDescriptorWarning: $suppressDescriptorWarning')
           ..write(')'))
         .toString();
   }
@@ -7281,9 +7357,17 @@ typedef $$MediaSettingsTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 typedef $$DebugSettingsTableCreateCompanionBuilder =
-    DebugSettingsCompanion Function({Value<int> id, Value<bool> logToConsole});
+    DebugSettingsCompanion Function({
+      Value<int> id,
+      Value<bool> logToConsole,
+      Value<bool> suppressDescriptorWarning,
+    });
 typedef $$DebugSettingsTableUpdateCompanionBuilder =
-    DebugSettingsCompanion Function({Value<int> id, Value<bool> logToConsole});
+    DebugSettingsCompanion Function({
+      Value<int> id,
+      Value<bool> logToConsole,
+      Value<bool> suppressDescriptorWarning,
+    });
 
 class $$DebugSettingsTableFilterComposer
     extends Composer<_$UserDatabase, $DebugSettingsTable> {
@@ -7301,6 +7385,11 @@ class $$DebugSettingsTableFilterComposer
 
   ColumnFilters<bool> get logToConsole => $composableBuilder(
     column: $table.logToConsole,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get suppressDescriptorWarning => $composableBuilder(
+    column: $table.suppressDescriptorWarning,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7323,6 +7412,11 @@ class $$DebugSettingsTableOrderingComposer
     column: $table.logToConsole,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get suppressDescriptorWarning => $composableBuilder(
+    column: $table.suppressDescriptorWarning,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DebugSettingsTableAnnotationComposer
@@ -7339,6 +7433,11 @@ class $$DebugSettingsTableAnnotationComposer
 
   GeneratedColumn<bool> get logToConsole => $composableBuilder(
     column: $table.logToConsole,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get suppressDescriptorWarning => $composableBuilder(
+    column: $table.suppressDescriptorWarning,
     builder: (column) => column,
   );
 }
@@ -7376,14 +7475,21 @@ class $$DebugSettingsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<bool> logToConsole = const Value.absent(),
-              }) => DebugSettingsCompanion(id: id, logToConsole: logToConsole),
+                Value<bool> suppressDescriptorWarning = const Value.absent(),
+              }) => DebugSettingsCompanion(
+                id: id,
+                logToConsole: logToConsole,
+                suppressDescriptorWarning: suppressDescriptorWarning,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<bool> logToConsole = const Value.absent(),
+                Value<bool> suppressDescriptorWarning = const Value.absent(),
               }) => DebugSettingsCompanion.insert(
                 id: id,
                 logToConsole: logToConsole,
+                suppressDescriptorWarning: suppressDescriptorWarning,
               ),
           withReferenceMapper: (p0) => p0
               .map(

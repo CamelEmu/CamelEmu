@@ -2356,6 +2356,13 @@ class Translations$settings$debug$en {
   String get logToConsoleDescription =>
       'Also prints the native log to the standard output of Flutter.';
 
+  /// en: 'Suppress File Descriptor Warnings'
+  String get suppressDescriptorWarning => 'Suppress File Descriptor Warnings';
+
+  /// en: 'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.'
+  String get suppressDescriptorWarningDescription =>
+      'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.';
+
   /// en: 'CPU Clock Speed'
   String get cpuClockSpeed => 'CPU Clock Speed';
 
@@ -3939,6 +3946,10 @@ extension on Translations {
           'settings.debug.logToConsole' => 'Log to Standard Output',
           'settings.debug.logToConsoleDescription' =>
             'Also prints the native log to the standard output of Flutter.',
+          'settings.debug.suppressDescriptorWarning' =>
+            'Suppress File Descriptor Warnings',
+          'settings.debug.suppressDescriptorWarningDescription' =>
+            'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.',
           'settings.debug.cpuClockSpeed' => 'CPU Clock Speed',
           'settings.debug.cpuClockSpeedDescription' =>
             'Over/Underclocks the emulated CPU. Not recommended.',
