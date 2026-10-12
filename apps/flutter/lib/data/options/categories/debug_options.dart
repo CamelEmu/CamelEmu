@@ -30,6 +30,23 @@ final debugOptionsProvider = Provider<OptionCategory>(
                   .setLogToConsole(value),
             ),
           ),
+          BoolOption(
+            title: (t) => t.settings.debug.suppressDescriptorWarning,
+            description: (t) =>
+                t.settings.debug.suppressDescriptorWarningDescription,
+            icon: Icons.filter_alt_off,
+            value: CallbackOptionValue<bool>(
+              onRead: (ref) =>
+                  ref
+                      .watch(debugSettingsProvider)
+                      .value
+                      ?.suppressDescriptorWarning ??
+                  false,
+              onWrite: (context, ref, value) => ref
+                  .read(debugSettingsProvider.notifier)
+                  .setSuppressDescriptorWarning(value),
+            ),
+          ),
         ],
       ),
       OptionSection(

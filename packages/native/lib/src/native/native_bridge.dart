@@ -435,6 +435,12 @@ class NativeBridge {
     });
   }
 
+  Future<void> setDescriptorWarningSuppressed(bool suppressed) {
+    return _channel.invokeMethod<void>('setDescriptorWarningSuppressed', {
+      'suppressed': suppressed,
+    });
+  }
+
   Future<bool> onTouchEvent({
     required double x,
     required double y,

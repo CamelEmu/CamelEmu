@@ -21,8 +21,19 @@ class DebugSettingsNotifier extends AsyncNotifier<DebugSetting> {
     state = AsyncData(updated);
     await applyDebugSettings(updated);
   }
+
+  Future<void> setSuppressDescriptorWarning(bool enabled) async {
+    final current = await future;
+    final updated = current.copyWith(suppressDescriptorWarning: enabled);
+    await AppServices.debugSettingsRepository.write(updated);
+    state = AsyncData(updated);
+    await applyDebugSettings(updated);
+  }
 }
 
 Future<void> applyDebugSettings(DebugSetting settings) async {
   await AppServices.nativeBridge.setConsoleLogEnabled(settings.logToConsole);
+  await AppServices.nativeBridge.setDescriptorWarningSuppressed(
+    settings.suppressDescriptorWarning,
+  );
 }
