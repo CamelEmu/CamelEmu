@@ -2,7 +2,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../games/widgets/game_icon.dart';
+import 'emulation_game_icon.dart';
 import '../emulation_focus_provider.dart';
 import 'emulation_drawer.dart';
 import 'emulation_menu_actions.dart';
@@ -103,13 +103,10 @@ class _EmulationSidePanelState extends ConsumerState<EmulationSidePanel> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
           Align(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: GameIcon(iconPath: widget.game?.iconPath),
-              ),
+            child: EmulationGameIcon(
+              iconPath: widget.game?.iconPath,
+              size: 40,
+              radius: 8,
             ),
           ),
           const SizedBox(height: 8),
