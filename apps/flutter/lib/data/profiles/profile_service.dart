@@ -278,7 +278,10 @@ class ProfileService {
     if (await folder.exists()) {
       await target.create(recursive: true);
       for (final entry in await folder.list(followLinks: false).toList()) {
-        await FileMoves.move(entry, p.join(target.path, p.basename(entry.path)));
+        await FileMoves.move(
+          entry,
+          p.join(target.path, p.basename(entry.path)),
+        );
       }
       await _deleteIfEmpty(folder);
       await _deleteIfEmpty(folder.parent);

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,10 +25,6 @@ import 'desktop_app_shell.dart';
 /// content is allowed to run edge-to-edge behind it instead of reserving opaque space for it,
 /// so the bar only ever shows page content and blobs through its own blur, never a bare
 /// background. Only the flush, opaque Legacy bar reserves real space so it isn't drawn over.
-///
-/// The bar slides out of view while a descendant scroll view is being scrolled down, and back
-/// into view when scrolling back up, unless `reduceMotion` is enabled, in which case it stays put
-/// (the transition still happens, just instantly).
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -40,7 +35,9 @@ class AppShell extends ConsumerStatefulWidget {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  bool _navBarVisible = true;
+  final ValueNotifier<double> _navBarOffset = ValueNotifier(0);
+  double _hiddenDistance = 0;
+  int? _lastBranchIndex;
   late final ShellNavigationController _shellNavigation;
 
   @override
@@ -51,19 +48,21 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   void dispose() {
+    _navBarOffset.dispose();
     _shellNavigation.detach(widget.navigationShell);
     super.dispose();
   }
 
-  bool _handleScrollNotification(UserScrollNotification notification) {
-    switch (notification.direction) {
-      case ScrollDirection.reverse:
-        if (_navBarVisible) setState(() => _navBarVisible = false);
-      case ScrollDirection.forward:
-        if (!_navBarVisible) setState(() => _navBarVisible = true);
-      case ScrollDirection.idle:
-        break;
+  bool _handleScrollNotification(ScrollUpdateNotification notification) {
+    if (notification.metrics.axis != Axis.vertical ||
+        notification.metrics.outOfRange) {
+      return false;
     }
+    final delta = notification.scrollDelta ?? 0;
+    _navBarOffset.value = (_navBarOffset.value + delta).clamp(
+      0.0,
+      _hiddenDistance,
+    );
     return false;
   }
 
@@ -82,10 +81,18 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (ref.watch(isDesktopPlatformProvider)) {
       return DesktopAppShell(navigationShell: widget.navigationShell);
     }
-    final hiddenBottomOffset =
-        -(navBarTheme.barHeight + navBarTheme.bottomMargin + 32);
+    _hiddenDistance = navBarTheme.barHeight + navBarTheme.bottomMargin + 32;
+    final branchIndex = widget.navigationShell.currentIndex;
+    if (_lastBranchIndex != branchIndex) {
+      if (_lastBranchIndex != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _navBarOffset.value = 0;
+        });
+      }
+      _lastBranchIndex = branchIndex;
+    }
     return Scaffold(
-      body: NotificationListener<UserScrollNotification>(
+      body: NotificationListener<ScrollUpdateNotification>(
         onNotification: _handleScrollNotification,
         child: Stack(
           children: [
@@ -100,17 +107,16 @@ class _AppShellState extends ConsumerState<AppShell> {
                     )
                   else
                     widget.navigationShell,
-                  AnimatedPositioned(
-                    duration: animationDuration,
-                    curve: Curves.easeInOut,
+                  Positioned(
                     left: navBarTheme.horizontalMargin,
                     right: navBarTheme.horizontalMargin,
-                    bottom: _navBarVisible
-                        ? navBarTheme.bottomMargin
-                        : hiddenBottomOffset,
-                    child: AnimatedOpacity(
-                      duration: animationDuration,
-                      opacity: _navBarVisible ? 1 : 0,
+                    bottom: navBarTheme.bottomMargin,
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _navBarOffset,
+                      builder: (context, offset, child) => Transform.translate(
+                        offset: Offset(0, offset),
+                        child: child,
+                      ),
                       child: GamepadFocusRegion(
                         child: navBarTheme.stretchToFullWidth
                             ? AppNavBar(
