@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/extensions/app_search_bar_theme.dart';
+import 'app_neumorphic.dart';
 
 /// The games list search bar. Its blur, fill, and shape come entirely from [AppSearchBarTheme],
 /// so this single widget renders both the Azahar and Legacy looks.
@@ -50,6 +51,43 @@ class _AppSearchBarState extends State<AppSearchBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).extension<AppSearchBarTheme>()!;
+    final row = Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Icon(Icons.search, size: 20, color: theme.iconColor),
+        ),
+        Expanded(
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            style: theme.textStyle,
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              hintStyle: theme.textStyle.copyWith(color: theme.hintColor),
+              border: InputBorder.none,
+              isDense: true,
+            ),
+            onChanged: widget.onChanged,
+          ),
+        ),
+        if (widget.controller.text.isNotEmpty)
+          IconButton(
+            icon: Icon(Icons.clear, color: theme.iconColor),
+            onPressed: widget.onClear,
+          ),
+      ],
+    );
+    if (AppNeumorphic.of(context) != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: AppNeumorphic(
+          borderRadius: theme.radius,
+          inset: true,
+          child: SizedBox(height: theme.height, child: row),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: ClipRRect(
@@ -68,35 +106,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
                 color: _focused ? theme.focusedBorderColor : theme.borderColor,
               ),
             ),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Icon(Icons.search, size: 20, color: theme.iconColor),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    style: theme.textStyle,
-                    decoration: InputDecoration(
-                      hintText: widget.hintText,
-                      hintStyle: theme.textStyle.copyWith(
-                        color: theme.hintColor,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    onChanged: widget.onChanged,
-                  ),
-                ),
-                if (widget.controller.text.isNotEmpty)
-                  IconButton(
-                    icon: Icon(Icons.clear, color: theme.iconColor),
-                    onPressed: widget.onClear,
-                  ),
-              ],
-            ),
+            child: row,
           ),
         ),
       ),
