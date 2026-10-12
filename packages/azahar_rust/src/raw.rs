@@ -46,4 +46,5 @@ pub struct CoreApi {
     pub read_memory: unsafe extern "C" fn(*mut RawSession, u32, *mut u8, usize) -> i32,
     pub read_fcram: unsafe extern "C" fn(*mut RawSession, usize, *mut u8, usize) -> i32,
     pub destroy: unsafe extern "C" fn(*mut RawSession),
+    pub answer_artic_country: unsafe extern "C" fn(*mut RawSession, i32),
 }

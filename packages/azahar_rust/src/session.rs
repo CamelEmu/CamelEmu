@@ -164,6 +164,10 @@ impl GameSession {
         Ok(())
     }
 
+    pub fn answer_artic_country(&self, country: Option<u32>) {
+        self.handle.answer_artic_country(country);
+    }
+
     pub fn set_volume(&self, volume: f32) {
         if let Some(audio) = &self.audio {
             audio.set_volume(volume);

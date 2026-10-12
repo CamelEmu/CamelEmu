@@ -20,7 +20,6 @@ class EmulationSessionState {
     this.isFinished = false,
     this.isShutdownRequested = false,
     this.articCountryMismatch,
-    this.retryCountry,
     this.failure,
     this.topTextureId,
     this.bottomTextureId,
@@ -41,7 +40,6 @@ class EmulationSessionState {
   /// Whether the game asked to end, so the user has to choose to save or discard its changes.
   final bool isShutdownRequested;
   final ArticCountryMismatch? articCountryMismatch;
-  final int? retryCountry;
   final String? failure;
   final int? topTextureId;
   final int? bottomTextureId;
@@ -59,7 +57,6 @@ class EmulationSessionState {
     bool? isFinished,
     bool? isShutdownRequested,
     ArticCountryMismatch? articCountryMismatch,
-    int? retryCountry,
     String? failure,
     int? topTextureId,
     int? bottomTextureId,
@@ -77,7 +74,6 @@ class EmulationSessionState {
       isFinished: isFinished ?? this.isFinished,
       isShutdownRequested: isShutdownRequested ?? this.isShutdownRequested,
       articCountryMismatch: articCountryMismatch ?? this.articCountryMismatch,
-      retryCountry: retryCountry ?? this.retryCountry,
       failure: failure ?? this.failure,
       topTextureId: topTextureId ?? this.topTextureId,
       bottomTextureId: bottomTextureId ?? this.bottomTextureId,

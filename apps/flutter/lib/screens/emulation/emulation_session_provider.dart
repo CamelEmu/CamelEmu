@@ -144,6 +144,9 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
 
   Future<void> advanceFrame() => _bridge.advanceFrame();
 
+  Future<void> answerArticCountry(int? country) =>
+      _backend.answerCountry(country);
+
   /// Pauses the game while a dialog is shown over it, the same way as [togglePause], so the menu
   /// shows it as paused. Returns whether the game was running, to pass to [resumeAfterDialog].
   Future<bool> pauseForDialog() async {
@@ -233,9 +236,9 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
   ///
   /// The screen is left even when saving fails; the [SaveFailedException] is thrown afterwards
   /// so the user is told about it.
-  Future<void> terminate({required bool save, int? retryCountry}) async {
+  Future<void> terminate({required bool save}) async {
     if (state.isTerminating) return;
-    state = state.copyWith(isTerminating: true, retryCountry: retryCountry);
+    state = state.copyWith(isTerminating: true);
     await _releaseNativeSession(save: save);
     state = state.copyWith(isClosingWindow: true);
     await WidgetsBinding.instance.endOfFrame;

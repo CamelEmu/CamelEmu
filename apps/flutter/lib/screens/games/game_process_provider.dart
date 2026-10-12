@@ -25,8 +25,8 @@ class GameProcessNotifier extends Notifier<bool> {
   }
 
   /// Starts the game at [path], which is [game] when it is a listed game.
-  Future<int?> launch(BuildContext context, {required String path, Game? game}) async {
-    if (state) return null;
+  Future<void> launch(BuildContext context, {required String path, Game? game}) async {
+    if (state) return;
     final navigator = Navigator.of(context, rootNavigator: true);
     final games = ref.read(gamesProvider.notifier);
     state = true;
@@ -35,8 +35,8 @@ class GameProcessNotifier extends Notifier<bool> {
       if (game != null) {
         await AppServices.gameRepository.markLastPlayed(game.path);
       }
-      return await navigator.push<int>(
-        MaterialPageRoute<int>(
+      await navigator.push(
+        MaterialPageRoute<void>(
           builder: (_) => EmulationPage(gamePath: path, game: game),
         ),
       );

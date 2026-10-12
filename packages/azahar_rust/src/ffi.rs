@@ -239,6 +239,14 @@ impl SessionHandle {
         )
     }
 
+    pub fn answer_artic_country(&self, country: Option<u32>) {
+        let raw = self.raw;
+        let value = country.map_or(-1, |country| country as i32);
+        self.worker.call(move |library| unsafe {
+            (library.api.answer_artic_country)(raw as *mut RawSession, value)
+        });
+    }
+
     pub fn pause(&self) -> Result<()> {
         let raw = self.raw;
         check(

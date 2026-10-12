@@ -503,13 +503,19 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
             const u32 region = cfg_module->GetRegionValue(true);
             const u8 country = cfg_module->GetCountryCode();
             if (!Service::CFG::Module::IsValidRegionCountry(region, country)) {
-                // Report mismatch to server.
-                client->LogOnServer(
-                    Network::ArticBaseCommon::LogOnServerType::LOG_ERROR,
-                    "The country configuration does not match\n    the console region. "
-                    "Please select a valid\n    country from the emulation settings.");
-                system.ReportArticCountryMismatch(region, country);
-                return ResultStatus::ErrorArticCountryMismatch;
+                const int override_country = system.RequestArticCountryOverride(region, country);
+                if (override_country < 0 ||
+                    !Service::CFG::Module::IsValidRegionCountry(
+                        region, static_cast<u8>(override_country))) {
+                    client->LogOnServer(
+                        Network::ArticBaseCommon::LogOnServerType::LOG_ERROR,
+                        "The country configuration does not match\n    the console region. "
+                        "Please select a valid\n    country from the emulation settings.");
+                    client->Abort();
+                    return ResultStatus::ErrorArticCountryMismatch;
+                }
+                cfg_module->SetCountryCode(static_cast<u8>(override_country));
+                cfg_module->UpdateConfigNANDSavegame();
             }
             cfg_module->SetSystemSetupNeeded(false);
         }

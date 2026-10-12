@@ -179,10 +179,8 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
       current: Country.fromCode(mismatch.country),
       replacement: country,
     );
-    await notifier.terminate(
-      save: true,
-      retryCountry: override ? country.code : null,
-    );
+    await notifier.answerArticCountry(override ? country.code : null);
+    if (!override) await notifier.terminate(save: true);
   }
 
   Future<void> _openCheats() async {
@@ -257,11 +255,7 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
       _,
       isFinished,
     ) {
-      if (isFinished) {
-        Navigator.of(context).pop(
-          ref.read(emulationSessionProvider).retryCountry,
-        );
-      }
+      if (isFinished) Navigator.of(context).pop();
     });
     ref.listen(
       emulationSessionProvider.select((state) => state.articCountryMismatch),

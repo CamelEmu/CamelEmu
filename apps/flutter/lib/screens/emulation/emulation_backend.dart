@@ -95,6 +95,9 @@ class EmulationBackend {
     }
   }
 
+  Future<void> answerCountry(int? country) =>
+      answerArticCountry(country: country);
+
   Future<void> pause() => pauseGame();
 
   Future<void> resume() => resumeGame();

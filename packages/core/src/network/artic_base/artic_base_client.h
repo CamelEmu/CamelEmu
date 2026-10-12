@@ -139,6 +139,10 @@ public:
         StopImpl(false);
     }
 
+    void Abort() {
+        StopImpl(true);
+    }
+
     void SetCommunicationErrorCallback(const std::function<void(const std::string&)>& callback) {
         communication_error_callback = callback;
     }
