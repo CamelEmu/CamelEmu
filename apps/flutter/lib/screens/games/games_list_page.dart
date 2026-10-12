@@ -104,7 +104,10 @@ class _GamesListPageState extends ConsumerState<GamesListPage>
     }
     _wasRunning = isRunning;
 
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           GamepadFocusRegion(
@@ -141,6 +144,7 @@ class _GamesListPageState extends ConsumerState<GamesListPage>
                     onRefresh: ref.read(gamesProvider.notifier).rescan,
                     child: games.isEmpty
                         ? ListView(
+                            padding: EdgeInsets.only(bottom: bottomInset),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(24),
@@ -154,7 +158,12 @@ class _GamesListPageState extends ConsumerState<GamesListPage>
                             ],
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.fromLTRB(
+                              8,
+                              8,
+                              8,
+                              8 + bottomInset,
+                            ),
                             itemCount: games.length,
                             itemBuilder: (context, index) {
                               final game = games[index];

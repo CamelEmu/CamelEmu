@@ -36,12 +36,18 @@ class LegacyOptionsPage extends ConsumerWidget {
     final settings = ref.read(optionsSettingsProvider);
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: FutureBuilder<bool>(
           future: ref.read(gpuDriverProvider).isSupported(),
           builder: (context, snapshot) {
             final supportsGpuDriverLoading = snapshot.data ?? false;
             return GridView(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.fromLTRB(
+                0,
+                24,
+                0,
+                24 + MediaQuery.paddingOf(context).bottom,
+              ),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 1,
                 mainAxisExtent: 88,
