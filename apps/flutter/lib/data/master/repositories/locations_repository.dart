@@ -17,7 +17,10 @@ class LocationsRepository {
 
   /// The folder that holds the master database.
   Future<Directory> systemDirectory() async {
-    return _directory(_system, () async => (await MasterDatabase.file()).parent.path);
+    return _directory(
+      _system,
+      () async => (await MasterDatabase.file()).parent.path,
+    );
   }
 
   /// The folder that holds one folder per profile, with the user database of each profile.
@@ -39,7 +42,9 @@ class LocationsRepository {
     final path = await defaultPath();
     await _db
         .into(_db.locations)
-        .insertOnConflictUpdate(LocationsCompanion.insert(kind: kind, path: path));
+        .insertOnConflictUpdate(
+          LocationsCompanion.insert(kind: kind, path: path),
+        );
     return Directory(path);
   }
 }

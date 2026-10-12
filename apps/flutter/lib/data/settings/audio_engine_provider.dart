@@ -37,8 +37,6 @@ class AudioEngineNotifier extends Notifier<AudioEngine> {
     state = engine;
     final repository = AppServices.mediaSettingsRepository;
     final settings = await repository.read();
-    await repository.write(
-      settings.copyWith(audioEngine: Value(engine.name)),
-    );
+    await repository.write(settings.copyWith(audioEngine: Value(engine.name)));
   }
 }

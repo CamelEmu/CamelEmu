@@ -48,26 +48,31 @@ class EmulationBackend {
     required AudioEngine audioEngine,
     required EmulationBackendListener listener,
   }) async {
-    _subscription = startGame(
-      gamePath: gamePath,
-      options: SessionOptions(
-        primaryWidth: topScreenSize.width.round(),
-        primaryHeight: topScreenSize.height.round(),
-        secondaryWidth: bottomScreenSize.width.round(),
-        secondaryHeight: bottomScreenSize.height.round(),
-        dualScreen: true,
-        audioEngine: audioEngine,
-      ),
-    ).listen(
-      (event) => _dispatch(event, listener),
-      onError: (Object error) => listener.onError(error.toString()),
-    );
+    _subscription =
+        startGame(
+          gamePath: gamePath,
+          options: SessionOptions(
+            primaryWidth: topScreenSize.width.round(),
+            primaryHeight: topScreenSize.height.round(),
+            secondaryWidth: bottomScreenSize.width.round(),
+            secondaryHeight: bottomScreenSize.height.round(),
+            dualScreen: true,
+            audioEngine: audioEngine,
+          ),
+        ).listen(
+          (event) => _dispatch(event, listener),
+          onError: (Object error) => listener.onError(error.toString()),
+        );
     _started = true;
   }
 
   void _dispatch(SessionEvent event, EmulationBackendListener listener) {
     switch (event) {
-      case SessionEvent_ShaderProgress(:final stage, :final progress, :final max):
+      case SessionEvent_ShaderProgress(
+        :final stage,
+        :final progress,
+        :final max,
+      ):
         listener.onShaderProgress(
           ShaderCacheProgress(
             stage: switch (stage) {
