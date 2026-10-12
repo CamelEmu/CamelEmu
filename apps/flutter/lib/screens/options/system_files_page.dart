@@ -112,16 +112,19 @@ class _SystemFilesPageState extends ConsumerState<SystemFilesPage> {
     final linked = await _service.isFullConsoleLinked();
     if (mounted) setState(() => _consoleLinked = linked);
     unawaited(_loadHomeMenuPaths());
-    if (!mounted) return;
-    await ref
-        .read(gameProcessProvider.notifier)
-        .launch(
-          context,
-          path: _service.articInstallPath(
-            address: result.address,
-            installO3ds: result.installO3ds,
-          ),
-        );
+    final path = _service.articInstallPath(
+      address: result.address,
+      installO3ds: result.installO3ds,
+    );
+    int? country;
+    do {
+      if (!mounted) return;
+      if (country != null) await _service.setCountryCode(country);
+      if (!mounted) return;
+      country = await ref
+          .read(gameProcessProvider.notifier)
+          .launch(context, path: path);
+    } while (country != null);
   }
 
   Future<void> _launchHomeMenu(int region) async {

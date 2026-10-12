@@ -500,14 +500,16 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
 
         if (cfg.get()) {
             auto cfg_module = cfg->GetModule();
-            if (!Service::CFG::Module::IsValidRegionCountry(cfg_module->GetRegionValue(true),
-                                                            cfg_module->GetCountryCode())) {
+            const u32 region = cfg_module->GetRegionValue(true);
+            const u8 country = cfg_module->GetCountryCode();
+            if (!Service::CFG::Module::IsValidRegionCountry(region, country)) {
                 // Report mismatch to server.
                 client->LogOnServer(
                     Network::ArticBaseCommon::LogOnServerType::LOG_ERROR,
                     "The country configuration does not match\n    the console region. "
                     "Please select a valid\n    country from the emulation settings.");
-                return ResultStatus::ErrorArtic;
+                system.ReportArticCountryMismatch(region, country);
+                return ResultStatus::ErrorArticCountryMismatch;
             }
             cfg_module->SetSystemSetupNeeded(false);
         }

@@ -194,6 +194,11 @@
     "gameEndedMessage": "ゲームを開始してから保存した内容を保存しますか？それとも破棄しますか？",
     "save": "保存",
     "discard": "破棄",
+    "articCountryMismatchTitle": "国がコンソールと一致しません",
+    "articCountryMismatchMessage": "コンソールの地域は${region}ですが、国は${current}に設定されています。国を${replacement}に変更して再試行しますか？",
+    "failureTitle": "ゲームを開始できませんでした",
+    "articCountryOverride": "変更して再試行",
+    "articCountryKeep": "キャンセル",
     "showVirtualGamepad": "画面上のコントローラーを表示",
     "hideVirtualGamepad": "画面上のコントローラーを非表示"
   },

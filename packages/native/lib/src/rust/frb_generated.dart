@@ -625,6 +625,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SessionEvent_Error(message: dco_decode_String(raw[1]));
       case 4:
         return SessionEvent_ShutdownRequested();
+      case 5:
+        return SessionEvent_Failed(message: dco_decode_String(raw[1]));
+      case 6:
+        return SessionEvent_ArticCountryMismatch(
+          region: dco_decode_u_32(raw[1]),
+          country: dco_decode_u_32(raw[2]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -844,6 +851,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SessionEvent_Error(message: var_message);
       case 4:
         return SessionEvent_ShutdownRequested();
+      case 5:
+        var var_message = sse_decode_String(deserializer);
+        return SessionEvent_Failed(message: var_message);
+      case 6:
+        var var_region = sse_decode_u_32(deserializer);
+        var var_country = sse_decode_u_32(deserializer);
+        return SessionEvent_ArticCountryMismatch(
+          region: var_region,
+          country: var_country,
+        );
       default:
         throw UnimplementedError('');
     }
@@ -1071,6 +1088,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(message, serializer);
       case SessionEvent_ShutdownRequested():
         sse_encode_i_32(4, serializer);
+      case SessionEvent_Failed(message: final message):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(message, serializer);
+      case SessionEvent_ArticCountryMismatch(
+        region: final region,
+        country: final country,
+      ):
+        sse_encode_i_32(6, serializer);
+        sse_encode_u_32(region, serializer);
+        sse_encode_u_32(country, serializer);
     }
   }
 

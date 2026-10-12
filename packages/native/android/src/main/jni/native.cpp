@@ -1297,6 +1297,13 @@ static int32_t StartSessionUnguarded(AzaharSession* session) {
     stop_run = false;
     pause_emulation = false;
     advance_frame_requested = false;
+    Core::System::GetInstance().SetArticCountryMismatchHandler(
+        [session](u32 region, u32 country) {
+            if (session->callbacks.on_artic_country_mismatch) {
+                session->callbacks.on_artic_country_mismatch(session->callbacks.user, region,
+                                                             country);
+            }
+        });
     session->emulation_thread = std::thread([session] {
         Core::System::ResultStatus result = Core::System::ResultStatus::ErrorUnknown;
         try {
@@ -1313,7 +1320,8 @@ static int32_t StartSessionUnguarded(AzaharSession* session) {
             session->callbacks.on_shutdown_requested(session->callbacks.user);
         }
         if (result != Core::System::ResultStatus::Success &&
-            result != Core::System::ResultStatus::ShutdownRequested) {
+            result != Core::System::ResultStatus::ShutdownRequested &&
+            result != Core::System::ResultStatus::ErrorArticCountryMismatch) {
             ReportSessionError(session->callbacks,
                                "The emulation ended with status " +
                                    std::to_string(static_cast<int>(result)));
@@ -1418,6 +1426,7 @@ static void DestroySessionUnguarded(AzaharSession* session) {
     }
 
     TryShutdown();
+    Core::System::GetInstance().SetArticCountryMismatchHandler({});
     AudioCore::SetExternalAudioHandler({});
     Settings::values.output_type = session->previous_output_type;
     Settings::values.swap_screen = session->previous_swap_screen;

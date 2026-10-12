@@ -1,6 +1,6 @@
 use std::ffi::{CStr, CString, c_char, c_void};
 
-use super::{OpenMode, route, route_any, set_root, with_state};
+use super::{OpenMode, relocate, route, set_root, with_state};
 
 type EntryCallback = unsafe extern "C" fn(*mut c_void, *const c_char);
 
@@ -73,14 +73,14 @@ unsafe extern "C" fn remove_dir(path: *const c_char) -> i32 {
 
 unsafe extern "C" fn rename(from: *const c_char, to: *const c_char) -> i32 {
     match unsafe { (text(from), text(to)) } {
-        (Some(from), Some(to)) => route_any(&[from, to]).storage().rename(from, to) as i32,
+        (Some(from), Some(to)) => relocate(from, to, false) as i32,
         _ => 0,
     }
 }
 
 unsafe extern "C" fn copy(from: *const c_char, to: *const c_char) -> i32 {
     match unsafe { (text(from), text(to)) } {
-        (Some(from), Some(to)) => route_any(&[from, to]).storage().copy(from, to) as i32,
+        (Some(from), Some(to)) => relocate(from, to, true) as i32,
         _ => 0,
     }
 }

@@ -145,6 +145,18 @@ enum Country {
   /// The name of this country in the language of [t].
   String label(Translations t) => countryLabels(t.settings.system)[index];
 
+  static Country defaultForRegion(int region) {
+    return switch (region) {
+      0 => japan,
+      2 => unitedKingdom,
+      3 => australia,
+      4 => china,
+      5 => southKorea,
+      6 => taiwan,
+      _ => unitedStates,
+    };
+  }
+
   /// The country with [code], or null when no country has it.
   static Country? fromCode(int code) {
     for (final country in values) {
