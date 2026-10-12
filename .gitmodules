@@ -100,3 +100,6 @@
 [submodule "packages/externals/flutter_liquid_glass"]
 	path = packages/externals/flutter_liquid_glass
 	url = git@github.com:Hashibutogarasu/flutter_liquid_glass.git
+[submodule "apps/flutter/packages/flutter-neumorphic"]
+	path = apps/flutter/packages/flutter-neumorphic
+	url = https://github.com/Hashibutogarasu/Flutter-Neumorphic.git
