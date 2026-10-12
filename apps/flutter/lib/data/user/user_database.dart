@@ -178,7 +178,10 @@ class UserDatabase extends _$UserDatabase {
         }
       }
       if (from < 21) {
-        await m.addColumn(debugSettings, debugSettings.suppressDescriptorWarning);
+        await m.addColumn(
+          debugSettings,
+          debugSettings.suppressDescriptorWarning,
+        );
       }
     },
   );
