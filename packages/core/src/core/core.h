@@ -385,18 +385,17 @@ public:
 
     bool IsInitialSetup();
 
-    void SetArticCountryMismatchHandler(std::function<void(u32 region, u32 country)> handler) {
+    void SetArticCountryMismatchHandler(std::function<int(u32 region, u32 country)> handler) {
         artic_country_mismatch_handler = std::move(handler);
     }
 
-    void ReportArticCountryMismatch(u32 region, u32 country) const {
-        if (artic_country_mismatch_handler) {
-            artic_country_mismatch_handler(region, country);
-        }
+    int RequestArticCountryOverride(u32 region, u32 country) const {
+        return artic_country_mismatch_handler ? artic_country_mismatch_handler(region, country)
+                                              : -1;
     }
 
 private:
-    std::function<void(u32 region, u32 country)> artic_country_mismatch_handler;
+    std::function<int(u32 region, u32 country)> artic_country_mismatch_handler;
 
     /**
      * Initialize the emulated system.

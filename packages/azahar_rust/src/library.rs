@@ -73,6 +73,7 @@ mod platform {
             len: usize,
         ) -> i32;
         fn azahar_session_destroy(session: *mut RawSession);
+        fn azahar_session_answer_artic_country(session: *mut RawSession, country: i32);
     }
 
     /// The core is part of the executable, so there is nothing to unload.
@@ -96,6 +97,7 @@ mod platform {
             read_memory: azahar_session_read_memory,
             read_fcram: azahar_session_read_fcram,
             destroy: azahar_session_destroy,
+            answer_artic_country: azahar_session_answer_artic_country,
         };
         Ok((api, Unload))
     }
@@ -224,6 +226,10 @@ mod platform {
                 read_memory: transmute(symbol(handle, c"azahar_session_read_memory")?),
                 read_fcram: transmute(symbol(handle, c"azahar_session_read_fcram")?),
                 destroy: transmute(symbol(handle, c"azahar_session_destroy")?),
+                answer_artic_country: transmute(symbol(
+                    handle,
+                    c"azahar_session_answer_artic_country",
+                )?),
             };
 
             let status = init(

@@ -589,6 +589,10 @@ bool Client::Read(SocketHolder sockFD, void* buffer, size_t size,
             read_bytes = 0;
             break;
         }
+        if (new_read == 0) {
+            read_bytes = 0;
+            break;
+        }
         if (report_traffic_callback && new_read) {
             report_traffic_callback(new_read);
         }

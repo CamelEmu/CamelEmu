@@ -20,10 +20,6 @@ class SystemFilesService {
 
   Future<void> unlinkConsole() => AppServices.nativeBridge.unlinkConsole();
 
-  Future<void> setCountryCode(int country) {
-    return AppServices.systemSaveRepository.setCountryCode(country);
-  }
-
   Future<String> getHomeMenuPath(int region) =>
       AppServices.nativeBridge.getHomeMenuPath(region);
 
