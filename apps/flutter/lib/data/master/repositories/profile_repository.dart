@@ -113,9 +113,7 @@ class ProfileRepository extends MasterKeyValueRepository
 
   @override
   Future<void> delete(String cuid) {
-    return (db.delete(
-      db.profiles,
-    )..where((tbl) => tbl.cuid.equals(cuid))).go();
+    return (db.delete(db.profiles)..where((tbl) => tbl.cuid.equals(cuid))).go();
   }
 
   Future<String?> defaultProfileCuid() => read(_defaultProfileKey);

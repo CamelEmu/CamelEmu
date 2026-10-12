@@ -63,10 +63,7 @@ class _LegacyDataPromptPageState extends State<LegacyDataPromptPage> {
             title: Text(t.title),
             content: Text(t.description(path: widget.path)),
             actions: [
-              TextButton(
-                onPressed: () => _choose(false),
-                child: Text(t.keep),
-              ),
+              TextButton(onPressed: () => _choose(false), child: Text(t.keep)),
               FilledButton(
                 onPressed: () => _choose(true),
                 child: Text(t.migrate),

@@ -32,7 +32,10 @@ class SystemFilesService {
 
   /// Returns the path that starts the system files installation from the Artic Base server at
   /// [address].
-  String articInstallPath({required String address, required bool installO3ds}) {
+  String articInstallPath({
+    required String address,
+    required bool installO3ds,
+  }) {
     final scheme = installO3ds ? 'articinio' : 'articinin';
     return '$scheme://$address';
   }
