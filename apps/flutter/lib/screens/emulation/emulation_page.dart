@@ -9,15 +9,19 @@ import '../../app_services.dart';
 import '../../data/gamepad/gamepad_hub.dart';
 import '../../data/platform_provider.dart';
 import '../../data/repositories/cheat_repository.dart';
+import '../../data/settings/country.dart';
 import '../../theme/extensions/emulation_focus_frame_theme.dart';
 import 'controller_motion_source.dart';
+import 'emulation_session_state.dart';
 import 'emulation_focus_provider.dart';
 import 'emulation_screens_layout.dart';
 import 'emulation_session_provider.dart';
 import 'motion_input_source.dart';
 import 'virtual_gamepad_visibility_provider.dart';
 import 'widgets/bottom_screen.dart';
+import 'widgets/artic_country_mismatch_dialog.dart';
 import 'widgets/cheats_dialog.dart';
+import 'widgets/emulation_failure_dialog.dart';
 import 'widgets/emulation_drawer.dart';
 import 'widgets/gamepad/emulation_gamepad.dart';
 import 'widgets/emulation_loading_card.dart';
@@ -158,6 +162,27 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     await notifier.terminate(save: save);
   }
 
+  Future<void> _showFailure(String message) async {
+    final notifier = ref.read(emulationSessionProvider.notifier);
+    _scaffoldKey.currentState?.closeDrawer();
+    await EmulationFailureDialog.show(context, message);
+    await notifier.terminate(save: true);
+  }
+
+  Future<void> _askToOverrideCountry(ArticCountryMismatch mismatch) async {
+    final notifier = ref.read(emulationSessionProvider.notifier);
+    _scaffoldKey.currentState?.closeDrawer();
+    final country = Country.defaultForRegion(mismatch.region);
+    final override = await ArticCountryMismatchDialog.show(
+      context,
+      region: mismatch.region,
+      current: Country.fromCode(mismatch.country),
+      replacement: country,
+    );
+    await notifier.answerArticCountry(override ? country.code : null);
+    if (!override) await notifier.terminate(save: true);
+  }
+
   Future<void> _openCheats() async {
     final game = widget.game;
     if (game == null) return;
@@ -231,6 +256,18 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
       isFinished,
     ) {
       if (isFinished) Navigator.of(context).pop();
+    });
+    ref.listen(
+      emulationSessionProvider.select((state) => state.articCountryMismatch),
+      (_, mismatch) {
+        if (mismatch != null) unawaited(_askToOverrideCountry(mismatch));
+      },
+    );
+    ref.listen(emulationSessionProvider.select((state) => state.failure), (
+      _,
+      failure,
+    ) {
+      if (failure != null) unawaited(_showFailure(failure));
     });
     ref.listen(
       emulationFocusProvider.select((state) => state.focus),

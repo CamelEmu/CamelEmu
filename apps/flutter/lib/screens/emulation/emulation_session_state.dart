@@ -1,6 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
+class ArticCountryMismatch {
+  const ArticCountryMismatch({required this.region, required this.country});
+
+  final int region;
+  final int country;
+}
+
 class EmulationSessionState {
   const EmulationSessionState({
     this.isLaunched = false,
@@ -12,6 +19,8 @@ class EmulationSessionState {
     this.isClosingWindow = false,
     this.isFinished = false,
     this.isShutdownRequested = false,
+    this.articCountryMismatch,
+    this.failure,
     this.topTextureId,
     this.bottomTextureId,
     this.bottomTextureSize,
@@ -30,6 +39,8 @@ class EmulationSessionState {
 
   /// Whether the game asked to end, so the user has to choose to save or discard its changes.
   final bool isShutdownRequested;
+  final ArticCountryMismatch? articCountryMismatch;
+  final String? failure;
   final int? topTextureId;
   final int? bottomTextureId;
   final Size? bottomTextureSize;
@@ -45,6 +56,8 @@ class EmulationSessionState {
     bool? isClosingWindow,
     bool? isFinished,
     bool? isShutdownRequested,
+    ArticCountryMismatch? articCountryMismatch,
+    String? failure,
     int? topTextureId,
     int? bottomTextureId,
     Size? bottomTextureSize,
@@ -60,6 +73,8 @@ class EmulationSessionState {
       isClosingWindow: isClosingWindow ?? this.isClosingWindow,
       isFinished: isFinished ?? this.isFinished,
       isShutdownRequested: isShutdownRequested ?? this.isShutdownRequested,
+      articCountryMismatch: articCountryMismatch ?? this.articCountryMismatch,
+      failure: failure ?? this.failure,
       topTextureId: topTextureId ?? this.topTextureId,
       bottomTextureId: bottomTextureId ?? this.bottomTextureId,
       bottomTextureSize: bottomTextureSize ?? this.bottomTextureSize,

@@ -73,7 +73,7 @@ class UserDatabase extends _$UserDatabase {
   ];
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -176,6 +176,9 @@ class UserDatabase extends _$UserDatabase {
             ),
           );
         }
+      }
+      if (from < 21) {
+        await m.addColumn(debugSettings, debugSettings.suppressDescriptorWarning);
       }
     },
   );

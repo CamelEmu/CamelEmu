@@ -409,6 +409,21 @@ class _Translations$emulation$ja extends Translations$emulation$en {
   @override
   String get discard => '破棄';
   @override
+  String get articCountryMismatchTitle => '国がコンソールと一致しません';
+  @override
+  String articCountryMismatchMessage({
+    required Object region,
+    required Object current,
+    required Object replacement,
+  }) =>
+      'コンソールの地域は${region}ですが、国は${current}に設定されています。国を${replacement}に変更して再試行しますか？';
+  @override
+  String get failureTitle => 'ゲームを開始できませんでした';
+  @override
+  String get articCountryOverride => '変更して再試行';
+  @override
+  String get articCountryKeep => 'キャンセル';
+  @override
   String get showVirtualGamepad => '画面上のコントローラーを表示';
   @override
   String get hideVirtualGamepad => '画面上のコントローラーを非表示';
@@ -1866,6 +1881,11 @@ class _Translations$settings$debug$ja extends Translations$settings$debug$en {
   @override
   String get logToConsoleDescription => 'ネイティブのログをFlutterの標準出力にも出力します。';
   @override
+  String get suppressDescriptorWarning => 'ファイル記述子の警告を抑制';
+  @override
+  String get suppressDescriptorWarningDescription =>
+      'ストレージのファイルを警告が出ない方法で閉じ、「Peer expected signal when closed」の警告でログが埋まるのを防ぎます。';
+  @override
   String get cpuClockSpeed => 'CPUクロック速度';
   @override
   String get cpuClockSpeedDescription =>
@@ -2566,6 +2586,17 @@ extension on TranslationsJa {
           'emulation.gameEndedMessage' => 'ゲームを開始してから保存した内容を保存しますか？それとも破棄しますか？',
           'emulation.save' => '保存',
           'emulation.discard' => '破棄',
+          'emulation.articCountryMismatchTitle' => '国がコンソールと一致しません',
+          'emulation.articCountryMismatchMessage' =>
+            ({
+              required Object region,
+              required Object current,
+              required Object replacement,
+            }) =>
+                'コンソールの地域は${region}ですが、国は${current}に設定されています。国を${replacement}に変更して再試行しますか？',
+          'emulation.failureTitle' => 'ゲームを開始できませんでした',
+          'emulation.articCountryOverride' => '変更して再試行',
+          'emulation.articCountryKeep' => 'キャンセル',
           'emulation.showVirtualGamepad' => '画面上のコントローラーを表示',
           'emulation.hideVirtualGamepad' => '画面上のコントローラーを非表示',
           'applets.softwareKeyboard' => 'ソフトウェアキーボード',
@@ -2979,14 +3010,14 @@ extension on TranslationsJa {
           'settings.system.countries.estonia' => 'エストニア',
           'settings.system.countries.finland' => 'フィンランド',
           'settings.system.countries.france' => 'フランス',
+          _ => null,
+        } ??
+        switch (path) {
           'settings.system.countries.germany' => 'ドイツ',
           'settings.system.countries.greece' => 'ギリシャ',
           'settings.system.countries.hungary' => 'ハンガリー',
           'settings.system.countries.iceland' => 'アイスランド',
           'settings.system.countries.ireland' => 'アイルランド',
-          _ => null,
-        } ??
-        switch (path) {
           'settings.system.countries.italy' => 'イタリア',
           'settings.system.countries.latvia' => 'ラトビア',
           'settings.system.countries.lesotho' => 'レソト',
@@ -3192,6 +3223,9 @@ extension on TranslationsJa {
           'settings.debug.logToConsole' => '標準出力にログを出力',
           'settings.debug.logToConsoleDescription' =>
             'ネイティブのログをFlutterの標準出力にも出力します。',
+          'settings.debug.suppressDescriptorWarning' => 'ファイル記述子の警告を抑制',
+          'settings.debug.suppressDescriptorWarningDescription' =>
+            'ストレージのファイルを警告が出ない方法で閉じ、「Peer expected signal when closed」の警告でログが埋まるのを防ぎます。',
           'settings.debug.cpuClockSpeed' => 'CPUクロック速度',
           'settings.debug.cpuClockSpeedDescription' =>
             'エミュレートされたCPUをオーバークロック/アンダークロックします。推奨しません。',

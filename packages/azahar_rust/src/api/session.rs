@@ -43,6 +43,13 @@ pub fn stop_game(persist: bool) -> Result<(), AzaharError> {
     registry::stop(persist)
 }
 
+pub fn answer_artic_country(country: Option<u32>) -> Result<(), AzaharError> {
+    registry::with_session(|session| {
+        session.answer_artic_country(country);
+        Ok(())
+    })
+}
+
 pub fn set_volume(volume: f32) -> Result<(), AzaharError> {
     registry::with_session(|session| {
         session.set_volume(volume);

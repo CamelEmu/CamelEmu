@@ -31,6 +31,9 @@ Future<void> resumeGame() => RustLib.instance.api.crateApiSessionResumeGame();
 Future<void> stopGame({required bool persist}) =>
     RustLib.instance.api.crateApiSessionStopGame(persist: persist);
 
+Future<void> answerArticCountry({int? country}) =>
+    RustLib.instance.api.crateApiSessionAnswerArticCountry(country: country);
+
 Future<void> setVolume({required double volume}) =>
     RustLib.instance.api.crateApiSessionSetVolume(volume: volume);
 

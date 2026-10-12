@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1293222700;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 148061833;
 
 // Section: executor
 
@@ -47,6 +47,39 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crate__api__session__answer_artic_country_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "answer_artic_country",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_country = <Option<u32>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, crate::error::AzaharError>((move || {
+                    let output_ok = crate::api::session::answer_artic_country(api_country)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__audio__available_audio_engines_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -632,6 +665,17 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u32>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for crate::session::SessionEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -667,6 +711,20 @@ impl SseDecode for crate::session::SessionEvent {
             }
             4 => {
                 return crate::session::SessionEvent::ShutdownRequested;
+            }
+            5 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::session::SessionEvent::Failed {
+                    message: var_message,
+                };
+            }
+            6 => {
+                let mut var_region = <u32>::sse_decode(deserializer);
+                let mut var_country = <u32>::sse_decode(deserializer);
+                return crate::session::SessionEvent::ArticCountryMismatch {
+                    region: var_region,
+                    country: var_country,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -757,17 +815,20 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        3 => wire__crate__api__session__dump_fcram_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__session__fcram_size_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__session__init_app_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__storage__initialize_storage_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__session__pause_game_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__session__read_memory_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__session__read_u32_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__session__resume_game_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__session__set_volume_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__session__start_game_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__session__stop_game_impl(port, ptr, rust_vec_len, data_len),
+        1 => {
+            wire__crate__api__session__answer_artic_country_impl(port, ptr, rust_vec_len, data_len)
+        }
+        4 => wire__crate__api__session__dump_fcram_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__session__fcram_size_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__session__init_app_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__storage__initialize_storage_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__session__pause_game_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__session__read_memory_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__session__read_u32_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__session__resume_game_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__session__set_volume_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__session__start_game_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__session__stop_game_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -780,8 +841,8 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__audio__available_audio_engines_impl(ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__audio__default_audio_engine_impl(ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__audio__available_audio_engines_impl(ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__audio__default_audio_engine_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -882,6 +943,15 @@ impl flutter_rust_bridge::IntoDart for crate::session::SessionEvent {
                 [3.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
             crate::session::SessionEvent::ShutdownRequested => [4.into_dart()].into_dart(),
+            crate::session::SessionEvent::Failed { message } => {
+                [5.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::session::SessionEvent::ArticCountryMismatch { region, country } => [
+                6.into_dart(),
+                region.into_into_dart().into_dart(),
+                country.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -1109,6 +1179,16 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u32>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for crate::session::SessionEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1141,6 +1221,15 @@ impl SseEncode for crate::session::SessionEvent {
             }
             crate::session::SessionEvent::ShutdownRequested => {
                 <i32>::sse_encode(4, serializer);
+            }
+            crate::session::SessionEvent::Failed { message } => {
+                <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::session::SessionEvent::ArticCountryMismatch { region, country } => {
+                <i32>::sse_encode(6, serializer);
+                <u32>::sse_encode(region, serializer);
+                <u32>::sse_encode(country, serializer);
             }
             _ => {
                 unimplemented!("");

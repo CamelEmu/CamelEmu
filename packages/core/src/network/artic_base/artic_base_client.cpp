@@ -416,7 +416,6 @@ void Client::StopImpl(bool from_error) {
         handler->should_run = false;
         // Shouldn't matter if the socket is shut down twice
         shutdown(handler->handler_socket, SHUT_RDWR);
-        closesocket(handler->handler_socket);
     }
 
     // Close main socket
@@ -587,6 +586,10 @@ bool Client::Read(SocketHolder sockFD, void* buffer, size_t size,
                  std::chrono::steady_clock::now() - before < timeout)) {
                 continue;
             }
+            read_bytes = 0;
+            break;
+        }
+        if (new_read == 0) {
             read_bytes = 0;
             break;
         }

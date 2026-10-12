@@ -50,6 +50,7 @@ typedef struct AzaharSessionCallbacks {
    * The session still has to be destroyed; the application decides how.
    */
   void (*on_shutdown_requested)(void* user);
+  void (*on_artic_country_mismatch)(void* user, uint32_t region, uint32_t country);
 } AzaharSessionCallbacks;
 
 #define AZAHAR_AUDIO_SAMPLE_RATE 32728
@@ -70,6 +71,8 @@ AzaharSession* azahar_session_create(const char* game_path, const AzaharSessionO
 
 /** Starts the emulation and shader preparation threads. */
 int32_t azahar_session_start(AzaharSession* session);
+
+void azahar_session_answer_artic_country(AzaharSession* session, int32_t country);
 
 int32_t azahar_session_pause(AzaharSession* session);
 int32_t azahar_session_resume(AzaharSession* session);
