@@ -16,6 +16,7 @@ import 'routing/app_routes.dart';
 import 'screens/profiles/legacy_data_prompt_page.dart';
 import 'screens/settings/settings_routes.dart' as legacy_settings;
 import 'theme/app_theme.dart';
+import 'theme/neumorphic/neumorphism_theme.dart';
 import 'theme/no_overscroll_indicator_behavior.dart';
 import 'theme/theme_settings_provider.dart';
 import 'theme/theme_style.dart';
@@ -155,30 +156,44 @@ class AzaharApp extends ConsumerWidget {
         builder: (context) {
           return DynamicColorBuilder(
             builder: (lightDynamic, darkDynamic) {
+              final themeMode = _themeMode(themeSettings.themeMode);
+              final lightTheme = AppTheme.light(
+                style: themeSettings.themeStyle,
+                staticThemeColor: themeSettings.staticThemeColor,
+                materialYou: themeSettings.materialYou,
+                dynamicScheme: lightDynamic,
+              );
+              final darkTheme = AppTheme.dark(
+                style: themeSettings.themeStyle,
+                staticThemeColor: themeSettings.staticThemeColor,
+                blackBackgrounds: themeSettings.blackBackgrounds,
+                materialYou: themeSettings.materialYou,
+                dynamicScheme: darkDynamic,
+              );
               return MaterialApp.router(
                 title: context.t.appName,
-                themeMode: _themeMode(themeSettings.themeMode),
-                theme: AppTheme.light(
-                  style: themeSettings.themeStyle,
-                  staticThemeColor: themeSettings.staticThemeColor,
-                  materialYou: themeSettings.materialYou,
-                  dynamicScheme: lightDynamic,
-                ),
-                darkTheme: AppTheme.dark(
-                  style: themeSettings.themeStyle,
-                  staticThemeColor: themeSettings.staticThemeColor,
-                  blackBackgrounds: themeSettings.blackBackgrounds,
-                  materialYou: themeSettings.materialYou,
-                  dynamicScheme: darkDynamic,
-                ),
+                themeMode: themeMode,
+                theme: lightTheme,
+                darkTheme: darkTheme,
                 scrollBehavior: const NoOverscrollIndicatorBehavior(),
                 routerConfig: _router,
                 scaffoldMessengerKey: _scaffoldMessengerKey,
                 shortcuts: _shortcutsWithoutGameButtons(),
-                builder: (context, child) => GamepadActionHost(
-                  navigatorKey: _navigatorKey,
-                  child: child ?? const SizedBox.shrink(),
-                ),
+                builder: (context, child) {
+                  final content = GamepadActionHost(
+                    navigatorKey: _navigatorKey,
+                    child: child ?? const SizedBox.shrink(),
+                  );
+                  if (themeSettings.themeStyle != ThemeStyle.neumorphic) {
+                    return content;
+                  }
+                  return NeumorphismScope(
+                    themeMode: themeMode,
+                    lightTheme: lightTheme,
+                    darkTheme: darkTheme,
+                    child: content,
+                  );
+                },
               );
             },
           );

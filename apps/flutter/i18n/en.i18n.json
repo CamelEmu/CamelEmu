@@ -839,7 +839,8 @@
     },
     "themes": {
       "azahar": "Azahar",
-      "legacy": "Legacy"
+      "legacy": "Legacy",
+      "neumorphic": "Neumorphism"
     },
     "accessibility": {
       "title": "Accessibility",

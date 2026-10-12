@@ -1991,7 +1991,9 @@ class _Translations$settings$themes$ja extends Translations$settings$themes$en {
   @override
   String get azahar => 'Azahar';
   @override
-  String get legacy => 'Legacy';
+  String get legacy => '旧テーマ';
+  @override
+  String get neumorphic => 'ニューモフィズム';
 }
 
 // Path: settings.accessibility
@@ -3273,7 +3275,8 @@ extension on TranslationsJa {
           'settings.theme.useBlackBackgroundsDescription' =>
             'ダークモード有効時に、ダークグレーの代わりに黒背景を使用します。',
           'settings.themes.azahar' => 'Azahar',
-          'settings.themes.legacy' => 'Legacy',
+          'settings.themes.legacy' => '旧テーマ',
+          'settings.themes.neumorphic' => 'ニューモフィズム',
           'settings.accessibility.title' => 'アクセシビリティ',
           'settings.accessibility.reduceMotion' => '視差効果を減らす',
           'settings.accessibility.reduceMotionDescription' =>

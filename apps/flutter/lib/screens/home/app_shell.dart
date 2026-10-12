@@ -9,7 +9,10 @@ import '../../data/settings/advanced_settings_provider.dart';
 import '../../data/settings/animation_speed.dart';
 import '../../theme/extensions/app_navigation_bar_theme.dart';
 import '../../theme/extensions/background_blob_theme.dart';
+import '../../theme/theme_settings_provider.dart';
+import '../../theme/theme_style.dart';
 import '../../widgets/app_nav_bar.dart';
+import '../../widgets/app_nav_destination.dart';
 import '../../widgets/background_blobs.dart';
 import '../../widgets/gamepad/gamepad_focus_region.dart';
 import '../../widgets/gamepad_notification_bar.dart';
@@ -80,6 +83,37 @@ class _AppShellState extends ConsumerState<AppShell> {
     );
     if (ref.watch(isDesktopPlatformProvider)) {
       return DesktopAppShell(navigationShell: widget.navigationShell);
+    }
+    if (ref.watch(
+      themeSettingsProvider.select(
+        (settings) => settings.themeStyle == ThemeStyle.neumorphic,
+      ),
+    )) {
+      final destinations = AppNavDestination.of(context);
+      return Scaffold(
+        body: Stack(
+          children: [
+            Positioned.fill(child: BackgroundBlobs(variant: blobVariant)),
+            GamepadNotificationColumn(child: widget.navigationShell),
+          ],
+        ),
+        bottomNavigationBar: GamepadFocusRegion(
+          child: NavigationBar(
+            selectedIndex: widget.navigationShell.currentIndex,
+            onDestinationSelected: (index) => widget.navigationShell.goBranch(
+              index,
+              initialLocation: widget.navigationShell.currentIndex == index,
+            ),
+            destinations: [
+              for (final destination in destinations)
+                NavigationDestination(
+                  icon: Icon(destination.icon),
+                  label: destination.label,
+                ),
+            ],
+          ),
+        ),
+      );
     }
     _hiddenDistance = navBarTheme.barHeight + navBarTheme.bottomMargin + 32;
     final branchIndex = widget.navigationShell.currentIndex;
