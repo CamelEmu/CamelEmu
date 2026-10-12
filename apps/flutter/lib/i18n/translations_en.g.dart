@@ -2507,6 +2507,9 @@ class Translations$settings$themes$en {
 
   /// en: 'Legacy'
   String get legacy => 'Legacy';
+
+  /// en: 'Neumorphism'
+  String get neumorphic => 'Neumorphism';
 }
 
 // Path: settings.accessibility
@@ -4001,6 +4004,7 @@ extension on Translations {
             'Uses black backgrounds when dark mode is enabled, instead of dark gray.',
           'settings.themes.azahar' => 'Azahar',
           'settings.themes.legacy' => 'Legacy',
+          'settings.themes.neumorphic' => 'Neumorphism',
           'settings.accessibility.title' => 'Accessibility',
           'settings.accessibility.reduceMotion' => 'Reduce Motion',
           'settings.accessibility.reduceMotionDescription' =>

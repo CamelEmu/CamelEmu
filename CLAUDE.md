@@ -15,3 +15,6 @@ Do not mention whether changes are committed or uncommitted in a report. Say onl
 ## Do not open pull requests on external repositories
 
 Do not open a pull request on a repository owned by an external team or account, such as the upstream of a fork, unless explicitly instructed to. Open pull requests only on repositories the user owns.
+## Do not copy or modify the pub local store
+
+Do not copy packages out of the pub local store (`~/.pub-cache`) into the repository, and do not modify the files inside it. When a dependency needs a change, make it in the dependency's own repository, added as a submodule.
