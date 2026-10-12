@@ -115,8 +115,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             // Treat reset as shutdown if we are doing the initial setup
             return ResultStatus::ShutdownRequested;
         }
-        Reset();
-        return ResultStatus::Success;
+        return Reset();
     }
     case Signal::Shutdown:
         return ResultStatus::ShutdownRequested;
@@ -382,6 +381,8 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader_ErrorGbaTitle;
         case Loader::ResultStatus::ErrorArtic:
             return ResultStatus::ErrorArticDisconnected;
+        case Loader::ResultStatus::ErrorArticCountryMismatch:
+            return ResultStatus::ErrorArticCountryMismatch;
         default:
             return ResultStatus::ErrorLoader;
         }
@@ -681,7 +682,7 @@ void System::Shutdown(bool is_deserializing) {
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
-void System::Reset() {
+System::ResultStatus System::Reset() {
     // This is NOT a proper reset, but a temporary workaround by shutting down the system and
     // reloading.
     // TODO: Properly implement the reset
@@ -703,8 +704,12 @@ void System::Reset() {
     }
 
     // Reload the system with the same setting
-    [[maybe_unused]] const System::ResultStatus result =
-        Load(*m_emu_window, m_filepath, m_secondary_window);
+    const ResultStatus result = Load(*m_emu_window, m_filepath, m_secondary_window);
+    if (result != ResultStatus::Success) {
+        LOG_CRITICAL(Core, "Failed to load {} again after the reset (Error {})", m_filepath,
+                     static_cast<u32>(result));
+    }
+    return result;
 }
 
 void System::ApplySettings() {

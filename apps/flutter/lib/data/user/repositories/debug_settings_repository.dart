@@ -11,7 +11,12 @@ class DebugSettingsRepository {
     final row = await (_db.select(
       _db.debugSettings,
     )..where((tbl) => tbl.id.equals(0))).getSingleOrNull();
-    return row ?? const DebugSetting(id: 0, logToConsole: true);
+    return row ??
+        const DebugSetting(
+          id: 0,
+          logToConsole: true,
+          suppressDescriptorWarning: false,
+        );
   }
 
   Future<void> write(DebugSetting settings) {

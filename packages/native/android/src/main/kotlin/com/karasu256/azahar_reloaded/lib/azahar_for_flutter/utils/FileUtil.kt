@@ -8,6 +8,7 @@ import okio.ByteString.Companion.readByteString
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.system.Os
 import android.system.OsConstants
@@ -33,6 +34,9 @@ object FileUtil {
     const val TEXT_PLAIN = "text/plain"
 
     val context: Context get() = CitraApplication.appContext
+
+    @Volatile
+    var suppressDescriptorWarning = false
 
     /**
      * Create a file from directory with filename.
@@ -114,6 +118,11 @@ object FileUtil {
                         val fd = parcelFileDescriptor.fileDescriptor
                         val flags = Os.fcntlInt(fd, OsConstants.F_GETFL, 0)
                         Os.fcntlInt(fd, OsConstants.F_SETFL, flags or OsConstants.O_APPEND)
+                    }
+                    if (suppressDescriptorWarning) {
+                        val duplicate =
+                            ParcelFileDescriptor.dup(parcelFileDescriptor.fileDescriptor)
+                        return duplicate.detachFd()
                     }
                     return parcelFileDescriptor.detachFd()
                 }

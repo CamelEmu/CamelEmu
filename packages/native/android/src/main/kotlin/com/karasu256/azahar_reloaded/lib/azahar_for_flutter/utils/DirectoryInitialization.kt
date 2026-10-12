@@ -43,8 +43,11 @@ object DirectoryInitialization {
         if (directoryState != DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED) {
             directoryState = if (hasWriteAccess(context)) {
                 if (setCitraUserDirectory()) {
-                    CitraApplication.documentsTree.setRoot(Uri.parse(userPath))
-                    NativeLibrary.setStorageRoot(storageLocation(Uri.parse(userPath)).toString())
+                    val location = storageLocation(Uri.parse(userPath))
+                    val treeRoot =
+                        if (location.scheme == "content") location else Uri.parse(userPath)
+                    CitraApplication.documentsTree.setRoot(treeRoot)
+                    NativeLibrary.setStorageRoot(location.toString())
                     NativeLibrary.startLogging()
                     NativeLibrary.logUserDirectory(userPath.toString())
                     NativeLibrary.createConfigFile()

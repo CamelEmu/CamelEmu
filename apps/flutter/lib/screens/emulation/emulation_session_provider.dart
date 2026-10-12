@@ -93,6 +93,17 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
         onShutdownRequested: () {
           state = state.copyWith(isShutdownRequested: true);
         },
+        onFailed: (message) {
+          state = state.copyWith(failure: message);
+        },
+        onArticCountryMismatch: (region, country) {
+          state = state.copyWith(
+            articCountryMismatch: ArticCountryMismatch(
+              region: region,
+              country: country,
+            ),
+          );
+        },
       ),
     );
   }
@@ -132,6 +143,9 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
   }
 
   Future<void> advanceFrame() => _bridge.advanceFrame();
+
+  Future<void> answerArticCountry(int? country) =>
+      _backend.answerCountry(country);
 
   /// Pauses the game while a dialog is shown over it, the same way as [togglePause], so the menu
   /// shows it as paused. Returns whether the game was running, to pass to [resumeAfterDialog].

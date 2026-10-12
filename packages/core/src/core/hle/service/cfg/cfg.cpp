@@ -855,7 +855,11 @@ Result Module::UpdateConfigNANDSavegame() {
     FileSys::Path path("/config");
 
     auto config_result = cfg_system_save_data_archive->OpenFile(path, mode);
-    ASSERT_MSG(config_result.Succeeded(), "could not open file");
+    if (!config_result.Succeeded()) {
+        LOG_ERROR(Service_CFG, "Could not open the config savegame for writing: 0x{:08X}",
+                  config_result.Code().raw);
+        return config_result.Code();
+    }
 
     auto config = std::move(config_result).Unwrap();
     config->Write(0, CONFIG_SAVEFILE_SIZE, true, false, cfg_config_file_buffer.data());

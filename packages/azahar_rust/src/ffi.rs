@@ -78,7 +78,7 @@ unsafe extern "C" fn trampoline_error(user: *mut c_void, message: *const c_char)
     };
     unsafe { context(user) }
         .listener
-        .on_event(SessionEvent::Error { message });
+        .on_event(SessionEvent::Failed { message });
 }
 
 unsafe extern "C" fn trampoline_audio(user: *mut c_void, frames: *const i16, frame_count: usize) {
@@ -93,6 +93,16 @@ unsafe extern "C" fn trampoline_shutdown_requested(user: *mut c_void) {
     unsafe { context(user) }
         .listener
         .on_event(SessionEvent::ShutdownRequested);
+}
+
+unsafe extern "C" fn trampoline_artic_country_mismatch(
+    user: *mut c_void,
+    region: u32,
+    country: u32,
+) {
+    unsafe { context(user) }
+        .listener
+        .on_event(SessionEvent::ArticCountryMismatch { region, country });
 }
 
 type Job = Box<dyn FnOnce(&CoreLibrary) + Send>;
@@ -211,6 +221,7 @@ impl SessionHandle {
                 on_error: Some(trampoline_error),
                 on_audio: plays_audio.then_some(trampoline_audio as _),
                 on_shutdown_requested: Some(trampoline_shutdown_requested),
+                on_artic_country_mismatch: Some(trampoline_artic_country_mismatch),
             };
             unsafe { (library.api.create)(path.as_ptr(), &raw_options, &callbacks) as usize }
         });
@@ -226,6 +237,14 @@ impl SessionHandle {
             self.worker
                 .call(move |library| unsafe { (library.api.start)(raw as *mut RawSession) }),
         )
+    }
+
+    pub fn answer_artic_country(&self, country: Option<u32>) {
+        let raw = self.raw;
+        let value = country.map_or(-1, |country| country as i32);
+        self.worker.call(move |library| unsafe {
+            (library.api.answer_artic_country)(raw as *mut RawSession, value)
+        });
     }
 
     pub fn pause(&self) -> Result<()> {

@@ -102,6 +102,7 @@ public:
         ErrorSystemFiles,          ///< Error in finding system files
         ErrorSavestate,            ///< Error saving or loading
         ErrorArticDisconnected,    ///< Error when artic base disconnects
+        ErrorArticCountryMismatch, ///< The country of the console does not fit its region
         ShutdownRequested,         ///< Emulated program requested a system shutdown
         ErrorUnknown               ///< Any other error
     };
@@ -131,7 +132,8 @@ public:
     void Shutdown(bool is_deserializing = false);
 
     /// Shutdown and then load again
-    void Reset();
+    /// @return The result of loading the application again.
+    [[nodiscard]] ResultStatus Reset();
 
     enum class Signal : u32 { None, Shutdown, Reset, Save, Load };
 
@@ -383,7 +385,18 @@ public:
 
     bool IsInitialSetup();
 
+    void SetArticCountryMismatchHandler(std::function<int(u32 region, u32 country)> handler) {
+        artic_country_mismatch_handler = std::move(handler);
+    }
+
+    int RequestArticCountryOverride(u32 region, u32 country) const {
+        return artic_country_mismatch_handler ? artic_country_mismatch_handler(region, country)
+                                              : -1;
+    }
+
 private:
+    std::function<int(u32 region, u32 country)> artic_country_mismatch_handler;
+
     /**
      * Initialize the emulated system.
      * @param emu_window Reference to the host-system window used for video output and keyboard

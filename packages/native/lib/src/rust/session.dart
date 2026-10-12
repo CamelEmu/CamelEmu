@@ -29,6 +29,12 @@ sealed class SessionEvent with _$SessionEvent {
       SessionEvent_Error;
   const factory SessionEvent.shutdownRequested() =
       SessionEvent_ShutdownRequested;
+  const factory SessionEvent.failed({required String message}) =
+      SessionEvent_Failed;
+  const factory SessionEvent.articCountryMismatch({
+    required int region,
+    required int country,
+  }) = SessionEvent_ArticCountryMismatch;
 }
 
 /// Size of the screen textures of a session and the engine that plays its audio.

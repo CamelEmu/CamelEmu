@@ -13,6 +13,8 @@ class EmulationBackendListener {
     required this.onShaderProgress,
     required this.onError,
     required this.onShutdownRequested,
+    required this.onArticCountryMismatch,
+    required this.onFailed,
   });
 
   /// Called when a screen texture is ready to be shown.
@@ -27,6 +29,8 @@ class EmulationBackendListener {
   /// Called when the game asked to end. Its emulation has stopped, but the game still has to be
   /// stopped with [EmulationBackend.stop] to save or discard what it changed.
   final void Function() onShutdownRequested;
+  final void Function(int region, int country) onArticCountryMismatch;
+  final void Function(String message) onFailed;
 }
 
 /// Starts, pauses, resumes and stops one game in a session owned by the `azahar_rust` crate.
@@ -84,8 +88,15 @@ class EmulationBackend {
         listener.onError(message);
       case SessionEvent_ShutdownRequested():
         listener.onShutdownRequested();
+      case SessionEvent_ArticCountryMismatch(:final region, :final country):
+        listener.onArticCountryMismatch(region, country);
+      case SessionEvent_Failed(:final message):
+        listener.onFailed(message);
     }
   }
+
+  Future<void> answerCountry(int? country) =>
+      answerArticCountry(country: country);
 
   Future<void> pause() => pauseGame();
 

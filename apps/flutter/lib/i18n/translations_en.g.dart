@@ -477,6 +477,27 @@ class Translations$emulation$en {
   /// en: 'Discard'
   String get discard => 'Discard';
 
+  /// en: 'The country does not fit the console'
+  String get articCountryMismatchTitle =>
+      'The country does not fit the console';
+
+  /// en: 'The console is of the region ${region}, but the country is set to ${current}. Change the country to ${replacement} and try again?'
+  String articCountryMismatchMessage({
+    required Object region,
+    required Object current,
+    required Object replacement,
+  }) =>
+      'The console is of the region ${region}, but the country is set to ${current}. Change the country to ${replacement} and try again?';
+
+  /// en: 'The game could not be started'
+  String get failureTitle => 'The game could not be started';
+
+  /// en: 'Change and retry'
+  String get articCountryOverride => 'Change and retry';
+
+  /// en: 'Cancel'
+  String get articCountryKeep => 'Cancel';
+
   /// en: 'Show On-Screen Controller'
   String get showVirtualGamepad => 'Show On-Screen Controller';
 
@@ -2335,6 +2356,13 @@ class Translations$settings$debug$en {
   String get logToConsoleDescription =>
       'Also prints the native log to the standard output of Flutter.';
 
+  /// en: 'Suppress File Descriptor Warnings'
+  String get suppressDescriptorWarning => 'Suppress File Descriptor Warnings';
+
+  /// en: 'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.'
+  String get suppressDescriptorWarningDescription =>
+      'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.';
+
   /// en: 'CPU Clock Speed'
   String get cpuClockSpeed => 'CPU Clock Speed';
 
@@ -3235,6 +3263,18 @@ extension on Translations {
             'Save what the game saved since it started, or discard it?',
           'emulation.save' => 'Save',
           'emulation.discard' => 'Discard',
+          'emulation.articCountryMismatchTitle' =>
+            'The country does not fit the console',
+          'emulation.articCountryMismatchMessage' =>
+            ({
+              required Object region,
+              required Object current,
+              required Object replacement,
+            }) =>
+                'The console is of the region ${region}, but the country is set to ${current}. Change the country to ${replacement} and try again?',
+          'emulation.failureTitle' => 'The game could not be started',
+          'emulation.articCountryOverride' => 'Change and retry',
+          'emulation.articCountryKeep' => 'Cancel',
           'emulation.showVirtualGamepad' => 'Show On-Screen Controller',
           'emulation.hideVirtualGamepad' => 'Hide On-Screen Controller',
           'applets.softwareKeyboard' => 'Software Keyboard',
@@ -3684,14 +3724,14 @@ extension on Translations {
           'settings.system.countries.czechRepublic' => 'Czech Republic',
           'settings.system.countries.denmark' => 'Denmark',
           'settings.system.countries.estonia' => 'Estonia',
+          _ => null,
+        } ??
+        switch (path) {
           'settings.system.countries.finland' => 'Finland',
           'settings.system.countries.france' => 'France',
           'settings.system.countries.germany' => 'Germany',
           'settings.system.countries.greece' => 'Greece',
           'settings.system.countries.hungary' => 'Hungary',
-          _ => null,
-        } ??
-        switch (path) {
           'settings.system.countries.iceland' => 'Iceland',
           'settings.system.countries.ireland' => 'Ireland',
           'settings.system.countries.italy' => 'Italy',
@@ -3906,6 +3946,10 @@ extension on Translations {
           'settings.debug.logToConsole' => 'Log to Standard Output',
           'settings.debug.logToConsoleDescription' =>
             'Also prints the native log to the standard output of Flutter.',
+          'settings.debug.suppressDescriptorWarning' =>
+            'Suppress File Descriptor Warnings',
+          'settings.debug.suppressDescriptorWarningDescription' =>
+            'Stops the "Peer expected signal when closed" warning from filling the log by closing storage files in a way that does not trigger it.',
           'settings.debug.cpuClockSpeed' => 'CPU Clock Speed',
           'settings.debug.cpuClockSpeedDescription' =>
             'Over/Underclocks the emulated CPU. Not recommended.',

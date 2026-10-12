@@ -14,14 +14,14 @@ use super::{OpenMode, Storage, storage_for};
 /// so that installed titles and other large contents are never copied into memory.
 const PASSTHROUGH_SIZE: u64 = 32 * 1024 * 1024;
 
-const READ: OpenMode = OpenMode {
+pub(super) const READ: OpenMode = OpenMode {
     read: true,
     write: false,
     append: false,
     truncate: false,
 };
 
-const WRITE: OpenMode = OpenMode {
+pub(super) const WRITE: OpenMode = OpenMode {
     read: false,
     write: true,
     append: false,
@@ -400,7 +400,7 @@ pub(super) fn normalize(path: &str) -> String {
     normalized
 }
 
-fn parent(path: &str) -> &str {
+pub(super) fn parent(path: &str) -> &str {
     match path.rfind('/') {
         Some(0) => "/",
         Some(index) => &path[..index],

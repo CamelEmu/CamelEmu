@@ -13,6 +13,12 @@ fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
+fn writes_directly(game_path: &str) -> bool {
+    ["articinio://", "articinin://"]
+        .iter()
+        .any(|scheme| game_path.starts_with(scheme))
+}
+
 /// Starts a session. Fails while another one is alive.
 ///
 /// Holding the lifecycle lock makes a start wait for a concurrent stop to
@@ -23,7 +29,9 @@ pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> Re
     if lock(&ACTIVE).is_some() {
         return Err(AzaharError::SessionActive);
     }
-    storage::begin_overlay();
+    if !writes_directly(game_path) {
+        storage::begin_overlay();
+    }
     let session = match GameSession::start(game_path, options, events) {
         Ok(session) => session,
         Err(error) => {

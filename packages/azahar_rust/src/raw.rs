@@ -18,6 +18,7 @@ pub struct RawCallbacks {
     pub on_error: Option<unsafe extern "C" fn(*mut c_void, *const c_char)>,
     pub on_audio: Option<unsafe extern "C" fn(*mut c_void, *const i16, usize)>,
     pub on_shutdown_requested: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub on_artic_country_mismatch: Option<unsafe extern "C" fn(*mut c_void, u32, u32)>,
 }
 
 #[repr(C)]
@@ -45,4 +46,5 @@ pub struct CoreApi {
     pub read_memory: unsafe extern "C" fn(*mut RawSession, u32, *mut u8, usize) -> i32,
     pub read_fcram: unsafe extern "C" fn(*mut RawSession, usize, *mut u8, usize) -> i32,
     pub destroy: unsafe extern "C" fn(*mut RawSession),
+    pub answer_artic_country: unsafe extern "C" fn(*mut RawSession, i32),
 }
