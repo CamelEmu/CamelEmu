@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'azahar/azahar_theme.dart';
 import 'legacy/legacy_theme.dart';
+import 'neumorphic/neumorphism_theme.dart';
 import 'theme_style.dart';
 
 /// Builds the app's [ThemeData], delegating to [AzaharTheme] or [LegacyTheme] depending on
@@ -27,6 +28,11 @@ abstract final class AppTheme {
         materialYou: materialYou,
         dynamicScheme: dynamicScheme,
       ),
+      ThemeStyle.neumorphic => NeumorphismTheme.light(
+        staticThemeColor: staticThemeColor == 0 ? null : staticThemeColor - 1,
+        materialYou: materialYou,
+        dynamicScheme: dynamicScheme,
+      ),
     };
   }
 
@@ -46,6 +52,12 @@ abstract final class AppTheme {
       ),
       ThemeStyle.legacy => LegacyTheme.dark(
         staticThemeColor: staticThemeColor,
+        blackBackgrounds: blackBackgrounds,
+        materialYou: materialYou,
+        dynamicScheme: dynamicScheme,
+      ),
+      ThemeStyle.neumorphic => NeumorphismTheme.dark(
+        staticThemeColor: staticThemeColor == 0 ? null : staticThemeColor - 1,
         blackBackgrounds: blackBackgrounds,
         materialYou: materialYou,
         dynamicScheme: dynamicScheme,

@@ -17,7 +17,7 @@ final themeOptionsProvider = Provider<OptionCategory>((ref) {
     themeSettingsProvider.select((settings) => settings.themeStyle),
   );
   final List<TranslationText> colorLabels = [
-    if (style == ThemeStyle.azahar)
+    if (style != ThemeStyle.legacy)
       (t) => t.settings.theme.staticThemeColorDefault,
     (t) => t.settings.theme.staticThemeColorBlue,
     (t) => t.settings.theme.staticThemeColorCyan,
@@ -51,6 +51,10 @@ final themeOptionsProvider = Provider<OptionCategory>((ref) {
               EnumChoice(
                 label: (t) => t.settings.themes.legacy,
                 value: ThemeStyle.legacy,
+              ),
+              EnumChoice(
+                label: (t) => t.settings.themes.neumorphic,
+                value: ThemeStyle.neumorphic,
               ),
             ],
           ),
