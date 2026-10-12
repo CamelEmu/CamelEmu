@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
+import 'app_neumorphic.dart';
+
 /// A panel drawn as Liquid Glass, or as a flat [Material] when [blurSigma] is zero (Legacy theme)
 /// or [backdropBlur] is false.
 ///
@@ -33,6 +35,15 @@ class AppLiquidGlass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (AppNeumorphic.of(context) != null) {
+      return AppNeumorphic(
+        borderRadius: borderRadius,
+        color: fillColor,
+        borderColor: borderColor,
+        child: child,
+      );
+    }
+
     final decoration = BoxDecoration(
       borderRadius: borderRadius,
       boxShadow: shadow,

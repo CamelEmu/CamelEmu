@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart'
-    show NeumorphicColors, NeumorphicTheme, NeumorphicThemeData;
+    show
+        Neumorphic,
+        NeumorphicBoxShape,
+        NeumorphicColors,
+        NeumorphicShape,
+        NeumorphicStyle,
+        NeumorphicTheme,
+        NeumorphicThemeData;
 
 import '../azahar/azahar_theme.dart';
 import '../extensions/app_navigation_bar_theme.dart';
@@ -11,6 +18,7 @@ import '../extensions/emulation_focus_frame_theme.dart';
 import '../extensions/game_card_theme.dart';
 import '../extensions/gamepad_notification_bar_theme.dart';
 import '../extensions/glass_surface_theme.dart';
+import '../extensions/neumorphic_surface_theme.dart';
 import '../extensions/settings_list_item_theme.dart';
 
 abstract final class NeumorphismTheme {
@@ -92,11 +100,139 @@ abstract final class NeumorphismTheme {
       surfaceContainerHigh: base,
       surfaceContainerHighest: base,
     );
+    final shadowColor = brightness == Brightness.dark
+        ? Colors.black
+        : const Color(0xFFA3B1C6);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: base,
+      cardTheme: CardThemeData(
+        color: base,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: shadowColor,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: base,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: base,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: shadowColor,
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: base,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: shadowColor,
+        elevation: 8,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: base,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: shadowColor,
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: _buttonStyle(
+          colorScheme,
+          fill: colorScheme.primary,
+          foreground: colorScheme.onPrimary,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: _buttonStyle(
+          colorScheme,
+          fill: base,
+          foreground: colorScheme.primary,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: _buttonStyle(
+          colorScheme,
+          fill: base,
+          foreground: colorScheme.primary,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: _buttonStyle(
+          colorScheme,
+          fill: base,
+          foreground: colorScheme.primary,
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: _buttonStyle(
+          colorScheme,
+          fill: base,
+          foreground: colorScheme.onSurfaceVariant,
+          radius: BorderRadius.circular(999),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: base,
+        foregroundColor: colorScheme.primary,
+        shape: const CircleBorder(),
+        elevation: 6,
+        highlightElevation: 2,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: base,
+        selectedColor: base,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: shadowColor,
+        elevation: 3,
+        pressElevation: 1,
+        side: BorderSide.none,
+      ),
       extensions: _extensions(colorScheme),
+    );
+  }
+
+  static ButtonStyle _buttonStyle(
+    ColorScheme colorScheme, {
+    required Color fill,
+    required Color foreground,
+    BorderRadius? radius,
+  }) {
+    final shape = radius ?? BorderRadius.circular(16);
+    return ButtonStyle(
+      elevation: const WidgetStatePropertyAll(0),
+      backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+      side: const WidgetStatePropertyAll(BorderSide.none),
+      overlayColor: WidgetStatePropertyAll(foreground.withValues(alpha: 0.08)),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: shape)),
+      foregroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled)
+            ? colorScheme.onSurface.withValues(alpha: 0.38)
+            : foreground,
+      ),
+      backgroundBuilder: (context, states, child) {
+        final disabled = states.contains(WidgetState.disabled);
+        final pressed = states.contains(WidgetState.pressed);
+        return Neumorphic(
+          drawSurfaceAboveChild: false,
+          style: NeumorphicStyle(
+            shape: NeumorphicShape.flat,
+            depth: disabled ? 0 : (pressed ? -3 : 4),
+            color: disabled ? colorScheme.surface : fill,
+            boxShape: NeumorphicBoxShape.roundRect(shape),
+          ),
+          child: child,
+        );
+      },
     );
   }
 
@@ -122,6 +258,7 @@ abstract final class NeumorphismTheme {
 
   static List<ThemeExtension<dynamic>> _extensions(ColorScheme colorScheme) {
     return [
+      const NeumorphicSurfaceTheme(depth: 4, intensity: 0.7),
       GlassSurfaceTheme.flat(colorScheme).copyWith(
         fillColor: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
