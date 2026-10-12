@@ -333,6 +333,9 @@ private:
     }
 
     void StartBackendThread() {
+        if (backend_thread.joinable()) {
+            return;
+        }
         backend_thread = std::jthread([this](std::stop_token stop_token) {
             Common::SetCurrentThreadName("citra:Log");
             Entry entry;
@@ -349,7 +352,9 @@ private:
             // case where a system is repeatedly spamming logs even on close.
             int max_logs_to_write = filter.IsDebug() ? INT_MAX : 100;
             while (max_logs_to_write-- && message_queue.TryPop(entry)) {
-                write_logs();
+                if (entry.filename != nullptr) {
+                    write_logs();
+                }
             }
         });
     }

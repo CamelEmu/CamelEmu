@@ -416,7 +416,6 @@ void Client::StopImpl(bool from_error) {
         handler->should_run = false;
         // Shouldn't matter if the socket is shut down twice
         shutdown(handler->handler_socket, SHUT_RDWR);
-        closesocket(handler->handler_socket);
     }
 
     // Close main socket

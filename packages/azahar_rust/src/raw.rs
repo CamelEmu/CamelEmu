@@ -18,6 +18,7 @@ pub struct RawCallbacks {
     pub on_error: Option<unsafe extern "C" fn(*mut c_void, *const c_char)>,
     pub on_audio: Option<unsafe extern "C" fn(*mut c_void, *const i16, usize)>,
     pub on_shutdown_requested: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub on_artic_country_mismatch: Option<unsafe extern "C" fn(*mut c_void, u32, u32)>,
 }
 
 #[repr(C)]

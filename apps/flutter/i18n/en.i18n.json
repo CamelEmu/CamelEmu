@@ -194,6 +194,11 @@
     "gameEndedMessage": "Save what the game saved since it started, or discard it?",
     "save": "Save",
     "discard": "Discard",
+    "articCountryMismatchTitle": "The country does not fit the console",
+    "articCountryMismatchMessage": "The console is of the region ${region}, but the country is set to ${current}. Change the country to ${replacement} and try again?",
+    "failureTitle": "The game could not be started",
+    "articCountryOverride": "Change and retry",
+    "articCountryKeep": "Cancel",
     "showVirtualGamepad": "Show On-Screen Controller",
     "hideVirtualGamepad": "Hide On-Screen Controller"
   },

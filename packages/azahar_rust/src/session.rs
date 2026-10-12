@@ -45,6 +45,13 @@ pub enum SessionEvent {
         message: String,
     },
     ShutdownRequested,
+    Failed {
+        message: String,
+    },
+    ArticCountryMismatch {
+        region: u32,
+        country: u32,
+    },
 }
 
 /// Size of the screen textures of a session and the engine that plays its audio.

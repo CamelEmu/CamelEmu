@@ -75,6 +75,7 @@ enum class ResultStatus {
     ErrorEncrypted,
     ErrorGbaTitle,
     ErrorArtic,
+    ErrorArticCountryMismatch,
     ErrorNotFound,
 };
 

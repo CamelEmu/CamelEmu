@@ -93,6 +93,17 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
         onShutdownRequested: () {
           state = state.copyWith(isShutdownRequested: true);
         },
+        onFailed: (message) {
+          state = state.copyWith(failure: message);
+        },
+        onArticCountryMismatch: (region, country) {
+          state = state.copyWith(
+            articCountryMismatch: ArticCountryMismatch(
+              region: region,
+              country: country,
+            ),
+          );
+        },
       ),
     );
   }
@@ -222,9 +233,9 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
   ///
   /// The screen is left even when saving fails; the [SaveFailedException] is thrown afterwards
   /// so the user is told about it.
-  Future<void> terminate({required bool save}) async {
+  Future<void> terminate({required bool save, int? retryCountry}) async {
     if (state.isTerminating) return;
-    state = state.copyWith(isTerminating: true);
+    state = state.copyWith(isTerminating: true, retryCountry: retryCountry);
     await _releaseNativeSession(save: save);
     state = state.copyWith(isClosingWindow: true);
     await WidgetsBinding.instance.endOfFrame;
