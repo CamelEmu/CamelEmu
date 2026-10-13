@@ -20,3 +20,7 @@ emu_network = { version = "0.1.0", path = "../emu_network" }
 emu_pica = { version = "0.1.0", path = "../emu_pica" }
 emu_renderer = { version = "0.1.0", path = "../emu_renderer" }
 emu_service = { version = "0.1.0", path = "../emu_service" }
+log = "0.4.34"
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.15.1"

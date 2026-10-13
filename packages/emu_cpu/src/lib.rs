@@ -16,3 +16,5 @@ mod monitor;
 mod state;
 mod thumb;
 mod vfp;
+
+pub use host::HostCallbacks;
