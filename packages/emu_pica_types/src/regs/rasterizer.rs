@@ -1,4 +1,5 @@
 use crate::bits::{bits, pica_enum, sbits};
+use crate::math_util::Rectangle;
 use crate::{F24, Vec4};
 
 pica_enum!(CullMode {
@@ -117,15 +118,6 @@ impl ViewportCorner {
     pub fn y(&self) -> i32 {
         sbits(self.raw, 16, 10)
     }
-}
-
-/// A rectangle with the fields of `Common::Rectangle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Rectangle<T> {
-    pub left: T,
-    pub top: T,
-    pub right: T,
-    pub bottom: T,
 }
 
 #[repr(C)]
