@@ -2,7 +2,6 @@ mod aligned;
 pub mod geometry_pipeline;
 pub mod gpu;
 pub mod memory;
-pub mod nihstro;
 pub mod output_vertex;
 pub mod packed_attribute;
 pub mod pica_core;
@@ -17,5 +16,5 @@ pub mod vertex_loader;
 
 use emu_pica_types::{bits, pica_reg_index};
 
-pub use emu_pica_types::regs;
+pub use emu_pica_types::{nihstro, regs};
 pub use gpu::{FlushMode, Gpu, GpuHost};
