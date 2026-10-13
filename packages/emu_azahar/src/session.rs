@@ -61,17 +61,22 @@ pub struct Session {
 
 impl Session {
     pub fn new(config: SessionConfig) -> Option<Box<Self>> {
-        let gpu = match config.graphics_api {
+        let mut system = Box::new(System {
+            memory: Memory::new()?,
+            kernel: Kernel::new(),
+        });
+
+        let renderer = match config.graphics_api {
             1 => emu_renderer::create(GraphicsApi::OpenGl),
             2 => emu_renderer::create(GraphicsApi::Vulkan),
             _ => emu_renderer::create(GraphicsApi::Software),
+        };
+        if let Some(renderer) = renderer {
+            let physical_memory = system.memory.physical_memory();
+            system
+                .memory
+                .set_gpu(Gpu::new(renderer, physical_memory, true));
         }
-        .map(Gpu::new);
-
-        let mut system = Box::new(System {
-            memory: Memory::new(gpu)?,
-            kernel: Kernel::new(),
-        });
         let system_ptr = NonNull::from(system.as_mut());
 
         let monitor = Monitor::new(config.num_cores)?;

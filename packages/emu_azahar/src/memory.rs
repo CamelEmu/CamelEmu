@@ -1,13 +1,22 @@
+use std::cell::Cell;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicU8, AtomicU16, AtomicU32, AtomicU64, Ordering};
 
 use emu_mem::abi::PageTableView;
 use emu_mem::page_table::{PAGE_MASK, PageTable, PageType};
 use emu_mem::region::{GuestMemory, Region};
 use emu_pica::Gpu;
+use emu_pica::memory::PhysicalMemory;
+
+pub use emu_pica::FlushMode;
 
 pub const IO_AREA_PADDR: u32 = 0x1010_0000;
 pub const VRAM_PADDR: u32 = 0x1800_0000;
 pub const VRAM_SIZE: u32 = 0x0060_0000;
+pub const N3DS_EXTRA_RAM_PADDR: u32 = 0x1F00_0000;
+pub const N3DS_EXTRA_RAM_SIZE: u32 = 0x0040_0000;
+pub const DSP_RAM_PADDR: u32 = 0x1FF0_0000;
+pub const DSP_RAM_SIZE: u32 = 0x0008_0000;
 pub const FCRAM_PADDR: u32 = 0x2000_0000;
 pub const FCRAM_N3DS_SIZE: u32 = 0x1000_0000;
 
@@ -20,10 +29,10 @@ pub const NEW_LINEAR_HEAP_VADDR: u32 = 0x3000_0000;
 pub const NEW_LINEAR_HEAP_SIZE: u32 = 0x1000_0000;
 pub const NEW_LINEAR_HEAP_VADDR_END: u32 = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FlushMode {
-    Flush,
-    Invalidate,
+type PcSource = Rc<Cell<Option<*const u32>>>;
+
+fn read_pc(pc: &PcSource) -> u32 {
+    pc.get().map_or(0, |pc| unsafe { pc.read_volatile() })
 }
 
 pub struct Memory {
@@ -31,7 +40,53 @@ pub struct Memory {
     page_table: PageTable,
     view: PageTableView,
     gpu: Option<Gpu>,
-    pc: Option<*const u32>,
+    pc: PcSource,
+}
+
+/// The physical memory as the PICA reads and writes it, which `MemorySystem::GetPhysicalPointer`
+/// returns in the core.
+struct PhysicalMemoryView {
+    fcram: *mut u8,
+    vram: *mut u8,
+    dsp: Option<*mut u8>,
+    n3ds_extra_ram: *mut u8,
+    pc: PcSource,
+}
+
+impl PhysicalMemory for PhysicalMemoryView {
+    fn get_physical_pointer(&self, address: u32) -> *mut u8 {
+        let memory_areas = [
+            (VRAM_PADDR, VRAM_SIZE, Some(self.vram)),
+            (DSP_RAM_PADDR, DSP_RAM_SIZE, self.dsp),
+            (FCRAM_PADDR, FCRAM_N3DS_SIZE, Some(self.fcram)),
+            (
+                N3DS_EXTRA_RAM_PADDR,
+                N3DS_EXTRA_RAM_SIZE,
+                Some(self.n3ds_extra_ram),
+            ),
+        ];
+
+        // Note: the region end check is inclusive because the user can pass in an address that
+        // represents an open right bound
+        let area = memory_areas
+            .iter()
+            .find(|(start, size, _)| address >= *start && address <= start + size);
+
+        let Some(&(start, _, target_mem)) = area else {
+            log::error!(
+                target: "HW_Memory",
+                "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}",
+                address,
+                read_pc(&self.pc)
+            );
+            return std::ptr::null_mut();
+        };
+
+        let offset_into_region = address - start;
+        target_mem.map_or(std::ptr::null_mut(), |target_mem| unsafe {
+            target_mem.add(offset_into_region as usize)
+        })
+    }
 }
 
 macro_rules! read_fn {
@@ -210,7 +265,7 @@ macro_rules! write_exclusive_fn {
 }
 
 impl Memory {
-    pub fn new(gpu: Option<Gpu>) -> Option<Self> {
+    pub fn new() -> Option<Self> {
         let guest = GuestMemory::new()?;
         let page_table = PageTable::new()?;
         let view = page_table.view();
@@ -218,9 +273,24 @@ impl Memory {
             guest,
             page_table,
             view,
-            gpu,
-            pc: None,
+            gpu: None,
+            pc: PcSource::default(),
         })
+    }
+
+    /// The physical memory for the GPU, which stays valid while the memory lives.
+    pub fn physical_memory(&self) -> Rc<dyn PhysicalMemory> {
+        Rc::new(PhysicalMemoryView {
+            fcram: self.region_pointer(Region::Fcram),
+            vram: self.region_pointer(Region::Vram),
+            dsp: self.guest.region_ptr(Region::Dsp),
+            n3ds_extra_ram: self.region_pointer(Region::N3ds),
+            pc: self.pc.clone(),
+        })
+    }
+
+    pub fn set_gpu(&mut self, gpu: Gpu) {
+        self.gpu = Some(gpu);
     }
 
     pub fn page_table_view(&self) -> PageTableView {
@@ -236,11 +306,11 @@ impl Memory {
     }
 
     pub fn set_pc_source(&mut self, pc: *const u32) {
-        self.pc = Some(pc);
+        self.pc.set(Some(pc));
     }
 
     fn pc(&self) -> u32 {
-        self.pc.map_or(0, |pc| unsafe { pc.read_volatile() })
+        read_pc(&self.pc)
     }
 
     read_fn!(read8, u8);
@@ -302,34 +372,8 @@ impl Memory {
     }
 
     pub fn rasterizer_flush_virtual_region(&mut self, start: u32, size: u32, mode: FlushMode) {
-        let end = start.wrapping_add(size);
-        let Some(gpu) = self.gpu.as_mut() else {
-            return;
-        };
-
-        let mut check_region = |region_start: u32, region_end: u32, paddr_region_start: u32| {
-            if start >= region_end || end <= region_start {
-                // No overlap with region
-                return;
-            }
-
-            let overlap_start = start.max(region_start);
-            let overlap_end = end.min(region_end);
-            let physical_start = paddr_region_start + (overlap_start - region_start);
-            let overlap_size = overlap_end - overlap_start;
-
-            match mode {
-                FlushMode::Flush => gpu.flush_region(physical_start, overlap_size),
-                FlushMode::Invalidate => gpu.invalidate_region(physical_start, overlap_size),
-            }
-        };
-
-        check_region(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
-        check_region(
-            NEW_LINEAR_HEAP_VADDR,
-            NEW_LINEAR_HEAP_VADDR_END,
-            FCRAM_PADDR,
-        );
-        check_region(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
+        if let Some(gpu) = self.gpu.as_mut() {
+            gpu.rasterizer_flush_virtual_region(start, size, mode);
+        }
     }
 }

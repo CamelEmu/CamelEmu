@@ -65,9 +65,17 @@ impl MemoryFillConfig {
         bits(self.control, 0, 1) != 0
     }
 
+    pub fn set_trigger(&mut self, trigger: bool) {
+        assign(&mut self.control, 0, 1, u32::from(trigger));
+    }
+
     // Set to 1 upon completion.
     pub fn finished(&self) -> bool {
         bits(self.control, 1, 1) != 0
+    }
+
+    pub fn set_finished(&mut self, finished: bool) {
+        assign(&mut self.control, 1, 1, u32::from(finished));
     }
 
     // If both of these bits are unset, then it will fill the memory with a 16 bit value
@@ -292,6 +300,10 @@ impl DisplayTransferConfig {
 
     pub fn triggered(&self) -> bool {
         bits(self.trigger, 0, 1) != 0
+    }
+
+    pub fn set_triggered(&mut self, triggered: bool) {
+        assign(&mut self.trigger, 0, 1, u32::from(triggered));
     }
 
     pub fn debug_name(&self) -> String {

@@ -11,4 +11,4 @@ pub enum InterruptId {
     DMA = 0x06,
 }
 
-pub type InterruptHandler = Box<dyn FnMut(InterruptId)>;
+pub type InterruptHandler = std::rc::Rc<dyn Fn(InterruptId)>;
