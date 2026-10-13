@@ -799,6 +799,8 @@
       "cpuClockSpeedDescription": "エミュレートされたCPUをオーバークロック/アンダークロックします。推奨しません。",
       "cpuJit": "CPU JIT",
       "cpuJitDescription": "CPUエミュレーションにJIT（Just-In-Time）コンパイラを使用します。無効にすると、代わりにはるかに低速なインタプリタが使用されます。",
+      "rustCpu": "Rust CPU（実験的）",
+      "rustCpuDescription": "JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。",
       "hwShaders": "ハードウェアシェーダー",
       "hwShadersDescription": "ソフトウェアレンダラーの代わりに、ハードウェアシェーダーで3DSのシェーダーをエミュレートします。無効にするとパフォーマンスが大きく低下します。",
       "vsync": "垂直同期",

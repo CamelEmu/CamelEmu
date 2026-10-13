@@ -84,6 +84,7 @@ void LogSettings() {
 
     LOG_INFO(Config, "Azahar Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
+    log_setting("Core_UseRustCpu", values.use_rust_cpu.GetValue());
     log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
     log_setting("Core_UseRustCore", values.use_rust_core.GetValue());
     log_setting("Core_RustRenderer", values.rust_renderer.GetValue());

@@ -16,6 +16,7 @@ class SettingsController {
         ReadConfig(),
         WriteConfig(),
         ReloadNativeSettings(),
+        SupportsRustCpu(),
         ReadSystemSaveGame(),
         WriteSystemSaveGame(),
         RegenerateConsoleId(),
@@ -72,6 +73,13 @@ class SettingsController {
         override fun run(call: MethodCall): Any? {
             NativeLibrary.reloadSettings()
             return null
+        }
+    }
+
+    private inner class SupportsRustCpu : AzaharMethodHandler {
+        override val name = "supportsRustCpu"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            result.success(NativeLibrary.supportsRustCpu())
         }
     }
 
