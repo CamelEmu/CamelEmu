@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+emu_pica_types = { version = "0.1.0", path = "../emu_pica_types" }
 emu_renderer = { version = "0.1.0", path = "../emu_renderer" }

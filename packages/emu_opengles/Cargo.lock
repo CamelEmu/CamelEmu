@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "emu_opengles"
 version = "0.1.0"
+dependencies = [
+ "emu_pica_types",
+]
+
+[[package]]
+name = "emu_pica_types"
+version = "0.1.0"

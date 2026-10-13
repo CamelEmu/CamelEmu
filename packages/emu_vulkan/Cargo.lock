@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
+name = "emu_pica_types"
+version = "0.1.0"
+
+[[package]]
 name = "emu_vulkan"
 version = "0.1.0"
+dependencies = [
+ "emu_pica_types",
+]
