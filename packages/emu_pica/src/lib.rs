@@ -1,3 +1,6 @@
+mod bits;
+pub mod regs;
+
 use emu_renderer::Renderer;
 
 pub struct Gpu {

@@ -87,6 +87,7 @@ version = "0.1.0"
 dependencies = [
  "emu_pica_types",
  "emu_renderer",
+ "log",
 ]
 
 [[package]]
