@@ -183,14 +183,17 @@ mod host {
     }
 }
 
+/// The destination register, from the bits 15:12 and the bit 22.
 fn vd<T: Float>(raw: u32) -> usize {
     T::index(bits(raw, 15, 12), bit(raw, 22))
 }
 
+/// The first operand register, from the bits 19:16 and the bit 7.
 fn vn<T: Float>(raw: u32) -> usize {
     T::index(bits(raw, 19, 16), bit(raw, 7))
 }
 
+/// The second operand register, from the bits 3:0 and the bit 5.
 fn vm<T: Float>(raw: u32) -> usize {
     T::index(bits(raw, 3, 0), bit(raw, 5))
 }
@@ -200,6 +203,7 @@ fn is_double(raw: u32) -> bool {
     bit(raw, 8)
 }
 
+/// Calls the version of `$function` for the precision that the bit 8 selects.
 macro_rules! by_precision {
     ($cpu:expr, $raw:expr, $function:ident) => {
         if is_double($raw) {
@@ -210,6 +214,8 @@ macro_rules! by_precision {
     };
 }
 
+/// The arithmetic on three registers. VMLA and its variants round the product before the
+/// addition, as VFPv2 does not fuse them.
 fn three<T: Float>(cpu: &mut Cpu, raw: u32) -> Step {
     let state = cpu.state();
     let d = T::read(state, vd::<T>(raw));
@@ -387,6 +393,7 @@ pub fn vmov_core_scalar(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// VMRS: reads FPSCR, or copies its flags to CPSR when Rt is 15.
 pub fn vmrs(cpu: &mut Cpu, raw: u32) -> Step {
     if cpu.in_guest_environment() {
         fpenv::collect_exceptions(&mut cpu.state().fpscr);
@@ -402,6 +409,7 @@ pub fn vmrs(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// VMSR: writes FPSCR, which also changes the floating-point environment of the host.
 pub fn vmsr(cpu: &mut Cpu, raw: u32) -> Step {
     let value = cpu.reg(bits(raw, 15, 12));
     if cpu.in_guest_environment() {
@@ -412,6 +420,7 @@ pub fn vmsr(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// Loads a double as two words, where the first word is the upper half in big-endian state.
 fn load_double(cpu: &mut Cpu, address: u32) -> u64 {
     let first = cpu.read32(address) as u64;
     let second = cpu.read32(address.wrapping_add(4)) as u64;
@@ -422,6 +431,7 @@ fn load_double(cpu: &mut Cpu, address: u32) -> u64 {
     }
 }
 
+/// Stores a double as two words, where the first word is the upper half in big-endian state.
 fn store_double(cpu: &mut Cpu, address: u32, value: u64) {
     let (first, second) = if cpu.state().big_endian() {
         ((value >> 32) as u32, value as u32)
@@ -432,6 +442,7 @@ fn store_double(cpu: &mut Cpu, address: u32, value: u64) {
     cpu.write32(address.wrapping_add(4), second);
 }
 
+/// Loads or stores one register of VLDR, VSTR, VLDM or VSTM, where the bit 20 loads.
 fn transfer(cpu: &mut Cpu, raw: u32, address: u32, register: usize) {
     let load = bit(raw, 20);
     if is_double(raw) {
@@ -451,6 +462,7 @@ fn transfer(cpu: &mut Cpu, raw: u32, address: u32, register: usize) {
     }
 }
 
+/// The first register that a load or store of the extension registers transfers.
 fn first_register(raw: u32) -> usize {
     if is_double(raw) { vd::<f64>(raw) } else { vd::<f32>(raw) }
 }

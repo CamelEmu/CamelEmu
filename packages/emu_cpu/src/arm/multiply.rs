@@ -7,11 +7,13 @@ fn operands(cpu: &mut Cpu, raw: u32) -> (u32, u32) {
     (cpu.reg(bits(raw, 3, 0)), cpu.reg(bits(raw, 11, 8)))
 }
 
+/// Writes a 64-bit result to RdHi in the bits 19:16 and RdLo in the bits 15:12.
 fn write_long(cpu: &mut Cpu, raw: u32, value: u64) {
     cpu.set_reg(bits(raw, 15, 12), value as u32);
     cpu.set_reg(bits(raw, 19, 16), (value >> 32) as u32);
 }
 
+/// Reads the 64-bit accumulator from RdHi and RdLo.
 fn accumulator_long(cpu: &mut Cpu, raw: u32) -> u64 {
     let low = cpu.reg(bits(raw, 15, 12)) as u64;
     let high = cpu.reg(bits(raw, 19, 16)) as u64;
@@ -22,6 +24,7 @@ fn set_q(cpu: &mut Cpu) {
     cpu.state().cpsr |= psr::Q;
 }
 
+/// MUL: Rn * Rm.
 pub fn mul(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let value = n.wrapping_mul(m);
@@ -32,6 +35,7 @@ pub fn mul(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// MLA: Rn * Rm + Ra.
 pub fn mla(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let value = n.wrapping_mul(m).wrapping_add(cpu.reg(bits(raw, 15, 12)));
@@ -42,6 +46,7 @@ pub fn mla(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// MLS: Ra - Rn * Rm.
 pub fn mls(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let value = cpu.reg(bits(raw, 15, 12)).wrapping_sub(n.wrapping_mul(m));
@@ -72,6 +77,7 @@ pub fn multiply_long(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// UMAAL: the 64-bit Rn * Rm + RdLo + RdHi.
 pub fn umaal(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let low = cpu.reg(bits(raw, 15, 12)) as u64;
@@ -80,6 +86,7 @@ pub fn umaal(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// The signed upper or lower halfword of `value`.
 fn half(value: u32, top: bool) -> i64 {
     (if top { value >> 16 } else { value }) as u16 as i16 as i64
 }
@@ -96,6 +103,7 @@ pub fn smlaxy(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// SMUL<x><y>: SMLA<x><y> without the accumulator.
 pub fn smulxy(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let value = half(n, bit(raw, 5)) * half(m, bit(raw, 6));
@@ -103,6 +111,7 @@ pub fn smulxy(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// SMLAL<x><y>: SMLA<x><y> with a 64-bit accumulator.
 pub fn smlalxy(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let product = half(n, bit(raw, 5)) * half(m, bit(raw, 6));
@@ -183,6 +192,7 @@ pub fn smlald(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// SDIV: the signed Rn / Rm, which is 0 when Rm is 0.
 pub fn sdiv(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     let value = if m == 0 {
@@ -194,6 +204,7 @@ pub fn sdiv(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// UDIV: the unsigned Rn / Rm, which is 0 when Rm is 0.
 pub fn udiv(cpu: &mut Cpu, raw: u32) -> Step {
     let (n, m) = operands(cpu, raw);
     cpu.set_reg(bits(raw, 19, 16), n.checked_div(m).unwrap_or(0));

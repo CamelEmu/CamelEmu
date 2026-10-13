@@ -11,7 +11,6 @@ pub struct PageTableView {
     pub attributes: *mut AtomicU8,
 }
 
-// The arrays live as long as the page table, which the core keeps alive while a CPU uses the view.
 unsafe impl Send for PageTableView {}
 unsafe impl Sync for PageTableView {}
 
@@ -38,8 +37,6 @@ impl PageTableView {
         unsafe { (*self.entries.add(page)).load(Ordering::Relaxed) }
     }
 
-    /// Returns the kind of the page that contains `vaddr`.
-    ///
     /// # Safety
     /// The view must not be null and its page table must still be alive.
     #[inline(always)]

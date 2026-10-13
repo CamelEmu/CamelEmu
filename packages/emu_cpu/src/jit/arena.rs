@@ -8,7 +8,6 @@ pub struct Arena {
     used: usize,
 }
 
-// The code is only written and run on the thread of the emulator.
 unsafe impl Send for Arena {}
 
 const PAGE_SIZE: usize = 4096;

@@ -7,7 +7,6 @@ pub(crate) struct Mapping {
     len: usize,
 }
 
-// The mapping is plain memory without any thread affinity.
 unsafe impl Send for Mapping {}
 unsafe impl Sync for Mapping {}
 

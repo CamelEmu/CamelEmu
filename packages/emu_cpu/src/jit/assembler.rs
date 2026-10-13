@@ -41,14 +41,13 @@ pub const COND_EQ: Cond = 0;
 pub struct Label(usize);
 
 enum Fixup {
-    /// B and BL, with a 26-bit offset.
     Branch26,
-    /// B.cond, CBZ, CBNZ and LDR (literal), with a 19-bit offset.
     Branch19,
-    /// TBZ and TBNZ, with a 14-bit offset.
     Branch14,
 }
 
+/// Each method emits the instruction of its name, on 32-bit registers for `_w` and 64-bit
+/// registers for `_x`.
 pub struct Assembler {
     pub code: Vec<u32>,
     labels: Vec<Option<usize>>,
@@ -114,8 +113,6 @@ impl Assembler {
         Some(self.code)
     }
 
-    // Moves and constants
-
     pub fn mov_w(&mut self, rd: Reg, rm: Reg) {
         self.emit(0x2A0003E0 | (rm.0 << 16) | rd.0);
     }
@@ -137,8 +134,6 @@ impl Assembler {
         self.literals.push((label, value));
         self.reference(label, Fixup::Branch19, 0x58000000 | rt.0);
     }
-
-    // Arithmetic and logic on 32-bit registers
 
     fn shifted(&mut self, base: u32, rd: Reg, rn: Reg, rm: Reg, shift: ShiftKind, amount: u32) {
         self.emit(base | ((shift as u32) << 22) | (rm.0 << 16) | (amount << 10) | (rn.0 << 5) | rd.0);
@@ -204,8 +199,6 @@ impl Assembler {
         self.emit(0x71000000 | (imm12 << 10) | (rn.0 << 5) | ZR.0);
     }
 
-    // Bitfields and shifts
-
     pub fn ubfx_w(&mut self, rd: Reg, rn: Reg, lsb: u32, width: u32) {
         self.emit(0x53000000 | (lsb << 16) | ((lsb + width - 1) << 10) | (rn.0 << 5) | rd.0);
     }
@@ -234,8 +227,6 @@ impl Assembler {
         self.emit(0x1A9F07E0 | ((cond ^ 1) << 12) | rd.0);
     }
 
-    // Flags
-
     pub fn mrs_nzcv(&mut self, rt: Reg) {
         self.emit(0xD53B4200 | rt.0);
     }
@@ -243,8 +234,6 @@ impl Assembler {
     pub fn msr_nzcv(&mut self, rt: Reg) {
         self.emit(0xD51B4200 | rt.0);
     }
-
-    // Memory
 
     pub fn ldr_w(&mut self, rt: Reg, rn: Reg, offset: u32) {
         debug_assert!(offset % 4 == 0 && offset / 4 < 4096);
@@ -289,8 +278,6 @@ impl Assembler {
         let imm7 = ((offset / 8) as u32) & 0x7F;
         self.emit(0xA8C00000 | (imm7 << 15) | (rt2.0 << 10) | (rn.0 << 5) | rt.0);
     }
-
-    // Branches
 
     pub fn b(&mut self, label: Label) {
         self.reference(label, Fixup::Branch26, 0x14000000);

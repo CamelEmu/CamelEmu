@@ -103,7 +103,6 @@ pub fn decode_thumb32(first: u16, second: u16) -> Option<&'static Instruction> {
     tables().thumb32.iter().find(|instruction| instruction.matches(raw)).copied()
 }
 
-/// Whether a halfword starts a 32-bit Thumb instruction.
 pub fn is_thumb32_prefix(first: u16) -> bool {
     first >> 11 == 0b11110
 }

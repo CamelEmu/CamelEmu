@@ -6,7 +6,6 @@ use crate::mapping::Mapping;
 pub enum Region {
     Fcram = 0,
     Vram = 1,
-    /// Owned by the DSP of the core, so it is never allocated here.
     Dsp = 2,
     N3ds = 3,
 }
