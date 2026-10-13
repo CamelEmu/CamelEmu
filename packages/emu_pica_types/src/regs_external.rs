@@ -1,3 +1,5 @@
+/// Most physical addresses which GPU registers refer to are 8-byte aligned.
+/// This function should be used to get the address from a raw register value.
 pub const fn decode_address_register(register_value: u32) -> u32 {
     register_value.wrapping_mul(8)
 }
@@ -44,6 +46,7 @@ impl MemoryFillConfig {
         bits(self.value_32bit, 0, 16)
     }
 
+    // TODO: Verify component order
     pub fn value_24bit_r(&self) -> u32 {
         bits(self.value_32bit, 0, 8)
     }
@@ -56,18 +59,24 @@ impl MemoryFillConfig {
         bits(self.value_32bit, 16, 8)
     }
 
+    // Setting this field to 1 triggers the memory fill.
+    // This field also acts as a status flag, and gets reset to 0 upon completion.
     pub fn trigger(&self) -> bool {
         bits(self.control, 0, 1) != 0
     }
 
+    // Set to 1 upon completion.
     pub fn finished(&self) -> bool {
         bits(self.control, 1, 1) != 0
     }
 
+    // If both of these bits are unset, then it will fill the memory with a 16 bit value
+    // 1: fill with 24-bit wide values
     pub fn fill_24bit(&self) -> bool {
         bits(self.control, 8, 1) != 0
     }
 
+    // 1: fill with 32-bit wide values
     pub fn fill_32bit(&self) -> bool {
         bits(self.control, 9, 1) != 0
     }
@@ -109,6 +118,7 @@ pub struct FramebufferConfig {
     _padding2: [u32; 0x1],
     pub active_fb: u32,
     _padding3: [u32; 0x5],
+    // Distance between two pixel rows, in bytes
     pub stride: u32,
     pub address_right1: u32,
     pub address_right2: u32,
@@ -130,6 +140,8 @@ impl FramebufferConfig {
         PixelFormat(bits(self.format, 0, 3))
     }
 
+    // 0: Use parameters ending with "1"
+    // 1: Use parameters ending with "2"
     pub fn second_fb_active(&self) -> bool {
         bits(self.active_fb, 0, 1) != 0
     }
@@ -140,15 +152,15 @@ impl FramebufferConfig {
 pub struct ScalingMode(pub u32);
 
 impl ScalingMode {
-    pub const NO_SCALE: Self = Self(0);
-    pub const SCALE_X: Self = Self(1);
-    pub const SCALE_XY: Self = Self(2);
+    pub const NO_SCALE: Self = Self(0); // Doesn't scale the image
+    pub const SCALE_X: Self = Self(1); // Downscales the image in half in the X axis and applies a box filter
+    pub const SCALE_XY: Self = Self(2); // Downscales the image in half in both the X and Y axes and applies a box filter
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct TextureCopy {
-    pub size: u32,
+    pub size: u32, // The lower 4 bits are ignored
     pub input_size: u32,
     pub output_size: u32,
 }
@@ -180,6 +192,7 @@ pub struct DisplayTransferConfig {
     pub input_size: u32,
     pub flags: u32,
     _padding0: u32,
+    // it seems that writing to this field triggers the display transfer
     pub trigger: u32,
     _padding1: u32,
     pub texture_copy: TextureCopy,
@@ -212,10 +225,12 @@ impl DisplayTransferConfig {
         bits(self.input_size, 16, 16)
     }
 
+    // flips input data vertically
     pub fn flip_vertically(&self) -> bool {
         bits(self.flags, 0, 1) != 0
     }
 
+    // Converts from linear to tiled format
     pub fn input_linear(&self) -> bool {
         bits(self.flags, 1, 1) != 0
     }
@@ -224,6 +239,7 @@ impl DisplayTransferConfig {
         bits(self.flags, 2, 1) != 0
     }
 
+    // Copies the data without performing any processing and respecting texture copy fields
     pub fn is_texture_copy(&self) -> bool {
         bits(self.flags, 3, 1) != 0
     }
@@ -240,10 +256,13 @@ impl DisplayTransferConfig {
         PixelFormat(bits(self.flags, 12, 3))
     }
 
+    /// Uses some kind of 32x32 block swizzling mode, instead of the usual 8x8 one.
+    // TODO(yuriks): unimplemented
     pub fn block_32(&self) -> bool {
         bits(self.flags, 16, 1) != 0
     }
 
+    // Determines the scaling mode of the transfer
     pub fn scaling(&self) -> ScalingMode {
         ScalingMode(bits(self.flags, 24, 2))
     }

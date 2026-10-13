@@ -39,6 +39,7 @@ macro_rules! read_fn {
         pub fn $name(&mut self, vaddr: u32) -> $ty {
             let page_pointer = unsafe { self.view.page_pointer(vaddr) };
             if !page_pointer.is_null() {
+                // NOTE: Avoid adding any extra logic to this fast-path block
                 return unsafe {
                     page_pointer
                         .add((vaddr & PAGE_MASK) as usize)
@@ -47,15 +48,19 @@ macro_rules! read_fn {
                 };
             }
 
+            // Custom Luma3ds mapping
+            // Is there a more efficient way to do this?
             if vaddr & (1 << 31) != 0 {
                 let paddr = vaddr & !(1 << 31);
                 if paddr & 0xF000_0000 == FCRAM_PADDR {
+                    // Check FCRAM region
                     return unsafe {
                         self.fcram_pointer(paddr - FCRAM_PADDR)
                             .cast::<$ty>()
                             .read_unaligned()
                     };
                 } else if paddr & 0xF000_0000 == 0x1000_0000 && paddr >= IO_AREA_PADDR {
+                    // Check MMIO region
                     return self.read_gpu_reg(paddr - IO_AREA_PADDR + 0x1EC0_0000) as $ty;
                 }
             }
@@ -96,6 +101,7 @@ macro_rules! write_fn {
         pub fn $name(&mut self, vaddr: u32, data: $ty) {
             let page_pointer = unsafe { self.view.page_pointer(vaddr) };
             if !page_pointer.is_null() {
+                // NOTE: Avoid adding any extra logic to this fast-path block
                 unsafe {
                     page_pointer
                         .add((vaddr & PAGE_MASK) as usize)
@@ -105,9 +111,12 @@ macro_rules! write_fn {
                 return;
             }
 
+            // Custom Luma3ds mapping
+            // Is there a more efficient way to do this?
             if vaddr & (1 << 31) != 0 {
                 let paddr = vaddr & !(1 << 31);
                 if paddr & 0xF000_0000 == FCRAM_PADDR {
+                    // Check FCRAM region
                     unsafe {
                         self.fcram_pointer(paddr - FCRAM_PADDR)
                             .cast::<$ty>()
@@ -115,6 +124,7 @@ macro_rules! write_fn {
                     };
                     return;
                 } else if paddr & 0xF000_0000 == 0x1000_0000 && paddr >= IO_AREA_PADDR {
+                    // Check MMIO region
                     assert_eq!(size_of::<$ty>(), size_of::<u32>());
                     self.write_gpu_reg(paddr - IO_AREA_PADDR + 0x1EC0_0000, data as u32);
                     return;
@@ -299,6 +309,7 @@ impl Memory {
 
         let mut check_region = |region_start: u32, region_end: u32, paddr_region_start: u32| {
             if start >= region_end || end <= region_start {
+                // No overlap with region
                 return;
             }
 
