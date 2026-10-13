@@ -75,6 +75,7 @@ impl CpuState {
         self.set_flag(psr::V, overflow);
     }
 
+    /// The GE flags that the parallel additions and subtractions set.
     pub fn ge(&self) -> u32 {
         (self.cpsr & psr::GE) >> psr::GE_SHIFT
     }
@@ -83,8 +84,7 @@ impl CpuState {
         self.cpsr = (self.cpsr & !psr::GE) | ((ge & 0xF) << psr::GE_SHIFT);
     }
 
-    /// Whether the condition of the bits 31:28 of an ARM instruction, or of a Thumb conditional
-    /// branch, passes. The value 0b1111 passes as the instructions that use it are unconditional.
+    /// The value 0b1111 passes, as the instructions that use it are unconditional.
     pub fn condition_passed(&self, cond: u32) -> bool {
         let n = self.flag(psr::N);
         let z = self.flag(psr::Z);
@@ -103,6 +103,7 @@ impl CpuState {
         result != (cond & 1 != 0)
     }
 
+    /// The VFP register S`index`.
     pub fn single(&self, index: usize) -> u32 {
         self.ext_regs[index]
     }
@@ -111,6 +112,7 @@ impl CpuState {
         self.ext_regs[index] = value;
     }
 
+    /// The VFP register D`index`.
     pub fn double(&self, index: usize) -> u64 {
         let low = self.ext_regs[index * 2] as u64;
         let high = self.ext_regs[index * 2 + 1] as u64;

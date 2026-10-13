@@ -20,11 +20,14 @@ fn reg_offset(register: u32) -> u32 {
     offset_of!(CpuState, regs) as u32 + register * 4
 }
 
+/// Called by the native code for an instruction that has no native translation.
 extern "C" fn jit_execute(cpu: *mut Cpu, decoded: *const Decoded) -> u32 {
     let (cpu, decoded) = unsafe { (&mut *cpu, &*decoded) };
     exec::execute(cpu, decoded) as u32
 }
 
+/// Called by the native code for the pages without a pointer and in big-endian state, as are
+/// the other `jit_read` and `jit_write` functions.
 extern "C" fn jit_read8(cpu: *mut Cpu, address: u32) -> u32 {
     unsafe { &mut *cpu }.read8(address) as u32
 }
@@ -43,11 +46,8 @@ extern "C" fn jit_write32(cpu: *mut Cpu, address: u32, value: u32) {
 
 /// How the shifter carry of an operand is found.
 enum ShifterCarry {
-    /// The carry flag stays as it is.
     Unchanged,
-    /// The carry is a constant.
     Constant(bool),
-    /// The carry is in w14.
     Computed,
 }
 
@@ -80,6 +80,7 @@ impl Emitter<'_> {
         }
     }
 
+    /// Calls a Rust function through x16, as a BL cannot reach it from the arena.
     fn call(&mut self, function: usize) {
         self.asm.ldr_literal(X16, function as u64);
         self.asm.blr(X16);
@@ -231,7 +232,6 @@ impl Emitter<'_> {
 
         if s {
             if logical {
-                // (N << 1) | Z, then the carry below it when it changes.
                 self.asm.lsr_imm_w(X9, X0, 31);
                 self.asm.cmp_imm_w(X0, 0);
                 self.asm.cset_w(X13, COND_EQ);
@@ -376,6 +376,7 @@ impl Emitter<'_> {
         true
     }
 
+    /// Emits the native code of the instruction, and returns false when it has none.
     fn native(&mut self, decoded: &Decoded) -> bool {
         if self.block.location.thumb {
             return false;
@@ -437,5 +438,4 @@ pub fn emit(block: &Block, page_table_entries: u64) -> Option<Vec<u32>> {
     asm.finish()
 }
 
-// The flags are merged into CPSR by their positions.
 const _: () = assert!(psr::N == 1 << 31 && psr::C == 1 << 29 && psr::V == 1 << 28 && psr::E == 1 << 9);

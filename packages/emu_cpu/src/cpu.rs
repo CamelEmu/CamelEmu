@@ -116,8 +116,6 @@ impl Cpu {
         unsafe { self.monitor.as_ref() }
     }
 
-    // Registers
-
     /// The address of the instruction that runs.
     #[inline(always)]
     pub fn pc(&mut self) -> u32 {
@@ -193,8 +191,6 @@ impl Cpu {
         }
     }
 
-    // Calls into the core
-
     /// Calls the core with the floating-point environment of the host.
     pub fn with_host<R>(&mut self, call: impl FnOnce(&HostCallbacks) -> R) -> R {
         let in_guest = self.in_guest_environment();
@@ -254,8 +250,6 @@ impl Cpu {
         Step::Exit
     }
 
-    // Clock
-
     pub fn start_clock(&mut self) {
         let remaining = self.with_host(|host| unsafe { (host.get_ticks_remaining)(host.user) });
         self.clock.budget = remaining as i64;
@@ -278,8 +272,6 @@ impl Cpu {
         }
         self.clock.budget = self.clock.remaining;
     }
-
-    // Memory
 
     #[inline(always)]
     fn host_pointer(&self, vaddr: u32) -> *mut u8 {
@@ -388,8 +380,6 @@ impl Cpu {
         }
         unsafe { ptr::write_unaligned(pointer.cast(), value.to_le()) };
     }
-
-    // Exclusive accesses
 
     pub fn clear_exclusive(&self) {
         self.shared().exclusive_local.store(false, Ordering::Relaxed);

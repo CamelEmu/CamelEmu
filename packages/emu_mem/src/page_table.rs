@@ -14,12 +14,8 @@ pub const NUM_ENTRIES: usize = 1 << (32 - PAGE_BITS);
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PageType {
-    /// The page is unmapped and an access is an error.
     Unmapped = 0,
-    /// The page is regular memory, and its entry points to the host memory.
     Memory = 1,
-    /// The page is regular memory that the rasterizer caches, so its entry is null and every
-    /// access has to flush or invalidate the cache first.
     RasterizerCachedMemory = 2,
 }
 

@@ -24,6 +24,7 @@ fn write_back(cpu: &mut Cpu, raw: u32, offset_address: u32) {
     }
 }
 
+/// LDR, LDRB, STR and STRB with the offset already computed.
 fn single(cpu: &mut Cpu, raw: u32, offset: u32) -> Step {
     let (address, offset_address) = addresses(cpu, raw, offset);
     let t = bits(raw, 15, 12);
@@ -161,6 +162,7 @@ pub fn multiple(cpu: &mut Cpu, raw: u32) -> Step {
     }
 }
 
+/// The cycles of LDM and STM, which grow with the registers in the list.
 pub fn multiple_cycles(raw: u32) -> u32 {
     1 + (raw & 0xFFFF).count_ones() / 2
 }
@@ -174,6 +176,8 @@ pub fn single_reg_cycles(raw: u32) -> u32 {
     if up && shift_type == 0 && (imm5 == 0 || imm5 == 2) { 2 } else { 4 }
 }
 
+/// The cycles of LDRH, LDRSB, LDRSH, LDRD, STRH and STRD with a register offset, which are lower
+/// for an offset that is added.
 pub fn extra_reg_cycles(raw: u32) -> u32 {
     if bit(raw, 23) { 2 } else { 4 }
 }

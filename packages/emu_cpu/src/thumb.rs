@@ -121,6 +121,7 @@ pub fn alu(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// The register of the bits 2:0 with the bit 7 on top, which reaches R8-R15.
 fn high_register(raw: u32) -> u32 {
     ((bit(raw, 7) as u32) << 3) | bits(raw, 2, 0)
 }
@@ -132,6 +133,7 @@ pub fn add_high(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(d, value)
 }
 
+/// CMP with high registers.
 pub fn cmp_high(cpu: &mut Cpu, raw: u32) -> Step {
     let n = cpu.reg(high_register(raw));
     let m = cpu.reg(bits(raw, 6, 3));
@@ -145,11 +147,13 @@ pub fn mov_high(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(high_register(raw), value)
 }
 
+/// BX: branches to the address in Rm, whose bit 0 selects the instruction set.
 pub fn bx(cpu: &mut Cpu, raw: u32) -> Step {
     let target = cpu.reg(bits(raw, 6, 3));
     cpu.bx_write_pc(target)
 }
 
+/// BLX with a register: calls the address in Rm, whose bit 0 selects the instruction set.
 pub fn blx_reg(cpu: &mut Cpu, raw: u32) -> Step {
     let target = cpu.reg(bits(raw, 6, 3));
     let return_address = cpu.pc().wrapping_add(2) | 1;
@@ -157,10 +161,12 @@ pub fn blx_reg(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.bx_write_pc(target)
 }
 
+/// The PC aligned to a word, which the PC-relative loads and ADR use in Thumb state.
 fn aligned_pc(cpu: &mut Cpu) -> u32 {
     cpu.reg(15) & !3
 }
 
+/// LDR relative to the PC.
 pub fn ldr_literal(cpu: &mut Cpu, raw: u32) -> Step {
     let address = aligned_pc(cpu).wrapping_add(bits(raw, 7, 0) * 4);
     let value = cpu.read32(address);
@@ -253,12 +259,14 @@ pub fn load_store_sp(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// ADR: an address relative to the PC.
 pub fn adr(cpu: &mut Cpu, raw: u32) -> Step {
     let value = aligned_pc(cpu).wrapping_add(bits(raw, 7, 0) * 4);
     cpu.set_reg(bits(raw, 10, 8), value);
     Step::Continue
 }
 
+/// ADD of SP and an immediate into a low register.
 pub fn add_sp_t1(cpu: &mut Cpu, raw: u32) -> Step {
     let value = cpu.reg(13).wrapping_add(bits(raw, 7, 0) * 4);
     cpu.set_reg(bits(raw, 10, 8), value);
@@ -303,6 +311,7 @@ pub fn reverse(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// SETEND in Thumb state, where the bit 3 selects big endian.
 pub fn setend(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.state().set_flag(psr::E, bit(raw, 3));
     Step::Continue
@@ -371,6 +380,7 @@ pub fn load_store_multiple(cpu: &mut Cpu, raw: u32) -> Step {
     Step::Continue
 }
 
+/// CBZ and CBNZ: branch forward when Rn is zero, or not zero with the bit 11.
 pub fn cbz_cbnz(cpu: &mut Cpu, raw: u32) -> Step {
     let value = cpu.reg(bits(raw, 2, 0));
     if (value == 0) == bit(raw, 11) {
@@ -381,6 +391,7 @@ pub fn cbz_cbnz(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.branch_write_pc(target)
 }
 
+/// B with a condition, which checks it by itself as the block does not.
 pub fn b_conditional(cpu: &mut Cpu, raw: u32) -> Step {
     if !cpu.state().condition_passed(bits(raw, 11, 8)) {
         return Step::Continue;
@@ -390,12 +401,14 @@ pub fn b_conditional(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.branch_write_pc(target)
 }
 
+/// B: branches relative to the PC.
 pub fn b(cpu: &mut Cpu, raw: u32) -> Step {
     let offset = ((raw << 21) as i32 >> 20) as u32;
     let target = cpu.reg(15).wrapping_add(offset);
     cpu.branch_write_pc(target)
 }
 
+/// SVC in Thumb state, with the 8-bit immediate.
 pub fn svc(cpu: &mut Cpu, raw: u32) -> Step {
     supervisor_call(cpu, bits(raw, 7, 0))
 }
@@ -440,6 +453,7 @@ fn long_branch_offset(raw: u32) -> u32 {
     ((offset << 7) as i32 >> 7) as u32
 }
 
+/// BL: calls Thumb code relative to the PC.
 pub fn bl(cpu: &mut Cpu, raw: u32) -> Step {
     let target = cpu.reg(15).wrapping_add(long_branch_offset(raw));
     let return_address = cpu.pc().wrapping_add(4) | 1;
@@ -447,6 +461,7 @@ pub fn bl(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.branch_write_pc(target)
 }
 
+/// BLX with an immediate: calls ARM code relative to the PC.
 pub fn blx(cpu: &mut Cpu, raw: u32) -> Step {
     let target = (cpu.reg(15) & !3).wrapping_add(long_branch_offset(raw));
     let return_address = cpu.pc().wrapping_add(4) | 1;

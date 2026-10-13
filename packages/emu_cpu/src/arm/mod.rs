@@ -10,26 +10,32 @@ pub mod system;
 
 use crate::instruction::{Instruction, bit, bits, inst};
 
+/// A write to the PC takes the cycles of a branch.
 fn dp_imm_cycles(raw: u32) -> u32 {
     if bits(raw, 15, 12) == 15 { 7 } else { 1 }
 }
 
+/// A write to the PC takes the cycles of a branch.
 fn dp_reg_cycles(raw: u32) -> u32 {
     if bits(raw, 15, 12) == 15 { 7 } else { 1 }
 }
 
+/// The shift by a register takes a cycle more, and a write to the PC the cycles of a branch.
 fn dp_rsr_cycles(raw: u32) -> u32 {
     if bits(raw, 15, 12) == 15 { 8 } else { 2 }
 }
 
+/// Setting the flags takes more cycles.
 fn multiply_cycles(raw: u32) -> u32 {
     if bit(raw, 20) { 5 } else { 2 }
 }
 
+/// Setting the flags takes more cycles.
 fn multiply_long_cycles(raw: u32) -> u32 {
     if bit(raw, 20) { 6 } else { 3 }
 }
 
+/// Writing only the flags of CPSR takes fewer cycles than writing its other fields.
 fn msr_cycles(raw: u32) -> u32 {
     if bits(raw, 19, 16) == 0b1000 { 1 } else { 4 }
 }

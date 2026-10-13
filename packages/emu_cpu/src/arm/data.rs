@@ -3,6 +3,7 @@ use crate::cpu::Cpu;
 use crate::instruction::{Step, bit, bits};
 use crate::state::psr;
 
+/// The data-processing instructions with a rotated immediate, selected by the bits 24:21.
 pub fn dp_imm(cpu: &mut Cpu, raw: u32) -> Step {
     let carry_in = cpu.state().flag(psr::C);
     let (operand, carry) = expand_imm_c(bits(raw, 11, 0), carry_in);
@@ -10,6 +11,7 @@ pub fn dp_imm(cpu: &mut Cpu, raw: u32) -> Step {
     alu::data_processing(cpu, bits(raw, 24, 21), bit(raw, 20), bits(raw, 15, 12), n, operand, carry)
 }
 
+/// The data-processing instructions with Rm shifted by an immediate.
 pub fn dp_reg(cpu: &mut Cpu, raw: u32) -> Step {
     let carry_in = cpu.state().flag(psr::C);
     let (kind, amount) = decode_imm_shift(bits(raw, 6, 5), bits(raw, 11, 7));
@@ -19,6 +21,7 @@ pub fn dp_reg(cpu: &mut Cpu, raw: u32) -> Step {
     alu::data_processing(cpu, bits(raw, 24, 21), bit(raw, 20), bits(raw, 15, 12), n, operand, carry)
 }
 
+/// The data-processing instructions with Rm shifted by the register Rs.
 pub fn dp_rsr(cpu: &mut Cpu, raw: u32) -> Step {
     let carry_in = cpu.state().flag(psr::C);
     let amount = cpu.reg(bits(raw, 11, 8)) & 0xFF;
@@ -28,25 +31,30 @@ pub fn dp_rsr(cpu: &mut Cpu, raw: u32) -> Step {
     alu::data_processing(cpu, bits(raw, 24, 21), bit(raw, 20), bits(raw, 15, 12), n, operand, carry)
 }
 
+/// CLZ: counts the leading zeros.
 pub fn clz(cpu: &mut Cpu, raw: u32) -> Step {
     let m = cpu.reg(bits(raw, 3, 0));
     cpu.write_alu(bits(raw, 15, 12), m.leading_zeros())
 }
 
+/// The 16-bit immediate of MOVW and MOVT, split between the bits 19:16 and 11:0.
 fn imm16(raw: u32) -> u32 {
     (bits(raw, 19, 16) << 12) | bits(raw, 11, 0)
 }
 
+/// MOVW: writes a 16-bit immediate to the lower half and clears the upper half.
 pub fn movw(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 15, 12), imm16(raw))
 }
 
+/// MOVT: writes a 16-bit immediate to the upper half and keeps the lower half.
 pub fn movt(cpu: &mut Cpu, raw: u32) -> Step {
     let d = bits(raw, 15, 12);
     let value = (cpu.reg(d) & 0xFFFF) | (imm16(raw) << 16);
     cpu.write_alu(d, value)
 }
 
+/// The mask of the bits `msb:lsb`, which is empty when `msb` is below `lsb`.
 fn field_mask(lsb: u32, msb: u32) -> u32 {
     if msb < lsb {
         return 0;
@@ -54,6 +62,7 @@ fn field_mask(lsb: u32, msb: u32) -> u32 {
     (u32::MAX >> (31 - (msb - lsb))) << lsb
 }
 
+/// BFC: clears a bit field.
 pub fn bfc(cpu: &mut Cpu, raw: u32) -> Step {
     let d = bits(raw, 15, 12);
     let mask = field_mask(bits(raw, 11, 7), bits(raw, 20, 16));
@@ -61,6 +70,7 @@ pub fn bfc(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(d, value)
 }
 
+/// BFI: inserts the low bits of Rn into a bit field.
 pub fn bfi(cpu: &mut Cpu, raw: u32) -> Step {
     let d = bits(raw, 15, 12);
     let lsb = bits(raw, 11, 7);
@@ -70,6 +80,7 @@ pub fn bfi(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(d, value)
 }
 
+/// SBFX: extracts a bit field and sign-extends it.
 pub fn sbfx(cpu: &mut Cpu, raw: u32) -> Step {
     let lsb = bits(raw, 11, 7);
     let width = bits(raw, 20, 16) + 1;
@@ -82,6 +93,7 @@ pub fn sbfx(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// UBFX: extracts a bit field and zero-extends it.
 pub fn ubfx(cpu: &mut Cpu, raw: u32) -> Step {
     let lsb = bits(raw, 11, 7);
     let width = bits(raw, 20, 16) + 1;
@@ -94,6 +106,7 @@ pub fn ubfx(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// SEL: takes each byte from Rn or Rm by the GE flags.
 pub fn sel(cpu: &mut Cpu, raw: u32) -> Step {
     let n = cpu.reg(bits(raw, 19, 16));
     let m = cpu.reg(bits(raw, 3, 0));
@@ -116,12 +129,14 @@ fn sum_absolute_differences(n: u32, m: u32) -> u32 {
         .sum()
 }
 
+/// USAD8: sums the absolute differences of the bytes.
 pub fn usad8(cpu: &mut Cpu, raw: u32) -> Step {
     let n = cpu.reg(bits(raw, 3, 0));
     let m = cpu.reg(bits(raw, 11, 8));
     cpu.write_alu(bits(raw, 19, 16), sum_absolute_differences(n, m))
 }
 
+/// USADA8: USAD8 that adds the sum to Ra.
 pub fn usada8(cpu: &mut Cpu, raw: u32) -> Step {
     let n = cpu.reg(bits(raw, 3, 0));
     let m = cpu.reg(bits(raw, 11, 8));
@@ -130,6 +145,7 @@ pub fn usada8(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 19, 16), value)
 }
 
+/// PKHBT and PKHTB: pack a half of Rn with a shifted half of Rm, where the bit 6 tells PKHTB.
 pub fn pkh(cpu: &mut Cpu, raw: u32) -> Step {
     let n = cpu.reg(bits(raw, 19, 16));
     let m = cpu.reg(bits(raw, 3, 0));
@@ -143,23 +159,27 @@ pub fn pkh(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// REV: reverses the bytes of a word.
 pub fn rev(cpu: &mut Cpu, raw: u32) -> Step {
     let m = cpu.reg(bits(raw, 3, 0));
     cpu.write_alu(bits(raw, 15, 12), m.swap_bytes())
 }
 
+/// REV16: reverses the bytes of each halfword.
 pub fn rev16(cpu: &mut Cpu, raw: u32) -> Step {
     let m = cpu.reg(bits(raw, 3, 0));
     let value = ((m & 0x00FF_00FF) << 8) | ((m & 0xFF00_FF00) >> 8);
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// REVSH: reverses the bytes of the lower halfword and sign-extends it.
 pub fn revsh(cpu: &mut Cpu, raw: u32) -> Step {
     let m = cpu.reg(bits(raw, 3, 0));
     let value = (m as u16).swap_bytes() as i16 as i32 as u32;
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// RBIT: reverses the bits.
 pub fn rbit(cpu: &mut Cpu, raw: u32) -> Step {
     let m = cpu.reg(bits(raw, 3, 0));
     cpu.write_alu(bits(raw, 15, 12), m.reverse_bits())
@@ -194,12 +214,14 @@ fn add_halves(a: u32, b: u32) -> u32 {
     low | (high << 16)
 }
 
+/// The operand of SSAT and USAT, which is Rn shifted left or arithmetically right by the bit 6.
 fn saturate_operand(cpu: &mut Cpu, raw: u32) -> i64 {
     let n = cpu.reg(bits(raw, 3, 0));
     let (kind, amount) = decode_imm_shift(if bit(raw, 6) { 2 } else { 0 }, bits(raw, 11, 7));
     shift(n, kind, amount, false) as i32 as i64
 }
 
+/// SSAT: saturates to a signed range and sets Q when it saturates.
 pub fn ssat(cpu: &mut Cpu, raw: u32) -> Step {
     let operand = saturate_operand(cpu, raw);
     let (value, saturated) = alu::signed_saturate(operand, bits(raw, 20, 16) + 1);
@@ -209,6 +231,7 @@ pub fn ssat(cpu: &mut Cpu, raw: u32) -> Step {
     cpu.write_alu(bits(raw, 15, 12), value)
 }
 
+/// USAT: saturates to an unsigned range and sets Q when it saturates.
 pub fn usat(cpu: &mut Cpu, raw: u32) -> Step {
     let operand = saturate_operand(cpu, raw);
     let (value, saturated) = alu::unsigned_saturate(operand, bits(raw, 20, 16));
@@ -228,11 +251,13 @@ fn saturate16(cpu: &mut Cpu, raw: u32, saturate: impl Fn(i64) -> (u32, bool)) ->
     cpu.write_alu(bits(raw, 15, 12), (low & 0xFFFF) | (high << 16))
 }
 
+/// SSAT16: SSAT on each halfword.
 pub fn ssat16(cpu: &mut Cpu, raw: u32) -> Step {
     let width = bits(raw, 19, 16) + 1;
     saturate16(cpu, raw, |value| alu::signed_saturate(value, width))
 }
 
+/// USAT16: USAT on each halfword.
 pub fn usat16(cpu: &mut Cpu, raw: u32) -> Step {
     let width = bits(raw, 19, 16);
     saturate16(cpu, raw, |value| alu::unsigned_saturate(value, width))

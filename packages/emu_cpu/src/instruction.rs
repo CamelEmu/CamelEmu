@@ -39,11 +39,8 @@ impl Kind {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Step {
-    /// The next instruction follows.
     Continue = 0,
-    /// The instruction wrote the PC, which may also have changed the instruction set.
     Branch = 1,
-    /// The instruction has to return to the core, with the PC already written.
     Exit = 2,
 }
 
