@@ -1,5 +1,9 @@
+mod aligned;
 mod bits;
+pub mod packed_attribute;
 pub mod regs;
+pub mod shader_setup;
+pub mod shader_unit;
 
 use emu_renderer::Renderer;
 
