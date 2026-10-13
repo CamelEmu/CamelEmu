@@ -866,7 +866,36 @@
       "title": "Feature Flags",
       "experimental": "Experimental",
       "performanceImprovements": "Performance Improvements",
-      "performanceImprovementsDescription": "Reduces rendering and processing load. Some visuals are simplified."
+      "performanceImprovementsDescription": "Reduces rendering and processing load. Some visuals are simplified.",
+      "newEmulatorCore": {
+        "title": "New Emulator Core",
+        "useRustCore": {
+          "title": "Use Rust Core",
+          "description": "Runs the parts turned on below in the Rust core instead of the C++ core."
+        },
+        "parts": {
+          "renderer": {
+            "title": "Renderer",
+            "description": "Draws the screen in Rust."
+          },
+          "audio": {
+            "title": "Audio",
+            "description": "Processes the audio in Rust."
+          },
+          "network": {
+            "title": "Network",
+            "description": "Handles the sockets and the connection state in Rust."
+          },
+          "kernel": {
+            "title": "Kernel",
+            "description": "Handles the threads, the system calls and the IPC in Rust."
+          },
+          "service": {
+            "title": "Services",
+            "description": "Handles the system services in Rust."
+          }
+        }
+      }
     },
     "language": {
       "title": "Language",

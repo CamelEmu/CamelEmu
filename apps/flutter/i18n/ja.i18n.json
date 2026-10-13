@@ -864,7 +864,36 @@
       "title": "機能フラグ",
       "experimental": "実験的",
       "performanceImprovements": "パフォーマンス改善",
-      "performanceImprovementsDescription": "描画や処理の負荷を軽減します。一部の見た目が簡略化されます。"
+      "performanceImprovementsDescription": "描画や処理の負荷を軽減します。一部の見た目が簡略化されます。",
+      "newEmulatorCore": {
+        "title": "新しいエミュレータコア",
+        "useRustCore": {
+          "title": "Rustコアを使用",
+          "description": "下でオンにした部分を、C++のコアの代わりにRustのコアで動かします。"
+        },
+        "parts": {
+          "renderer": {
+            "title": "レンダラー",
+            "description": "画面の描画をRustで行います。"
+          },
+          "audio": {
+            "title": "オーディオ",
+            "description": "音声の処理をRustで行います。"
+          },
+          "network": {
+            "title": "ネットワーク",
+            "description": "ソケットと接続状態をRustで扱います。"
+          },
+          "kernel": {
+            "title": "カーネル",
+            "description": "スレッド、システムコール、IPCをRustで処理します。"
+          },
+          "service": {
+            "title": "サービス",
+            "description": "システムサービスをRustで処理します。"
+          }
+        }
+      }
     },
     "language": {
       "title": "言語",

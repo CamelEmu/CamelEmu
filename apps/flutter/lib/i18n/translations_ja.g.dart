@@ -2064,6 +2064,11 @@ class _Translations$settings$featureFlags$ja
   @override
   String get performanceImprovementsDescription =>
       '描画や処理の負荷を軽減します。一部の見た目が簡略化されます。';
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$ja
+  newEmulatorCore = _Translations$settings$featureFlags$newEmulatorCore$ja._(
+    _root,
+  );
 }
 
 // Path: settings.language
@@ -2406,6 +2411,176 @@ class _Translations$settings$advanced$animationSpeed$ja
   String get normal => '普通';
   @override
   String get slow => '遅い';
+}
+
+// Path: settings.featureFlags.newEmulatorCore
+class _Translations$settings$featureFlags$newEmulatorCore$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$en {
+  _Translations$settings$featureFlags$newEmulatorCore$ja._(TranslationsJa root)
+    : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => '新しいエミュレータコア';
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$useRustCore$ja
+  useRustCore =
+      _Translations$settings$featureFlags$newEmulatorCore$useRustCore$ja._(
+        _root,
+      );
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$ja
+  parts = _Translations$settings$featureFlags$newEmulatorCore$parts$ja._(_root);
+}
+
+// Path: settings.featureFlags.newEmulatorCore.useRustCore
+class _Translations$settings$featureFlags$newEmulatorCore$useRustCore$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$useRustCore$en {
+  _Translations$settings$featureFlags$newEmulatorCore$useRustCore$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Rustコアを使用';
+  @override
+  String get description => '下でオンにした部分を、C++のコアの代わりにRustのコアで動かします。';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts
+class _Translations$settings$featureFlags$newEmulatorCore$parts$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$parts$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja
+  renderer =
+      _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja._(
+        _root,
+      );
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$audio$ja
+  audio = _Translations$settings$featureFlags$newEmulatorCore$parts$audio$ja._(
+    _root,
+  );
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$network$ja
+  network =
+      _Translations$settings$featureFlags$newEmulatorCore$parts$network$ja._(
+        _root,
+      );
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$kernel$ja
+  kernel =
+      _Translations$settings$featureFlags$newEmulatorCore$parts$kernel$ja._(
+        _root,
+      );
+  @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$service$ja
+  service =
+      _Translations$settings$featureFlags$newEmulatorCore$parts$service$ja._(
+        _root,
+      );
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.renderer
+class _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja
+    extends
+        Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'レンダラー';
+  @override
+  String get description => '画面の描画をRustで行います。';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.audio
+class _Translations$settings$featureFlags$newEmulatorCore$parts$audio$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$parts$audio$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$audio$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'オーディオ';
+  @override
+  String get description => '音声の処理をRustで行います。';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.network
+class _Translations$settings$featureFlags$newEmulatorCore$parts$network$ja
+    extends
+        Translations$settings$featureFlags$newEmulatorCore$parts$network$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$network$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'ネットワーク';
+  @override
+  String get description => 'ソケットと接続状態をRustで扱います。';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.kernel
+class _Translations$settings$featureFlags$newEmulatorCore$parts$kernel$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$parts$kernel$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$kernel$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'カーネル';
+  @override
+  String get description => 'スレッド、システムコール、IPCをRustで処理します。';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.service
+class _Translations$settings$featureFlags$newEmulatorCore$parts$service$ja
+    extends
+        Translations$settings$featureFlags$newEmulatorCore$parts$service$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$service$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'サービス';
+  @override
+  String get description => 'システムサービスをRustで処理します。';
 }
 
 /// The flat map containing all translations for locale <ja>.
@@ -3299,6 +3474,28 @@ extension on TranslationsJa {
           'settings.featureFlags.performanceImprovements' => 'パフォーマンス改善',
           'settings.featureFlags.performanceImprovementsDescription' =>
             '描画や処理の負荷を軽減します。一部の見た目が簡略化されます。',
+          'settings.featureFlags.newEmulatorCore.title' => '新しいエミュレータコア',
+          'settings.featureFlags.newEmulatorCore.useRustCore.title' =>
+            'Rustコアを使用',
+          'settings.featureFlags.newEmulatorCore.useRustCore.description' =>
+            '下でオンにした部分を、C++のコアの代わりにRustのコアで動かします。',
+          'settings.featureFlags.newEmulatorCore.parts.renderer.title' =>
+            'レンダラー',
+          'settings.featureFlags.newEmulatorCore.parts.renderer.description' =>
+            '画面の描画をRustで行います。',
+          'settings.featureFlags.newEmulatorCore.parts.audio.title' => 'オーディオ',
+          'settings.featureFlags.newEmulatorCore.parts.audio.description' =>
+            '音声の処理をRustで行います。',
+          'settings.featureFlags.newEmulatorCore.parts.network.title' =>
+            'ネットワーク',
+          'settings.featureFlags.newEmulatorCore.parts.network.description' =>
+            'ソケットと接続状態をRustで扱います。',
+          'settings.featureFlags.newEmulatorCore.parts.kernel.title' => 'カーネル',
+          'settings.featureFlags.newEmulatorCore.parts.kernel.description' =>
+            'スレッド、システムコール、IPCをRustで処理します。',
+          'settings.featureFlags.newEmulatorCore.parts.service.title' => 'サービス',
+          'settings.featureFlags.newEmulatorCore.parts.service.description' =>
+            'システムサービスをRustで処理します。',
           'settings.language.title' => '言語',
           'settings.language.systemDefault' => 'システムのデフォルト',
           'settings.language.english' => '英語 (English)',
