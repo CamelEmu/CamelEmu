@@ -8,6 +8,7 @@ use emu_audio::Audio;
 use emu_kernel::{Kernel, Timer};
 use emu_network::Network;
 use emu_pica::Gpu;
+use emu_pica::pica_core::SharedRegs;
 use emu_renderer::GraphicsApi;
 use emu_service::ServiceManager;
 
@@ -73,9 +74,10 @@ impl Session {
         };
         if let Some(renderer) = renderer {
             let physical_memory = system.memory.physical_memory();
+            let regs = SharedRegs::default();
             system
                 .memory
-                .set_gpu(Gpu::new(renderer, physical_memory, true));
+                .set_gpu(Gpu::new(renderer, regs, physical_memory, true));
         }
         let system_ptr = NonNull::from(system.as_mut());
 

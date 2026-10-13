@@ -1,6 +1,5 @@
 mod draw;
 mod register_write;
-mod regs;
 mod tables;
 
 use std::cell::RefCell;
@@ -10,7 +9,7 @@ use emu_pica_types::gsp_interrupt::{InterruptHandler, InterruptId};
 use emu_pica_types::{AttributeBuffer, PixelFormat};
 use emu_renderer::Rasterizer;
 
-pub use regs::Regs;
+pub use emu_pica_types::pica_regs::{Regs, SharedRegs};
 pub use tables::{
     Fog, FogLutEntry, Lighting, LightingLutEntry, ProcTex, ProcTexColorDifferenceEntry,
     ProcTexColorEntry, ProcTexValueEntry,
@@ -138,7 +137,7 @@ type PendingVertices = Rc<RefCell<Vec<PendingVertex>>>;
 
 pub struct PicaCore {
     pub regs_lcd: RegsLcd,
-    pub regs: Box<Regs>,
+    pub regs: SharedRegs,
     // TODO: Move these to a separate shader scheduler class
     pub gs_unit: Box<GeometryShaderUnit>,
     pub vs_setup: ShaderSetup,
@@ -160,10 +159,10 @@ pub struct PicaCore {
 }
 
 impl PicaCore {
-    pub fn new(memory: Rc<dyn PhysicalMemory>, use_shader_jit: bool) -> Self {
+    pub fn new(regs: SharedRegs, memory: Rc<dyn PhysicalMemory>, use_shader_jit: bool) -> Self {
         let mut core = Self {
             regs_lcd: RegsLcd::default(),
-            regs: Box::default(),
+            regs,
             gs_unit: GeometryShaderUnit::new(),
             vs_setup: ShaderSetup::new(),
             gs_setup: ShaderSetup::new(),
@@ -207,7 +206,8 @@ impl PicaCore {
     }
 
     fn initialize_regs(&mut self) {
-        let [framebuffer_top, framebuffer_sub] = &mut self.regs.framebuffer_config;
+        let mut regs = self.regs.borrow_mut();
+        let [framebuffer_top, framebuffer_sub] = &mut regs.framebuffer_config;
 
         // Set framebuffer defaults from nn::gx::Initialize
         framebuffer_top.address_left1 = 0x181E6000;
@@ -230,7 +230,7 @@ impl PicaCore {
         framebuffer_sub.active_fb = 0;
 
         // Tales of Abyss expects this register to have the following default values.
-        let gs = &mut self.regs.internal.gs;
+        let gs = &mut regs.internal.gs;
         gs.set_max_input_attribute_index(1);
         gs.set_shader_mode(ShaderMode::VS);
     }
@@ -293,16 +293,18 @@ impl PicaCore {
 
         const MAX_ITERATIONS: usize = 0x100;
 
-        let mut find_info = RenderPropertiesGuess {
-            vp_height: self.regs.internal.rasterizer.viewport_size_y(),
-            paddr: self
-                .regs
-                .internal
-                .framebuffer
-                .framebuffer
-                .color_buffer_address()
-                .wrapping_mul(8),
-            ..Default::default()
+        let mut find_info = {
+            let regs = self.regs.borrow();
+            RenderPropertiesGuess {
+                vp_height: regs.internal.rasterizer.viewport_size_y(),
+                paddr: regs
+                    .internal
+                    .framebuffer
+                    .framebuffer
+                    .color_buffer_address()
+                    .wrapping_mul(8),
+                ..Default::default()
+            }
         };
 
         let process_write =
@@ -318,7 +320,8 @@ impl PicaCore {
                     }
                     COMMAND_BUFFER_TRIGGER..=COMMAND_BUFFER_TRIGGER_LAST => {
                         let index = (cmd_id as usize - COMMAND_BUFFER_TRIGGER) as u32;
-                        let command_buffer = &core.regs.internal.pipeline.command_buffer;
+                        let regs = core.regs.borrow();
+                        let command_buffer = &regs.internal.pipeline.command_buffer;
                         let addr = command_buffer.get_physical_address(index);
                         let size = command_buffer.get_size(index);
                         let head = core.memory.get_physical_pointer(addr);

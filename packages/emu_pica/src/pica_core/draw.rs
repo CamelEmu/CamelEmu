@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use emu_pica_types::AttributeBuffer;
 use emu_renderer::Rasterizer;
 
@@ -9,22 +11,25 @@ use crate::vertex_loader::VertexLoader;
 
 impl PicaCore {
     pub(super) fn draw_immediate(&mut self, rasterizer: &mut dyn Rasterizer) {
+        let regs = Rc::clone(&self.regs);
+        let regs = regs.borrow();
+
         // Compile the vertex shader.
         self.shader_engine
-            .setup_batch(&mut self.vs_setup, self.regs.internal.vs.main_offset());
+            .setup_batch(&mut self.vs_setup, regs.internal.vs.main_offset());
 
         let mut shader_unit = ShaderUnit::default();
         let mut output = AttributeBuffer::default();
 
         // Invoke the vertex shader for the vertex.
-        shader_unit.load_input(&self.regs.internal.vs, &self.immediate.input_vertex);
+        shader_unit.load_input(&regs.internal.vs, &self.immediate.input_vertex);
         self.shader_engine.run(&self.vs_setup, &mut shader_unit);
-        shader_unit.write_output(&self.regs.internal.vs, &mut output);
+        shader_unit.write_output(&regs.internal.vs, &mut output);
 
         // Reconfigure geometry pipeline if needed.
         if self.immediate.reset_geometry_pipeline {
             self.geometry_pipeline
-                .reconfigure(&self.regs.internal, &mut self.gs_unit);
+                .reconfigure(&regs.internal, &mut self.gs_unit);
             self.immediate.reset_geometry_pipeline = false;
         }
 
@@ -35,7 +40,7 @@ impl PicaCore {
         );
         self.geometry_pipeline.setup(
             self.shader_engine.as_mut(),
-            &self.regs.internal,
+            &regs.internal,
             &mut self.gs_setup,
         );
         self.submit_to_geometry_pipeline(rasterizer, &output);
@@ -48,7 +53,7 @@ impl PicaCore {
     pub(super) fn draw_arrays(&mut self, rasterizer: &mut dyn Rasterizer, is_indexed: bool) {
         let accelerate_draw = {
             // Geometry shaders cannot be accelerated due to register preservation.
-            if self.regs.internal.pipeline.use_gs() == UseGs::YES {
+            if self.regs.borrow().internal.pipeline.use_gs() == UseGs::YES {
                 false
             } else {
                 // TODO (wwylele): for Strip/Fan topology, if the primitive assember is not restarted
@@ -62,7 +67,13 @@ impl PicaCore {
                 let topology = self.primitive_assembler.get_topology();
                 if topology == TriangleTopology::SHADER || topology == TriangleTopology::LIST {
                     accelerate_draw = accelerate_draw
-                        && self.regs.internal.pipeline.num_vertices.is_multiple_of(3);
+                        && self
+                            .regs
+                            .borrow()
+                            .internal
+                            .pipeline
+                            .num_vertices
+                            .is_multiple_of(3);
                 }
                 accelerate_draw
             }
@@ -81,12 +92,15 @@ impl PicaCore {
     }
 
     fn load_vertices(&mut self, rasterizer: &mut dyn Rasterizer, is_indexed: bool) {
+        let regs = Rc::clone(&self.regs);
+        let regs = regs.borrow();
+
         // Read and validate vertex information from the loaders
-        let pipeline = self.regs.internal.pipeline;
+        let pipeline = regs.internal.pipeline;
         let base_address = pipeline.vertex_attributes.get_physical_base_address();
         let memory = self.memory.clone();
         let loader = VertexLoader::new(memory.as_ref(), &pipeline);
-        self.regs.internal.rasterizer.validate_semantics();
+        regs.internal.rasterizer.validate_semantics();
 
         // Locate index buffer.
         let index_info = &pipeline.index_array;
@@ -106,14 +120,14 @@ impl PicaCore {
         let mut shader_unit = ShaderUnit::default();
         let mut vs_output = AttributeBuffer::default();
         self.shader_engine
-            .setup_batch(&mut self.vs_setup, self.regs.internal.vs.main_offset());
+            .setup_batch(&mut self.vs_setup, regs.internal.vs.main_offset());
 
         // Setup geometry pipeline in case we are using a geometry shader.
         self.geometry_pipeline
-            .reconfigure(&self.regs.internal, &mut self.gs_unit);
+            .reconfigure(&regs.internal, &mut self.gs_unit);
         self.geometry_pipeline.setup(
             self.shader_engine.as_mut(),
-            &self.regs.internal,
+            &regs.internal,
             &mut self.gs_setup,
         );
         assert!(
@@ -137,7 +151,7 @@ impl PicaCore {
             if is_indexed {
                 if self.geometry_pipeline.need_index_input() {
                     self.geometry_pipeline.submit_index(
-                        &self.regs.internal,
+                        &regs.internal,
                         &mut self.gs_unit,
                         &mut self.gs_setup,
                         vertex,
@@ -166,9 +180,9 @@ impl PicaCore {
                 );
 
                 // Invoke the vertex shader for this vertex.
-                shader_unit.load_input(&self.regs.internal.vs, &input);
+                shader_unit.load_input(&regs.internal.vs, &input);
                 self.shader_engine.run(&self.vs_setup, &mut shader_unit);
-                shader_unit.write_output(&self.regs.internal.vs, &mut vs_output);
+                shader_unit.write_output(&regs.internal.vs, &mut vs_output);
 
                 // Cache the vertex when doing indexed rendering.
                 if is_indexed {
@@ -191,9 +205,12 @@ impl PicaCore {
         rasterizer: &mut dyn Rasterizer,
         input: &AttributeBuffer,
     ) {
+        let regs = Rc::clone(&self.regs);
+        let regs = regs.borrow();
+
         self.geometry_pipeline.submit_vertex(
             self.shader_engine.as_ref(),
-            &self.regs.internal,
+            &regs.internal,
             &mut self.gs_unit,
             &mut self.gs_setup,
             input,
@@ -206,7 +223,7 @@ impl PicaCore {
                     let mut add_triangle = |v0: &_, v1: &_, v2: &_| {
                         rasterizer.add_triangle(v0, v1, v2);
                     };
-                    let vertex = output_vertex(&self.regs.internal.rasterizer, &buffer);
+                    let vertex = output_vertex(&regs.internal.rasterizer, &buffer);
                     self.primitive_assembler
                         .submit_vertex(&vertex, &mut add_triangle);
                 }
