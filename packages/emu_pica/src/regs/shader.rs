@@ -34,6 +34,10 @@ impl UniformSetup {
         bits(self.config, 0, 7)
     }
 
+    pub fn set_index(&mut self, index: u32) {
+        self.config = (self.config & !0x7F) | (index & 0x7F);
+    }
+
     pub fn format(&self) -> UniformFormat {
         UniformFormat(bits(self.config, 31, 1))
     }
