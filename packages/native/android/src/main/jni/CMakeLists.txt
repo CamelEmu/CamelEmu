@@ -42,9 +42,9 @@ function(azahar_android_library target)
     target_link_options(${target} PRIVATE -Wl,-z,noexecstack)
     target_link_libraries(${target} PRIVATE audio_core citra_common citra_core input_common network)
     target_link_libraries(${target} PRIVATE android camera2ndk inih jnigraphics log mediandk yuv)
-    # Linked directly, so that the libraries of the crates are packaged with the application.
-    if (TARGET emu_cpu)
-        target_link_libraries(${target} PRIVATE emu_cpu emu_mem)
+    # Linked directly, so that the library of the Rust core is packaged with the application.
+    if (TARGET emu_azahar)
+        target_link_libraries(${target} PRIVATE emu_azahar)
     endif()
 
     if (ENABLE_OPENGL)
