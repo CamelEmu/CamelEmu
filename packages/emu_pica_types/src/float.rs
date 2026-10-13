@@ -1,10 +1,20 @@
 use std::cmp::Ordering;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-/// A PICA float with `M` bits of mantissa and `E` bits of exponent, held as an IEEE 754 single.
+/// Template class for converting arbitrary Pica float types to IEEE 754 32-bit single-precision
+/// floating point.
+///
+/// When decoding, format is as follows:
+///  - The first `M` bits are the mantissa
+///  - The next `E` bits are the exponent
+///  - The last bit is the sign bit
+///
+/// @todo Verify on HW if this conversion is sufficiently accurate.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Float<const M: u32, const E: u32> {
+    // Stored as a regular float, merely for convenience
+    // TODO: Perform proper arithmetic on this!
     value: f32,
 }
 
@@ -49,6 +59,7 @@ impl<const M: u32, const E: u32> Float<M, E> {
         Self::from_float32(1.0)
     }
 
+    // Not recommended for anything but logging
     pub const fn to_float32(self) -> f32 {
         self.value
     }
@@ -59,6 +70,7 @@ impl<const M: u32, const E: u32> Mul for Float<M, E> {
 
     fn mul(self, flt: Self) -> Self {
         let mut result = self.value * flt.to_float32();
+        // PICA gives 0 instead of NaN when multiplying by inf
         if result.is_nan() && !self.value.is_nan() && !flt.to_float32().is_nan() {
             result = 0.0;
         }
