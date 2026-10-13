@@ -1,9 +1,14 @@
 mod aligned;
 mod bits;
+pub mod memory;
+pub mod output_vertex;
 pub mod packed_attribute;
+pub mod primitive_assembly;
 pub mod regs;
 pub mod shader_setup;
 pub mod shader_unit;
+mod vector;
+pub mod vertex_loader;
 
 use emu_renderer::Renderer;
 
