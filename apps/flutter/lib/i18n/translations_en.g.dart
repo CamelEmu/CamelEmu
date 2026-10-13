@@ -2589,6 +2589,10 @@ class Translations$settings$featureFlags$en {
   /// en: 'Reduces rendering and processing load. Some visuals are simplified.'
   String get performanceImprovementsDescription =>
       'Reduces rendering and processing load. Some visuals are simplified.';
+
+  late final Translations$settings$featureFlags$newEmulatorCore$en
+  newEmulatorCore =
+      Translations$settings$featureFlags$newEmulatorCore$en.internal(_root);
 }
 
 // Path: settings.language
@@ -3066,6 +3070,169 @@ class Translations$settings$advanced$animationSpeed$en {
 
   /// en: 'Slow'
   String get slow => 'Slow';
+}
+
+// Path: settings.featureFlags.newEmulatorCore
+class Translations$settings$featureFlags$newEmulatorCore$en {
+  Translations$settings$featureFlags$newEmulatorCore$en.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'New Emulator Core'
+  String get title => 'New Emulator Core';
+
+  late final Translations$settings$featureFlags$newEmulatorCore$useRustCore$en
+  useRustCore =
+      Translations$settings$featureFlags$newEmulatorCore$useRustCore$en.internal(
+        _root,
+      );
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$en parts =
+      Translations$settings$featureFlags$newEmulatorCore$parts$en.internal(
+        _root,
+      );
+}
+
+// Path: settings.featureFlags.newEmulatorCore.useRustCore
+class Translations$settings$featureFlags$newEmulatorCore$useRustCore$en {
+  Translations$settings$featureFlags$newEmulatorCore$useRustCore$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Use Rust Core'
+  String get title => 'Use Rust Core';
+
+  /// en: 'Runs the parts turned on below in the Rust core instead of the C++ core.'
+  String get description =>
+      'Runs the parts turned on below in the Rust core instead of the C++ core.';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts
+class Translations$settings$featureFlags$newEmulatorCore$parts$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en
+  renderer =
+      Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en.internal(
+        _root,
+      );
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$audio$en
+  audio =
+      Translations$settings$featureFlags$newEmulatorCore$parts$audio$en.internal(
+        _root,
+      );
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$network$en
+  network =
+      Translations$settings$featureFlags$newEmulatorCore$parts$network$en.internal(
+        _root,
+      );
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$kernel$en
+  kernel =
+      Translations$settings$featureFlags$newEmulatorCore$parts$kernel$en.internal(
+        _root,
+      );
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$service$en
+  service =
+      Translations$settings$featureFlags$newEmulatorCore$parts$service$en.internal(
+        _root,
+      );
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.renderer
+class Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Renderer'
+  String get title => 'Renderer';
+
+  /// en: 'Draws the screen in Rust.'
+  String get description => 'Draws the screen in Rust.';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.audio
+class Translations$settings$featureFlags$newEmulatorCore$parts$audio$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$audio$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Audio'
+  String get title => 'Audio';
+
+  /// en: 'Processes the audio in Rust.'
+  String get description => 'Processes the audio in Rust.';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.network
+class Translations$settings$featureFlags$newEmulatorCore$parts$network$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$network$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Network'
+  String get title => 'Network';
+
+  /// en: 'Handles the sockets and the connection state in Rust.'
+  String get description =>
+      'Handles the sockets and the connection state in Rust.';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.kernel
+class Translations$settings$featureFlags$newEmulatorCore$parts$kernel$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$kernel$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Kernel'
+  String get title => 'Kernel';
+
+  /// en: 'Handles the threads, the system calls and the IPC in Rust.'
+  String get description =>
+      'Handles the threads, the system calls and the IPC in Rust.';
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.service
+class Translations$settings$featureFlags$newEmulatorCore$parts$service$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$service$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Services'
+  String get title => 'Services';
+
+  /// en: 'Handles the system services in Rust.'
+  String get description => 'Handles the system services in Rust.';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -4028,6 +4195,30 @@ extension on Translations {
             'Performance Improvements',
           'settings.featureFlags.performanceImprovementsDescription' =>
             'Reduces rendering and processing load. Some visuals are simplified.',
+          'settings.featureFlags.newEmulatorCore.title' => 'New Emulator Core',
+          'settings.featureFlags.newEmulatorCore.useRustCore.title' =>
+            'Use Rust Core',
+          'settings.featureFlags.newEmulatorCore.useRustCore.description' =>
+            'Runs the parts turned on below in the Rust core instead of the C++ core.',
+          'settings.featureFlags.newEmulatorCore.parts.renderer.title' =>
+            'Renderer',
+          'settings.featureFlags.newEmulatorCore.parts.renderer.description' =>
+            'Draws the screen in Rust.',
+          'settings.featureFlags.newEmulatorCore.parts.audio.title' => 'Audio',
+          'settings.featureFlags.newEmulatorCore.parts.audio.description' =>
+            'Processes the audio in Rust.',
+          'settings.featureFlags.newEmulatorCore.parts.network.title' =>
+            'Network',
+          'settings.featureFlags.newEmulatorCore.parts.network.description' =>
+            'Handles the sockets and the connection state in Rust.',
+          'settings.featureFlags.newEmulatorCore.parts.kernel.title' =>
+            'Kernel',
+          'settings.featureFlags.newEmulatorCore.parts.kernel.description' =>
+            'Handles the threads, the system calls and the IPC in Rust.',
+          'settings.featureFlags.newEmulatorCore.parts.service.title' =>
+            'Services',
+          'settings.featureFlags.newEmulatorCore.parts.service.description' =>
+            'Handles the system services in Rust.',
           'settings.language.title' => 'Language',
           'settings.language.systemDefault' => 'System default',
           'settings.language.english' => 'English',
