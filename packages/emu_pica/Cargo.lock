@@ -21,6 +21,9 @@ dependencies = [
 [[package]]
 name = "emu_pica_types"
 version = "0.1.0"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "emu_renderer"
