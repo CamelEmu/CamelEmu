@@ -519,6 +519,12 @@ class NativeBridge {
     return result ?? 0;
   }
 
+  /// Whether the core was built with the CPU and the memory of the Rust crates.
+  Future<bool> supportsRustCpu() async {
+    final result = await _channel.invokeMethod<bool>('supportsRustCpu');
+    return result ?? false;
+  }
+
   Future<bool> supportsCustomDriverLoading() async {
     final result = await _channel.invokeMethod<bool>(
       'supportsCustomDriverLoading',

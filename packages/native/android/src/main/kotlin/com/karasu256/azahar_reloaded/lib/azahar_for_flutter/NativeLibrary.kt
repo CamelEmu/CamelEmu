@@ -146,6 +146,9 @@ object NativeLibrary {
 
     external fun reloadSettings()
 
+    /** Whether the core was built with the CPU and the memory of the Rust crates. */
+    external fun supportsRustCpu(): Boolean
+
     external fun getTitleId(filename: String): Long
 
     external fun getIsSystemTitle(path: String): Boolean

@@ -15,6 +15,7 @@
 #include "common/settings.h"
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
+#include "core/arm/rust/rust_cpu.h"
 #include "core/core.h"
 #include "core/global.h"
 #include "core/hle/kernel/process.h"
@@ -22,6 +23,9 @@
 #include "core/memory.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
+#if CITRA_HAS_RUST_CPU
+#include <emu_mem.h>
+#endif
 
 SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM>)
 SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
@@ -30,10 +34,70 @@ SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>
 
 namespace Memory {
 
+namespace {
+// Set by the memory system, so that the page tables, which the kernel and the deserializer create
+// without it, take their arrays from the same owner as the physical memory.
+bool emu_mem_enabled = false;
+} // Anonymous namespace
+
+PageTable::PageTable() {
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem_enabled) {
+        emu_mem = emu_mem_pt_create();
+        ASSERT_MSG(emu_mem, "emu_mem could not create a page table");
+        const EmuMemPageTableView view = emu_mem_pt_view(emu_mem);
+        pointers.raw = view.entries;
+        pointers.emu_mem = emu_mem;
+        attributes.raw = reinterpret_cast<PageType*>(view.attributes);
+        attributes.emu_mem = emu_mem;
+        return;
+    }
+#endif
+    owned_pointers = std::make_unique<PointerArray>();
+    owned_attributes = std::make_unique<AttributeArray>();
+    pointers.raw = owned_pointers->data();
+    attributes.raw = owned_attributes->data();
+}
+
+PageTable::~PageTable() {
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem) {
+        emu_mem_pt_destroy(emu_mem);
+    }
+#endif
+}
+
+void PageTable::Pointers::SetRaw(VAddr idx, u8* value) {
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem) {
+        emu_mem_pt_set_entry(emu_mem, idx, value);
+        return;
+    }
+#endif
+    raw[idx] = value;
+}
+
+void PageTable::Attributes::Set(VAddr idx, PageType value) {
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem) {
+        emu_mem_pt_set_attribute(emu_mem, idx, static_cast<u8>(value));
+        return;
+    }
+#endif
+    raw[idx] = value;
+}
+
 void PageTable::Clear() {
-    pointers.raw.fill(nullptr);
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem) {
+        emu_mem_pt_clear(emu_mem);
+        pointers.refs.fill(MemoryRef());
+        return;
+    }
+#endif
+    owned_pointers->fill(nullptr);
     pointers.refs.fill(MemoryRef());
-    attributes.fill(PageType::Unmapped);
+    owned_attributes->fill(PageType::Unmapped);
 }
 
 class RasterizerCacheMarker {
@@ -86,11 +150,19 @@ private:
 
 class MemorySystem::Impl {
 public:
+#if CITRA_HAS_RUST_CPU
+    // Owns the physical memory when the emu_mem crate creates it.
+    EmuMem* emu_mem = nullptr;
+#endif
     // Visual Studio would try to allocate these on compile time
     // if they are std::array which would exceed the memory limit.
-    std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
-    std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
-    std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+    std::unique_ptr<u8[]> owned_fcram;
+    std::unique_ptr<u8[]> owned_vram;
+    std::unique_ptr<u8[]> owned_n3ds_extra_ram;
+
+    u8* fcram = nullptr;
+    u8* vram = nullptr;
+    u8* n3ds_extra_ram = nullptr;
 
     Core::System& system;
     std::shared_ptr<PageTable> current_page_table = nullptr;
@@ -105,17 +177,29 @@ public:
     std::shared_ptr<BackingMem> dsp_mem;
 
     Impl(Core::System& system_);
+    ~Impl();
+
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    bool IsEmuMemEnabled() const {
+#if CITRA_HAS_RUST_CPU
+        return emu_mem != nullptr;
+#else
+        return false;
+#endif
+    }
 
     const u8* GetPtr(Region r) const {
         switch (r) {
         case Region::VRAM:
-            return vram.get();
+            return vram;
         case Region::DSP:
             return dsp->GetDspMemory().data();
         case Region::FCRAM:
-            return fcram.get();
+            return fcram;
         case Region::N3DS:
-            return n3ds_extra_ram.get();
+            return n3ds_extra_ram;
         default:
             UNREACHABLE();
         }
@@ -124,13 +208,13 @@ public:
     u8* GetPtr(Region r) {
         switch (r) {
         case Region::VRAM:
-            return vram.get();
+            return vram;
         case Region::DSP:
             return dsp->GetDspMemory().data();
         case Region::FCRAM:
-            return fcram.get();
+            return fcram;
         case Region::N3DS:
-            return n3ds_extra_ram.get();
+            return n3ds_extra_ram;
         default:
             UNREACHABLE();
         }
@@ -319,11 +403,11 @@ private:
     void serialize(Archive& ar, const unsigned int file_version) {
         bool save_n3ds_ram = Settings::values.is_new_3ds.GetValue();
         ar & save_n3ds_ram;
-        ar& boost::serialization::make_binary_object(vram.get(), Memory::VRAM_SIZE);
+        ar& boost::serialization::make_binary_object(vram, Memory::VRAM_SIZE);
         ar& boost::serialization::make_binary_object(
-            fcram.get(), save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
+            fcram, save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
         ar& boost::serialization::make_binary_object(
-            n3ds_extra_ram.get(), save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
+            n3ds_extra_ram, save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
         ar & cache_marker;
         ar & page_table_list;
         // dsp is set from Core::System at startup
@@ -366,10 +450,45 @@ MemorySystem::Impl::Impl(Core::System& system_)
     : system{system_}, fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>(*this)),
       vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>(*this)),
       n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>(*this)),
-      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {}
+      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {
+#if CITRA_HAS_RUST_CPU
+    if (Settings::values.use_rust_cpu.GetValue()) {
+        emu_mem = emu_mem_create();
+        ASSERT_MSG(emu_mem, "emu_mem could not create the physical memory");
+        fcram = emu_mem_region_ptr(emu_mem, EMU_MEM_REGION_FCRAM);
+        vram = emu_mem_region_ptr(emu_mem, EMU_MEM_REGION_VRAM);
+        n3ds_extra_ram = emu_mem_region_ptr(emu_mem, EMU_MEM_REGION_N3DS);
+        ASSERT(emu_mem_region_size(EMU_MEM_REGION_FCRAM) == Memory::FCRAM_N3DS_SIZE);
+        ASSERT(emu_mem_region_size(EMU_MEM_REGION_VRAM) == Memory::VRAM_SIZE);
+        ASSERT(emu_mem_region_size(EMU_MEM_REGION_N3DS) == Memory::N3DS_EXTRA_RAM_SIZE);
+        emu_mem_enabled = true;
+        return;
+    }
+#endif
+    owned_fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
+    owned_vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
+    owned_n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+    fcram = owned_fcram.get();
+    vram = owned_vram.get();
+    n3ds_extra_ram = owned_n3ds_extra_ram.get();
+    emu_mem_enabled = false;
+}
+
+MemorySystem::Impl::~Impl() {
+#if CITRA_HAS_RUST_CPU
+    if (emu_mem) {
+        emu_mem_destroy(emu_mem);
+        emu_mem_enabled = false;
+    }
+#endif
+}
 
 MemorySystem::MemorySystem(Core::System& system) : impl(std::make_unique<Impl>(system)) {}
 MemorySystem::~MemorySystem() = default;
+
+bool MemorySystem::IsEmuMemEnabled() const {
+    return impl->IsEmuMemEnabled();
+}
 
 template <class Archive>
 void MemorySystem::serialize(Archive& ar, const unsigned int file_version) {
@@ -734,7 +853,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
             impl->cache_marker.Mark(vaddr, cached);
             for (auto& page_table : impl->page_table_list) {
-                PageType& page_type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
+                auto page_type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
 
                 if (cached) {
                     // Switch page type to cached if now cached
@@ -937,18 +1056,18 @@ void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
 }
 
 u32 MemorySystem::GetFCRAMOffset(const u8* pointer) const {
-    ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
-    return static_cast<u32>(pointer - impl->fcram.get());
+    ASSERT(pointer >= impl->fcram && pointer <= impl->fcram + Memory::FCRAM_N3DS_SIZE);
+    return static_cast<u32>(pointer - impl->fcram);
 }
 
 u8* MemorySystem::GetFCRAMPointer(std::size_t offset) {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
-    return impl->fcram.get() + offset;
+    return impl->fcram + offset;
 }
 
 const u8* MemorySystem::GetFCRAMPointer(std::size_t offset) const {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
-    return impl->fcram.get() + offset;
+    return impl->fcram + offset;
 }
 
 MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
