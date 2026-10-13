@@ -1,4 +1,5 @@
 pub mod float;
+pub mod hash;
 pub mod load_callback;
 pub mod output_vertex;
 pub mod regs_external;
