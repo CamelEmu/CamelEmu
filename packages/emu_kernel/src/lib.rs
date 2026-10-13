@@ -1,6 +1,8 @@
 pub mod ipc;
+pub mod timing;
 
 pub use ipc::HleRequestContext;
+pub use timing::Timer;
 
 pub struct PortInfo {
     pub name: &'static str,
@@ -14,4 +16,6 @@ impl Kernel {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn call_svc(&mut self, _immediate: u32) {}
 }

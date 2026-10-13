@@ -1,4 +1,9 @@
+mod cpu;
 mod ffi;
+mod host;
+mod memory;
+mod session;
+mod surface;
 
 pub use emu_cpu;
 pub use emu_mem;
@@ -9,6 +14,8 @@ pub use emu_network::Network;
 pub use emu_pica::Gpu;
 pub use emu_renderer::{GraphicsApi, Renderer};
 pub use emu_service::ServiceManager;
+pub use session::{ResultStatus, Session, SessionConfig};
+pub use surface::window;
 
 pub const VERSION: u32 = 1;
 
@@ -34,4 +41,13 @@ impl EmuAzahar {
     pub fn config(&self) -> Config {
         self.config
     }
+}
+
+fn init_logger() {
+    #[cfg(target_os = "android")]
+    android_logger::init_once(
+        android_logger::Config::default()
+            .with_max_level(log::LevelFilter::Info)
+            .with_tag("emu_azahar"),
+    );
 }
