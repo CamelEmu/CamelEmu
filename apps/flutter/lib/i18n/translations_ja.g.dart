@@ -1896,11 +1896,6 @@ class _Translations$settings$debug$ja extends Translations$settings$debug$en {
   String get cpuJitDescription =>
       'CPUエミュレーションにJIT（Just-In-Time）コンパイラを使用します。無効にすると、代わりにはるかに低速なインタプリタが使用されます。';
   @override
-  String get rustCpu => 'Rust CPU（実験的）';
-  @override
-  String get rustCpuDescription =>
-      'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。';
-  @override
   String get hwShaders => 'ハードウェアシェーダー';
   @override
   String get hwShadersDescription =>
@@ -2470,6 +2465,11 @@ class _Translations$settings$featureFlags$newEmulatorCore$parts$ja
 
   // Translations
   @override
+  late final _Translations$settings$featureFlags$newEmulatorCore$parts$cpu$ja
+  cpu = _Translations$settings$featureFlags$newEmulatorCore$parts$cpu$ja._(
+    _root,
+  );
+  @override
   late final _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja
   renderer =
       _Translations$settings$featureFlags$newEmulatorCore$parts$renderer$ja._(
@@ -2498,6 +2498,24 @@ class _Translations$settings$featureFlags$newEmulatorCore$parts$ja
       _Translations$settings$featureFlags$newEmulatorCore$parts$service$ja._(
         _root,
       );
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.cpu
+class _Translations$settings$featureFlags$newEmulatorCore$parts$cpu$ja
+    extends Translations$settings$featureFlags$newEmulatorCore$parts$cpu$en {
+  _Translations$settings$featureFlags$newEmulatorCore$parts$cpu$ja._(
+    TranslationsJa root,
+  ) : this._root = root,
+      super.internal(root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'CPUとメモリ';
+  @override
+  String get description =>
+      'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。';
 }
 
 // Path: settings.featureFlags.newEmulatorCore.parts.renderer
@@ -3414,9 +3432,6 @@ extension on TranslationsJa {
           'settings.debug.cpuJit' => 'CPU JIT',
           'settings.debug.cpuJitDescription' =>
             'CPUエミュレーションにJIT（Just-In-Time）コンパイラを使用します。無効にすると、代わりにはるかに低速なインタプリタが使用されます。',
-          'settings.debug.rustCpu' => 'Rust CPU（実験的）',
-          'settings.debug.rustCpuDescription' =>
-            'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。',
           'settings.debug.hwShaders' => 'ハードウェアシェーダー',
           'settings.debug.hwShadersDescription' =>
             'ソフトウェアレンダラーの代わりに、ハードウェアシェーダーで3DSのシェーダーをエミュレートします。無効にするとパフォーマンスが大きく低下します。',
@@ -3487,6 +3502,9 @@ extension on TranslationsJa {
             'Rustコアを使用',
           'settings.featureFlags.newEmulatorCore.useRustCore.description' =>
             '下でオンにした部分を、C++のコアの代わりにRustのコアで動かします。',
+          'settings.featureFlags.newEmulatorCore.parts.cpu.title' => 'CPUとメモリ',
+          'settings.featureFlags.newEmulatorCore.parts.cpu.description' =>
+            'JITコンパイラの代わりに、RustでCPUエミュレーションを実行し、エミュレートされたメモリを作成します。',
           'settings.featureFlags.newEmulatorCore.parts.renderer.title' =>
             'レンダラー',
           'settings.featureFlags.newEmulatorCore.parts.renderer.description' =>

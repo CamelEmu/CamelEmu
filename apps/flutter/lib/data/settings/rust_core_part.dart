@@ -7,6 +7,7 @@ import 'sections/rust_core_settings.dart';
 /// A part of the emulation that can run in the Rust core instead of the C++ core, listed in the
 /// order the feature flags page shows them.
 enum RustCorePart {
+  cpu(RustCoreSettingKeys.rustCpu, Icons.developer_board),
   renderer(RustCoreSettingKeys.rustRenderer, Icons.brush_outlined),
   audio(RustCoreSettingKeys.rustAudio, Icons.volume_up_outlined),
   network(RustCoreSettingKeys.rustNetwork, Icons.wifi),
@@ -23,11 +24,13 @@ enum RustCorePart {
 
   /// The other parts that have to run in Rust for this part to run in Rust.
   List<RustCorePart> get requires => switch (this) {
+    kernel => const [cpu],
     service => const [kernel],
     _ => const [],
   };
 
   String title(Translations t) => switch (this) {
+    cpu => t.settings.featureFlags.newEmulatorCore.parts.cpu.title,
     renderer => t.settings.featureFlags.newEmulatorCore.parts.renderer.title,
     audio => t.settings.featureFlags.newEmulatorCore.parts.audio.title,
     network => t.settings.featureFlags.newEmulatorCore.parts.network.title,
@@ -36,6 +39,7 @@ enum RustCorePart {
   };
 
   String description(Translations t) => switch (this) {
+    cpu => t.settings.featureFlags.newEmulatorCore.parts.cpu.description,
     renderer =>
       t.settings.featureFlags.newEmulatorCore.parts.renderer.description,
     audio => t.settings.featureFlags.newEmulatorCore.parts.audio.description,

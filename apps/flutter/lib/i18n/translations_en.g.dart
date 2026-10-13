@@ -2377,13 +2377,6 @@ class Translations$settings$debug$en {
   String get cpuJitDescription =>
       'Uses the Just-In-Time (JIT) compiler for CPU emulation. When disabled, a much slower interpreter is used instead.';
 
-  /// en: 'Rust CPU (Experimental)'
-  String get rustCpu => 'Rust CPU (Experimental)';
-
-  /// en: 'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.'
-  String get rustCpuDescription =>
-      'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.';
-
   /// en: 'Hardware Shaders'
   String get hwShaders => 'Hardware Shaders';
 
@@ -3128,6 +3121,11 @@ class Translations$settings$featureFlags$newEmulatorCore$parts$en {
   final Translations _root; // ignore: unused_field
 
   // Translations
+  late final Translations$settings$featureFlags$newEmulatorCore$parts$cpu$en
+  cpu =
+      Translations$settings$featureFlags$newEmulatorCore$parts$cpu$en.internal(
+        _root,
+      );
   late final Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en
   renderer =
       Translations$settings$featureFlags$newEmulatorCore$parts$renderer$en.internal(
@@ -3153,6 +3151,24 @@ class Translations$settings$featureFlags$newEmulatorCore$parts$en {
       Translations$settings$featureFlags$newEmulatorCore$parts$service$en.internal(
         _root,
       );
+}
+
+// Path: settings.featureFlags.newEmulatorCore.parts.cpu
+class Translations$settings$featureFlags$newEmulatorCore$parts$cpu$en {
+  Translations$settings$featureFlags$newEmulatorCore$parts$cpu$en.internal(
+    this._root,
+  );
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'CPU and Memory'
+  String get title => 'CPU and Memory';
+
+  /// en: 'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.'
+  String get description =>
+      'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.';
 }
 
 // Path: settings.featureFlags.newEmulatorCore.parts.renderer
@@ -4133,9 +4149,6 @@ extension on Translations {
           'settings.debug.cpuJit' => 'CPU JIT',
           'settings.debug.cpuJitDescription' =>
             'Uses the Just-In-Time (JIT) compiler for CPU emulation. When disabled, a much slower interpreter is used instead.',
-          'settings.debug.rustCpu' => 'Rust CPU (Experimental)',
-          'settings.debug.rustCpuDescription' =>
-            'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.',
           'settings.debug.hwShaders' => 'Hardware Shaders',
           'settings.debug.hwShadersDescription' =>
             'Uses hardware shaders to emulate 3DS shaders, instead of the software renderer. Disabling this greatly reduces performance.',
@@ -4210,6 +4223,10 @@ extension on Translations {
             'Use Rust Core',
           'settings.featureFlags.newEmulatorCore.useRustCore.description' =>
             'Runs the parts turned on below in the Rust core instead of the C++ core.',
+          'settings.featureFlags.newEmulatorCore.parts.cpu.title' =>
+            'CPU and Memory',
+          'settings.featureFlags.newEmulatorCore.parts.cpu.description' =>
+            'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.',
           'settings.featureFlags.newEmulatorCore.parts.renderer.title' =>
             'Renderer',
           'settings.featureFlags.newEmulatorCore.parts.renderer.description' =>
