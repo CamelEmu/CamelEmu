@@ -2377,6 +2377,13 @@ class Translations$settings$debug$en {
   String get cpuJitDescription =>
       'Uses the Just-In-Time (JIT) compiler for CPU emulation. When disabled, a much slower interpreter is used instead.';
 
+  /// en: 'Rust CPU (Experimental)'
+  String get rustCpu => 'Rust CPU (Experimental)';
+
+  /// en: 'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.'
+  String get rustCpuDescription =>
+      'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.';
+
   /// en: 'Hardware Shaders'
   String get hwShaders => 'Hardware Shaders';
 
@@ -4126,6 +4133,9 @@ extension on Translations {
           'settings.debug.cpuJit' => 'CPU JIT',
           'settings.debug.cpuJitDescription' =>
             'Uses the Just-In-Time (JIT) compiler for CPU emulation. When disabled, a much slower interpreter is used instead.',
+          'settings.debug.rustCpu' => 'Rust CPU (Experimental)',
+          'settings.debug.rustCpuDescription' =>
+            'Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.',
           'settings.debug.hwShaders' => 'Hardware Shaders',
           'settings.debug.hwShadersDescription' =>
             'Uses hardware shaders to emulate 3DS shaders, instead of the software renderer. Disabling this greatly reduces performance.',

@@ -801,6 +801,8 @@
       "cpuClockSpeedDescription": "Over/Underclocks the emulated CPU. Not recommended.",
       "cpuJit": "CPU JIT",
       "cpuJitDescription": "Uses the Just-In-Time (JIT) compiler for CPU emulation. When disabled, a much slower interpreter is used instead.",
+      "rustCpu": "Rust CPU (Experimental)",
+      "rustCpuDescription": "Runs the CPU emulation and creates the emulated memory in Rust instead of the JIT compiler.",
       "hwShaders": "Hardware Shaders",
       "hwShadersDescription": "Uses hardware shaders to emulate 3DS shaders, instead of the software renderer. Disabling this greatly reduces performance.",
       "vsync": "VSync",

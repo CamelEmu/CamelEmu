@@ -541,6 +541,11 @@ FlMethodResponse* HandleSupportsCustomDriverLoading(GtkWindow* window, FlValue* 
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
 }
 
+FlMethodResponse* HandleSupportsRustCpu(GtkWindow* window, FlValue* args) {
+  g_autoptr(FlValue) result = fl_value_new_bool(false);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+}
+
 FlMethodResponse* HandleListGpuDrivers(GtkWindow* window, FlValue* args) {
   g_autoptr(FlValue) result = fl_value_new_list();
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
@@ -717,6 +722,7 @@ const std::unordered_map<std::string, BridgeMethodHandler>& BridgeMethodHandlers
       {"scanRealWifiAccessPoints", HandleScanRealWifiAccessPoints},
       {"setVirtualAccessPoints", HandleSetVirtualAccessPoints},
       {"supportsCustomDriverLoading", HandleSupportsCustomDriverLoading},
+      {"supportsRustCpu", HandleSupportsRustCpu},
       {"listGpuDrivers", HandleListGpuDrivers},
       {"getSelectedGpuDriver", HandleGetSelectedGpuDriver},
       {"installGpuDriver", HandleInstallGpuDriver},

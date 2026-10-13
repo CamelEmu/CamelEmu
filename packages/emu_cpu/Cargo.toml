@@ -1,0 +1,16 @@
+[package]
+name = "emu_cpu"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+emu_mem = { version = "0.1.0", path = "../emu_mem", default-features = false }
+libc = "0.2.190"
