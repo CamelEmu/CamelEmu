@@ -1,6 +1,6 @@
 use emu_pica_types::Vec3;
 
-use crate::bits::{bits, pica_enum, sbits};
+use crate::bits::{assign, bits, pica_enum, sbits};
 
 pica_enum!(LightingSampler {
     DISTRIBUTION0 = 0,
@@ -342,6 +342,10 @@ impl LutConfig {
     /// Index at which to set data in the LUT
     pub fn index(&self) -> u32 {
         bits(self.raw, 0, 8)
+    }
+
+    pub fn set_index(&mut self, index: u32) {
+        assign(&mut self.raw, 0, 8, index);
     }
 
     /// Type of LUT for which to set data

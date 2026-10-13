@@ -127,17 +127,40 @@ pub struct FramebufferConfig {
 
 const _: () = assert!(size_of::<FramebufferConfig>() == 0x100);
 
+impl Default for FramebufferConfig {
+    fn default() -> Self {
+        unsafe { std::mem::zeroed() }
+    }
+}
+
+fn assign(value: &mut u32, position: u32, width: u32, field: u32) {
+    let field_mask = ((1u32 << width) - 1) << position;
+    *value = (*value & !field_mask) | ((field << position) & field_mask);
+}
+
 impl FramebufferConfig {
     pub fn width(&self) -> u32 {
         bits(self.size, 0, 16)
+    }
+
+    pub fn set_width(&mut self, width: u32) {
+        assign(&mut self.size, 0, 16, width);
     }
 
     pub fn height(&self) -> u32 {
         bits(self.size, 16, 16)
     }
 
+    pub fn set_height(&mut self, height: u32) {
+        assign(&mut self.size, 16, 16, height);
+    }
+
     pub fn color_format(&self) -> PixelFormat {
         PixelFormat(bits(self.format, 0, 3))
+    }
+
+    pub fn set_color_format(&mut self, format: PixelFormat) {
+        assign(&mut self.format, 0, 3, format.0);
     }
 
     // 0: Use parameters ending with "1"

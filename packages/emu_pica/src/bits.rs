@@ -14,6 +14,12 @@ pub const fn sbits(value: u32, position: u32, width: u32) -> i32 {
     ((value << (32 - position - width)) as i32) >> (32 - width)
 }
 
+/// Stores `field` in the bits of `value`, truncated to the width as `BitField::Assign` does.
+pub fn assign(value: &mut u32, position: u32, width: u32, field: u32) {
+    let field_mask = mask(width) << position;
+    *value = (*value & !field_mask) | ((field << position) & field_mask);
+}
+
 /// An enumeration stored in a bit field. Like the cast of the core, any raw value is kept, so the
 /// values that have no name stay distinct.
 macro_rules! pica_enum {

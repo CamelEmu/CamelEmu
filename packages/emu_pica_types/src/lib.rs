@@ -1,4 +1,5 @@
 pub mod float;
+pub mod gsp_interrupt;
 pub mod hash;
 pub mod load_callback;
 pub mod output_vertex;
