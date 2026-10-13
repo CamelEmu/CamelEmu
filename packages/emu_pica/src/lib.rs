@@ -1,10 +1,12 @@
 mod aligned;
 mod bits;
 pub mod memory;
+pub mod nihstro;
 pub mod output_vertex;
 pub mod packed_attribute;
 pub mod primitive_assembly;
 pub mod regs;
+pub mod shader;
 pub mod shader_setup;
 pub mod shader_unit;
 mod vector;
