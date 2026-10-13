@@ -13,7 +13,9 @@ panic = "abort"
 
 [dependencies]
 emu_audio = { version = "0.1.0", path = "../emu_audio" }
+emu_cpu = { version = "0.1.0", path = "../emu_cpu" }
 emu_kernel = { version = "0.1.0", path = "../emu_kernel" }
+emu_mem = { version = "0.1.0", path = "../emu_mem", features = ["ffi"] }
 emu_network = { version = "0.1.0", path = "../emu_network" }
 emu_pica = { version = "0.1.0", path = "../emu_pica" }
 emu_renderer = { version = "0.1.0", path = "../emu_renderer" }

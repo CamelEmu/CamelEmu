@@ -22,6 +22,7 @@
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/rust/rust_cpu.h"
 #if CITRA_HAS_RUST_CPU
+#include <emu_azahar.h>
 #include "core/arm/rust/arm_rust.h"
 #endif
 #include "core/cheats/cheats.h"
@@ -460,6 +461,20 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     memory = std::make_unique<Memory::MemorySystem>(*this);
 
+#if CITRA_HAS_RUST_CPU
+    if (Settings::values.use_rust_core.GetValue()) {
+        const EmuAzaharConfig config{
+            .renderer = Settings::values.rust_renderer.GetValue(),
+            .audio = Settings::values.rust_audio.GetValue(),
+            .network = Settings::values.rust_network.GetValue(),
+            .kernel = Settings::values.rust_kernel.GetValue(),
+            .service = Settings::values.rust_service.GetValue(),
+        };
+        emu_azahar = emu_azahar_create(&config);
+        LOG_INFO(Core, "Created the Rust core of emu_azahar {}", emu_azahar_version());
+    }
+#endif
+
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue(),
                                       movie.GetOverrideBaseTicks());
 
@@ -686,6 +701,11 @@ void System::Shutdown(bool is_deserializing) {
     }
 
     memory.reset();
+
+#if CITRA_HAS_RUST_CPU
+    emu_azahar_destroy(emu_azahar);
+    emu_azahar = nullptr;
+#endif
 
     if (self_delete_pending)
         FileUtil::Delete(m_filepath);

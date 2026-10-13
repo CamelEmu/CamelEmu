@@ -545,34 +545,36 @@ if (ENABLE_RUST_CPU AND ANDROID AND "arm64" IN_LIST ARCHITECTURE)
     )
     target_compile_definitions(citra_core PUBLIC CITRA_RUST_CPU)
 
-    # Each crate is its own shared library, since the library of the application already holds
+    # The Rust core is its own shared library, since the library of the application already holds
     # the Rust standard library of azahar_rust.
     set(EMU_RUST_TARGET aarch64-linux-android)
     set(EMU_RUST_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${EMU_RUST_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
     find_program(CARGO_EXECUTABLE cargo REQUIRED)
-    foreach(crate emu_mem emu_cpu)
-        set(crate_dir "${AZAHAR_REPO_ROOT}/packages/${crate}")
-        set(crate_lib "${crate_dir}/target/${EMU_RUST_TARGET}/release/lib${crate}.so")
-        add_custom_target(${crate}_build
-            COMMAND ${CMAKE_COMMAND} -E env
-                "CC_aarch64_linux_android=${EMU_RUST_CLANG}"
-                "AR_aarch64_linux_android=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
-                "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${EMU_RUST_CLANG}"
-                "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type cdylib
-                --target ${EMU_RUST_TARGET}
-                -- -C link-arg=-Wl,-soname,lib${crate}.so
-                -C link-arg=-Wl,-z,max-page-size=16384
-                -C link-arg=-Wl,-z,noexecstack
-            WORKING_DIRECTORY "${crate_dir}"
-            BYPRODUCTS "${crate_lib}"
-            COMMENT "Building ${crate} for ${EMU_RUST_TARGET}"
-        )
-        add_library(${crate} SHARED IMPORTED GLOBAL)
-        set_target_properties(${crate} PROPERTIES IMPORTED_LOCATION "${crate_lib}")
-        target_include_directories(${crate} INTERFACE "${crate_dir}/include")
-        add_dependencies(${crate} ${crate}_build)
-        target_link_libraries(citra_core PRIVATE ${crate})
-    endforeach()
+    set(emu_azahar_dir "${AZAHAR_REPO_ROOT}/packages/emu_azahar")
+    set(emu_azahar_lib "${emu_azahar_dir}/target/${EMU_RUST_TARGET}/release/libemu_azahar.so")
+    add_custom_target(emu_azahar_build
+        COMMAND ${CMAKE_COMMAND} -E env
+            "CC_aarch64_linux_android=${EMU_RUST_CLANG}"
+            "AR_aarch64_linux_android=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
+            "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${EMU_RUST_CLANG}"
+            "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type cdylib
+            --target ${EMU_RUST_TARGET}
+            -- -C link-arg=-Wl,-soname,libemu_azahar.so
+            -C link-arg=-Wl,-z,max-page-size=16384
+            -C link-arg=-Wl,-z,noexecstack
+        WORKING_DIRECTORY "${emu_azahar_dir}"
+        BYPRODUCTS "${emu_azahar_lib}"
+        COMMENT "Building emu_azahar for ${EMU_RUST_TARGET}"
+    )
+    add_library(emu_azahar SHARED IMPORTED GLOBAL)
+    set_target_properties(emu_azahar PROPERTIES IMPORTED_LOCATION "${emu_azahar_lib}")
+    target_include_directories(emu_azahar INTERFACE
+        "${emu_azahar_dir}/include"
+        "${AZAHAR_REPO_ROOT}/packages/emu_cpu/include"
+        "${AZAHAR_REPO_ROOT}/packages/emu_mem/include"
+    )
+    add_dependencies(emu_azahar emu_azahar_build)
+    target_link_libraries(citra_core PRIVATE emu_azahar)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
