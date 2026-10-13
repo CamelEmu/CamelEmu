@@ -5,3 +5,5 @@ pub mod pica_fs_config;
 pub mod profile;
 pub mod shader_gen;
 pub mod shader_uniforms;
+pub mod spv_fs_shader_gen;
+pub mod spv_module;

@@ -104,6 +104,7 @@ dependencies = [
  "emu_opengles",
  "emu_pica_types",
  "emu_vulkan",
+ "log",
 ]
 
 [[package]]
