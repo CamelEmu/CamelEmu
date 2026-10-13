@@ -1,3 +1,4 @@
+pub mod glsl_fs_shader_gen;
 pub mod glsl_shader_decompiler;
 pub mod glsl_shader_gen;
 pub mod pica_fs_config;
