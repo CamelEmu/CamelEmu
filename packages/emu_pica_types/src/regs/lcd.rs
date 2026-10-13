@@ -1,7 +1,6 @@
 use std::mem::offset_of;
 
-use emu_pica_types::Vec3;
-
+use crate::Vec3;
 use crate::bits::bits;
 
 #[repr(transparent)]

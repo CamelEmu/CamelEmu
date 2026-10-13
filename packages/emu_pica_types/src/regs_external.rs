@@ -1,11 +1,9 @@
+use crate::bits::{assign, bits};
+
 /// Most physical addresses which GPU registers refer to are 8-byte aligned.
 /// This function should be used to get the address from a raw register value.
 pub const fn decode_address_register(register_value: u32) -> u32 {
     register_value.wrapping_mul(8)
-}
-
-const fn bits(value: u32, position: u32, width: u32) -> u32 {
-    (value >> position) & ((1u32 << width) - 1)
 }
 
 /// Components are laid out in reverse byte order, most significant bits first.
@@ -139,11 +137,6 @@ impl Default for FramebufferConfig {
     fn default() -> Self {
         unsafe { std::mem::zeroed() }
     }
-}
-
-fn assign(value: &mut u32, position: u32, width: u32, field: u32) {
-    let field_mask = ((1u32 << width) - 1) << position;
-    *value = (*value & !field_mask) | ((field << position) & field_mask);
 }
 
 impl FramebufferConfig {
