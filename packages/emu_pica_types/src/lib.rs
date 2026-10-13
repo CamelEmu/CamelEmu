@@ -1,3 +1,4 @@
+pub mod bits;
 pub mod color;
 pub mod float;
 pub mod gsp_command;
@@ -7,6 +8,7 @@ pub mod hacks;
 pub mod hash;
 pub mod load_callback;
 pub mod output_vertex;
+pub mod regs;
 pub mod regs_external;
 pub mod utils;
 pub mod vector;

@@ -1,5 +1,4 @@
-use emu_pica_types::Vec4;
-
+use crate::Vec4;
 use crate::bits::{assign, bits, pica_enum};
 
 pica_enum!(ShaderMode {

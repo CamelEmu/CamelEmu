@@ -1,5 +1,4 @@
-use emu_pica_types::Vec3;
-
+use crate::Vec3;
 use crate::bits::{assign, bits, pica_enum, sbits};
 
 pica_enum!(LightingSampler {

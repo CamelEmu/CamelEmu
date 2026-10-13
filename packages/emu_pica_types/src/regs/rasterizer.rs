@@ -1,6 +1,5 @@
-use emu_pica_types::{F24, Vec4};
-
 use crate::bits::{bits, pica_enum, sbits};
+use crate::{F24, Vec4};
 
 pica_enum!(CullMode {
     // Select which polygons are considered to be "frontfacing".

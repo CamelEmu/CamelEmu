@@ -22,6 +22,7 @@ pub fn assign(value: &mut u32, position: u32, width: u32, field: u32) {
 
 /// An enumeration stored in a bit field. Like the cast of the core, any raw value is kept, so the
 /// values that have no name stay distinct.
+#[macro_export]
 macro_rules! pica_enum {
     ($(#[$meta:meta])* $name:ident { $($variant:ident = $value:expr),* $(,)? }) => {
         $(#[$meta])*
@@ -35,4 +36,4 @@ macro_rules! pica_enum {
     };
 }
 
-pub(crate) use pica_enum;
+pub use pica_enum;
