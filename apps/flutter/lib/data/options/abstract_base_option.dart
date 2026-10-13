@@ -16,12 +16,15 @@ import '../../screens/options/widgets/tiles/string_option_widget.dart';
 import 'emulator/settings/emulator_setting.dart';
 import 'input_binding_mode.dart';
 import 'option_applicable.dart';
+import 'option_dependency.dart';
 import 'option_readable.dart';
 import 'option_value.dart';
 import 'translation_text.dart';
 import 'widget_convertable.dart';
 
 part 'abstract_base_option.freezed.dart';
+part 'dependent/abstract_dependent_option.dart';
+part 'dependent/dependent_bool_option.dart';
 part 'emulator/abstract_emulator_option.dart';
 part 'emulator/emulator_bool_option.dart';
 part 'emulator/emulator_enum_option.dart';
