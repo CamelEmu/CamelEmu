@@ -1,5 +1,11 @@
+mod base;
+
 use std::sync::atomic::AtomicBool;
 
+pub use base::{
+    FrameHooks, RendererBase, RendererSettings, SCREEN_BOTTOM_HEIGHT, SCREEN_BOTTOM_WIDTH,
+    SCREEN_TOP_HEIGHT, SCREEN_TOP_WIDTH, ScreenId, ScreenSurface, ScreenshotCallback,
+};
 pub use emu_opengles::{OpenGlesRenderer, RasterizerOpenGl};
 use emu_pica_types::{
     DiskResourceLoadCallback, DisplayTransferConfig, MemoryFillConfig, OutputVertex,
