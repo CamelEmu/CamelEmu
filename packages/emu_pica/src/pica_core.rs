@@ -449,7 +449,7 @@ impl PicaCore {
             fog: Fog::default(),
             input_default_attributes: AttributeBuffer::default(),
             immediate: ImmediateModeState::default(),
-            use_hw_shader: false,
+            use_hw_shader: true,
             memory,
             signal_interrupt: None,
             geometry_pipeline: GeometryPipeline::new(),
@@ -516,10 +516,10 @@ impl PicaCore {
         self.signal_interrupt = Some(signal_interrupt);
     }
 
-    fn signal_interrupt(&mut self, id: InterruptId) {
+    fn signal_interrupt(&self, id: InterruptId) {
         let signal_interrupt = self
             .signal_interrupt
-            .as_mut()
+            .as_ref()
             .expect("the interrupt handler is set before the GPU runs");
         signal_interrupt(id);
     }

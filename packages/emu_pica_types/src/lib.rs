@@ -1,9 +1,14 @@
+pub mod color;
 pub mod float;
+pub mod gsp_command;
+pub mod gsp_gpu;
 pub mod gsp_interrupt;
+pub mod hacks;
 pub mod hash;
 pub mod load_callback;
 pub mod output_vertex;
 pub mod regs_external;
+pub mod utils;
 pub mod vector;
 
 pub use float::{F16, F20, F24, F31, Float};
