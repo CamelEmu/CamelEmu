@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 emu_pica_types = { version = "0.1.0", path = "../emu_pica_types" }
 log = "0.4.34"
+rspirv = "0.13.0"
