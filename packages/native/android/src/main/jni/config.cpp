@@ -131,6 +131,12 @@ void Config::ReadValues() {
     // Core
     ReadSetting("Core", Settings::values.use_cpu_jit);
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
+    ReadSetting("Core", Settings::values.use_rust_core);
+    ReadSetting("Core", Settings::values.rust_renderer);
+    ReadSetting("Core", Settings::values.rust_audio);
+    ReadSetting("Core", Settings::values.rust_network);
+    ReadSetting("Core", Settings::values.rust_kernel);
+    ReadSetting("Core", Settings::values.rust_service);
 
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);

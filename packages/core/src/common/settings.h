@@ -454,6 +454,12 @@ struct Values {
     SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
     SwitchableSetting<bool> enable_required_online_lle_modules{
         false, "enable_required_online_lle_modules"};
+    Setting<bool> use_rust_core{false, "use_rust_core"};
+    Setting<bool> rust_renderer{false, "rust_renderer"};
+    Setting<bool> rust_audio{false, "rust_audio"};
+    Setting<bool> rust_network{false, "rust_network"};
+    Setting<bool> rust_kernel{false, "rust_kernel"};
+    Setting<bool> rust_service{false, "rust_service"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
