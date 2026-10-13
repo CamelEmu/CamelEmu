@@ -452,7 +452,7 @@ MemorySystem::Impl::Impl(Core::System& system_)
       n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>(*this)),
       dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {
 #if CITRA_HAS_RUST_CPU
-    if (Settings::values.use_rust_cpu.GetValue()) {
+    if (Settings::values.use_rust_core.GetValue() && Settings::values.use_rust_cpu.GetValue()) {
         emu_mem = emu_mem_create();
         ASSERT_MSG(emu_mem, "emu_mem could not create the physical memory");
         fcram = emu_mem_region_ptr(emu_mem, EMU_MEM_REGION_FCRAM);
