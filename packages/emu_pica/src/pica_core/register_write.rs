@@ -76,10 +76,13 @@ impl PicaCore {
         ];
 
         // TODO: Figure out how register masking acts on e.g. vs.uniform_setup.set_value
-        let reg_array = self.regs.internal.reg_array_mut();
-        let old_value = reg_array[id as usize];
-        let write_mask = EXPAND_BITS_TO_BYTES[mask as usize];
-        reg_array[id as usize] = (old_value & !write_mask) | (value & write_mask);
+        {
+            let mut regs = self.regs.borrow_mut();
+            let reg_array = regs.internal.reg_array_mut();
+            let old_value = reg_array[id as usize];
+            let write_mask = EXPAND_BITS_TO_BYTES[mask as usize];
+            reg_array[id as usize] = (old_value & !write_mask) | (value & write_mask);
+        }
 
         let id_index = id as usize;
         match id_index {
@@ -89,8 +92,8 @@ impl PicaCore {
             }
 
             TRIANGLE_TOPOLOGY => {
-                self.primitive_assembler
-                    .reconfigure(self.regs.internal.pipeline.triangle_topology());
+                let topology = self.regs.borrow().internal.pipeline.triangle_topology();
+                self.primitive_assembler.reconfigure(topology);
             }
 
             RESTART_PRIMITIVE => {
@@ -112,7 +115,8 @@ impl PicaCore {
 
             COMMAND_BUFFER_TRIGGER..=COMMAND_BUFFER_TRIGGER_LAST => {
                 let index = (id_index - COMMAND_BUFFER_TRIGGER) as u32;
-                let command_buffer = &self.regs.internal.pipeline.command_buffer;
+                let regs = self.regs.borrow();
+                let command_buffer = &regs.internal.pipeline.command_buffer;
                 let addr = command_buffer.get_physical_address(index);
                 let size = command_buffer.get_size(index);
                 let head = self.memory.get_physical_pointer(addr);
@@ -134,7 +138,8 @@ impl PicaCore {
             }
 
             LIGHTING_LUT_DATA..=LIGHTING_LUT_DATA_LAST => {
-                let lut_config = &mut self.regs.internal.lighting.lut_config;
+                let mut regs = self.regs.borrow_mut();
+                let lut_config = &mut regs.internal.lighting.lut_config;
                 assert!(
                     lut_config.index() < 256,
                     "lut_config.index exceeded maximum value of 255!"
@@ -146,7 +151,8 @@ impl PicaCore {
             }
 
             FOG_LUT_DATA..=FOG_LUT_DATA_LAST => {
-                let texturing = &mut self.regs.internal.texturing;
+                let mut regs = self.regs.borrow_mut();
+                let texturing = &mut regs.internal.texturing;
                 self.fog.lut[(texturing.fog_lut_offset() % 128) as usize].raw = value;
                 texturing.set_fog_lut_offset(texturing.fog_lut_offset() + 1);
             }
@@ -167,22 +173,25 @@ impl PicaCore {
         match id_index {
             GS_BOOL_UNIFORMS => {
                 self.gs_setup
-                    .write_uniform_bool_reg(self.regs.internal.gs.bool_uniforms());
+                    .write_uniform_bool_reg(self.regs.borrow().internal.gs.bool_uniforms());
             }
 
             GS_INT_UNIFORMS..=GS_INT_UNIFORMS_LAST => {
                 let index = (id_index - GS_INT_UNIFORMS) as u32;
-                self.gs_setup
-                    .write_uniform_int_reg(index, self.regs.internal.gs.get_int_uniform(index));
+                self.gs_setup.write_uniform_int_reg(
+                    index,
+                    self.regs.borrow().internal.gs.get_int_uniform(index),
+                );
             }
 
             GS_UNIFORM_SET_VALUE..=GS_UNIFORM_SET_VALUE_LAST => {
                 self.gs_setup
-                    .write_uniform_float_reg(&mut self.regs.internal.gs, value);
+                    .write_uniform_float_reg(&mut self.regs.borrow_mut().internal.gs, value);
             }
 
             GS_PROGRAM_SET_WORD..=GS_PROGRAM_SET_WORD_LAST => {
-                let offset = &mut self.regs.internal.gs.program.offset;
+                let mut regs = self.regs.borrow_mut();
+                let offset = &mut regs.internal.gs.program.offset;
                 if *offset >= 4096 {
                     log::error!(target: "HW_GPU", "Invalid GS program offset {}", *offset);
                 } else {
@@ -193,7 +202,8 @@ impl PicaCore {
             }
 
             GS_SWIZZLE_SET_WORD..=GS_SWIZZLE_SET_WORD_LAST => {
-                let offset = &mut self.regs.internal.gs.swizzle_patterns.offset;
+                let mut regs = self.regs.borrow_mut();
+                let offset = &mut regs.internal.gs.swizzle_patterns.offset;
                 if *offset as usize >= self.gs_setup.swizzle_data.len() {
                     log::error!(target: "HW_GPU", "Invalid GS swizzle pattern offset {}", *offset);
                 } else {
@@ -211,7 +221,8 @@ impl PicaCore {
     fn write_vs_reg(&mut self, id_index: usize, value: u32) {
         match id_index {
             VS_OUTPUT_MASK => {
-                let internal = &mut self.regs.internal;
+                let mut regs = self.regs.borrow_mut();
+                let internal = &mut regs.internal;
                 if internal.pipeline.gs_unit_exclusive_configuration() == 0
                     && internal.pipeline.use_gs() == UseGs::NO
                 {
@@ -220,7 +231,8 @@ impl PicaCore {
             }
 
             VS_BOOL_UNIFORMS => {
-                let internal = &self.regs.internal;
+                let regs = self.regs.borrow();
+                let internal = &regs.internal;
                 self.vs_setup
                     .write_uniform_bool_reg(internal.vs.bool_uniforms());
                 if internal.pipeline.gs_unit_exclusive_configuration() == 0
@@ -233,7 +245,8 @@ impl PicaCore {
 
             VS_INT_UNIFORMS..=VS_INT_UNIFORMS_LAST => {
                 let index = (id_index - VS_INT_UNIFORMS) as u32;
-                let internal = &self.regs.internal;
+                let regs = self.regs.borrow();
+                let internal = &regs.internal;
                 self.vs_setup
                     .write_uniform_int_reg(index, internal.vs.get_int_uniform(index));
                 if internal.pipeline.gs_unit_exclusive_configuration() == 0
@@ -245,7 +258,8 @@ impl PicaCore {
             }
 
             VS_UNIFORM_SET_VALUE..=VS_UNIFORM_SET_VALUE_LAST => {
-                let internal = &mut self.regs.internal;
+                let mut regs = self.regs.borrow_mut();
+                let internal = &mut regs.internal;
                 let index = self
                     .vs_setup
                     .write_uniform_float_reg(&mut internal.vs, value);
@@ -259,7 +273,8 @@ impl PicaCore {
             }
 
             VS_PROGRAM_SET_WORD..=VS_PROGRAM_SET_WORD_LAST => {
-                let internal = &mut self.regs.internal;
+                let mut regs = self.regs.borrow_mut();
+                let internal = &mut regs.internal;
                 let gs_unit_exclusive_configuration =
                     internal.pipeline.gs_unit_exclusive_configuration();
                 let offset = &mut internal.vs.program.offset;
@@ -277,7 +292,8 @@ impl PicaCore {
             }
 
             VS_SWIZZLE_SET_WORD..=VS_SWIZZLE_SET_WORD_LAST => {
-                let internal = &mut self.regs.internal;
+                let mut regs = self.regs.borrow_mut();
+                let internal = &mut regs.internal;
                 let gs_unit_exclusive_configuration =
                     internal.pipeline.gs_unit_exclusive_configuration();
                 let offset = &mut internal.vs.swizzle_patterns.offset;
@@ -300,7 +316,8 @@ impl PicaCore {
 
     /// Handles the writes to the data of the procedural texture lookup tables.
     fn write_proctex_lut(&mut self, value: u32) {
-        let config = &mut self.regs.internal.texturing.proctex_lut_config;
+        let mut regs = self.regs.borrow_mut();
+        let config = &mut regs.internal.texturing.proctex_lut_config;
         let index = config.index() as usize;
         let proctex = &mut self.proctex;
 
@@ -333,23 +350,33 @@ impl PicaCore {
 
         const IMMEDIATE_MODE_INDEX: u32 = 0xF;
 
-        let setup = &mut self.regs.internal.pipeline.vs_default_attributes_setup;
-        if setup.index > IMMEDIATE_MODE_INDEX {
-            log::error!(target: "HW_GPU", "Invalid VS default attribute index {}", setup.index);
-            return;
-        }
+        let attribute = {
+            let mut regs = self.regs.borrow_mut();
+            let setup = &mut regs.internal.pipeline.vs_default_attributes_setup;
+            if setup.index > IMMEDIATE_MODE_INDEX {
+                log::error!(target: "HW_GPU", "Invalid VS default attribute index {}", setup.index);
+                return;
+            }
 
-        // Retrieve the attribute and place it in the default attribute buffer.
-        let attribute = self.immediate.queue.get(false);
-        if setup.index < IMMEDIATE_MODE_INDEX {
-            self.input_default_attributes[setup.index as usize] = attribute;
-            setup.index += 1;
-            return;
-        }
+            // Retrieve the attribute and place it in the default attribute buffer.
+            let attribute = self.immediate.queue.get(false);
+            if setup.index < IMMEDIATE_MODE_INDEX {
+                self.input_default_attributes[setup.index as usize] = attribute;
+                setup.index += 1;
+                return;
+            }
+            attribute
+        };
 
         // When index is 0xF the attribute is used for immediate mode drawing.
         self.immediate.input_vertex[self.immediate.current_attribute as usize] = attribute;
-        if self.immediate.current_attribute < self.regs.internal.pipeline.max_input_attrib_index() {
+        let max_input_attrib_index = self
+            .regs
+            .borrow()
+            .internal
+            .pipeline
+            .max_input_attrib_index();
+        if self.immediate.current_attribute < max_input_attrib_index {
             self.immediate.current_attribute += 1;
             return;
         }

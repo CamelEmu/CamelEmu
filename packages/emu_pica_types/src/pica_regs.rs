@@ -1,6 +1,8 @@
-use emu_pica_types::{DisplayTransferConfig, FramebufferConfig, MemoryFillConfig};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::regs::RegsInternal;
+use crate::{DisplayTransferConfig, FramebufferConfig, MemoryFillConfig};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -23,6 +25,10 @@ pub struct Regs {
 
 const _: () = assert!(size_of::<Regs>() == Regs::NUM_REGS * size_of::<u32>());
 
+/// The registers of the PICA, shared by the PICA core that writes them and the rasterizer that
+/// reads them, as the C++ rasterizer holds a reference to the registers of the PICA core.
+pub type SharedRegs = Rc<RefCell<Regs>>;
+
 impl Default for Regs {
     fn default() -> Self {
         unsafe { std::mem::zeroed() }
@@ -44,6 +50,6 @@ impl Regs {
 #[macro_export]
 macro_rules! gpu_reg_index {
     ($($field:tt).+) => {
-        ::std::mem::offset_of!($crate::pica_core::Regs, $($field).+) / ::std::mem::size_of::<u32>()
+        ::std::mem::offset_of!($crate::pica_regs::Regs, $($field).+) / ::std::mem::size_of::<u32>()
     };
 }

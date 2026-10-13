@@ -11,7 +11,7 @@ use emu_renderer::Renderer;
 use crate::bits::assign;
 use crate::gpu_reg_index;
 use crate::memory::PhysicalMemory;
-use crate::pica_core::{PicaCore, Regs};
+use crate::pica_core::{PicaCore, Regs, SharedRegs};
 use crate::regs::RegsLcd;
 use crate::regs::lcd::ColorFill;
 use crate::right_eye_disabler::RightEyeDisabler;
@@ -78,12 +78,13 @@ pub struct Gpu {
 impl Gpu {
     pub fn new(
         renderer: Box<dyn Renderer>,
+        regs: SharedRegs,
         memory: Rc<dyn PhysicalMemory>,
         use_shader_jit: bool,
     ) -> Self {
         Self {
             right_eye_disabler: RightEyeDisabler::default(),
-            pica: Box::new(PicaCore::new(memory.clone(), use_shader_jit)),
+            pica: Box::new(PicaCore::new(regs, memory.clone(), use_shader_jit)),
             renderer,
             sw_blitter: SwBlitter::new(memory),
             signal_interrupt: None,
@@ -218,12 +219,15 @@ impl Gpu {
             CommandId::SUBMIT_CMD_LIST => {
                 let params = command.submit_gpu_cmdlist();
                 let address = self.virtual_to_physical_address(params.address);
-                let cmdbuffer = &mut self.pica.regs.internal.pipeline.command_buffer;
+                {
+                    let mut regs = self.pica.regs.borrow_mut();
+                    let cmdbuffer = &mut regs.internal.pipeline.command_buffer;
 
-                // Write to the command buffer GPU registers
-                assign(&mut cmdbuffer.addr_raw[0], 0, 28, address >> 3);
-                assign(&mut cmdbuffer.size_raw[0], 0, 20, params.size >> 3);
-                cmdbuffer.trigger[0] = 1;
+                    // Write to the command buffer GPU registers
+                    assign(&mut cmdbuffer.addr_raw[0], 0, 28, address >> 3);
+                    assign(&mut cmdbuffer.size_raw[0], 0, 20, params.size >> 3);
+                    cmdbuffer.trigger[0] = 1;
+                }
 
                 // Trigger processing of the command list
                 self.submit_cmd_list(0);
@@ -235,21 +239,27 @@ impl Gpu {
                 if params.start1 != 0 {
                     let address_start = self.virtual_to_physical_address(params.start1) >> 3;
                     let address_end = self.virtual_to_physical_address(params.end1) >> 3;
-                    let memfill = &mut self.pica.regs.memory_fill_config[0];
-                    memfill.address_start = address_start;
-                    memfill.address_end = address_end;
-                    memfill.value_32bit = params.value1;
-                    memfill.control = u32::from(params.control1);
+                    {
+                        let mut regs = self.pica.regs.borrow_mut();
+                        let memfill = &mut regs.memory_fill_config[0];
+                        memfill.address_start = address_start;
+                        memfill.address_end = address_end;
+                        memfill.value_32bit = params.value1;
+                        memfill.control = u32::from(params.control1);
+                    }
                     self.memory_fill(0);
                 }
                 if params.start2 != 0 {
                     let address_start = self.virtual_to_physical_address(params.start2) >> 3;
                     let address_end = self.virtual_to_physical_address(params.end2) >> 3;
-                    let memfill = &mut self.pica.regs.memory_fill_config[1];
-                    memfill.address_start = address_start;
-                    memfill.address_end = address_end;
-                    memfill.value_32bit = params.value2;
-                    memfill.control = u32::from(params.control2);
+                    {
+                        let mut regs = self.pica.regs.borrow_mut();
+                        let memfill = &mut regs.memory_fill_config[1];
+                        memfill.address_start = address_start;
+                        memfill.address_end = address_end;
+                        memfill.value_32bit = params.value2;
+                        memfill.control = u32::from(params.control2);
+                    }
                     self.memory_fill(1);
                 }
             }
@@ -258,15 +268,18 @@ impl Gpu {
                 let input_address = self.virtual_to_physical_address(params.in_buffer_address) >> 3;
                 let output_address =
                     self.virtual_to_physical_address(params.out_buffer_address) >> 3;
-                let display_transfer = &mut self.pica.regs.display_transfer_config;
+                {
+                    let mut regs = self.pica.regs.borrow_mut();
+                    let display_transfer = &mut regs.display_transfer_config;
 
-                // Write to the transfer engine GPU registers.
-                display_transfer.input_address = input_address;
-                display_transfer.output_address = output_address;
-                display_transfer.input_size = params.in_buffer_size;
-                display_transfer.output_size = params.out_buffer_size;
-                display_transfer.flags = params.flags;
-                display_transfer.set_triggered(true);
+                    // Write to the transfer engine GPU registers.
+                    display_transfer.input_address = input_address;
+                    display_transfer.output_address = output_address;
+                    display_transfer.input_size = params.in_buffer_size;
+                    display_transfer.output_size = params.out_buffer_size;
+                    display_transfer.flags = params.flags;
+                    display_transfer.set_triggered(true);
+                }
 
                 // Trigger the display transfer.
                 self.memory_transfer();
@@ -276,16 +289,19 @@ impl Gpu {
                 let input_address = self.virtual_to_physical_address(params.in_buffer_address) >> 3;
                 let output_address =
                     self.virtual_to_physical_address(params.out_buffer_address) >> 3;
-                let texture_copy = &mut self.pica.regs.display_transfer_config;
+                {
+                    let mut regs = self.pica.regs.borrow_mut();
+                    let texture_copy = &mut regs.display_transfer_config;
 
-                // Write to the transfer engine GPU registers.
-                texture_copy.input_address = input_address;
-                texture_copy.output_address = output_address;
-                texture_copy.texture_copy.size = params.size;
-                texture_copy.texture_copy.input_size = params.in_width_gap;
-                texture_copy.texture_copy.output_size = params.out_width_gap;
-                texture_copy.flags = params.flags;
-                texture_copy.set_triggered(true);
+                    // Write to the transfer engine GPU registers.
+                    texture_copy.input_address = input_address;
+                    texture_copy.output_address = output_address;
+                    texture_copy.texture_copy.size = params.size;
+                    texture_copy.texture_copy.input_size = params.in_width_gap;
+                    texture_copy.texture_copy.output_size = params.out_width_gap;
+                    texture_copy.flags = params.flags;
+                    texture_copy.set_triggered(true);
+                }
 
                 // Trigger the texture copy.
                 self.memory_transfer();
@@ -311,18 +327,21 @@ impl Gpu {
         let phys_address_right = self.virtual_to_physical_address(info.address_right);
 
         // Update framebuffer properties.
-        let framebuffer = &mut self.pica.regs.framebuffer_config[screen_id as usize];
-        if info.active_fb == 0 {
-            framebuffer.address_left1 = phys_address_left;
-            framebuffer.address_right1 = phys_address_right;
-        } else {
-            framebuffer.address_left2 = phys_address_left;
-            framebuffer.address_right2 = phys_address_right;
-        }
+        {
+            let mut regs = self.pica.regs.borrow_mut();
+            let framebuffer = &mut regs.framebuffer_config[screen_id as usize];
+            if info.active_fb == 0 {
+                framebuffer.address_left1 = phys_address_left;
+                framebuffer.address_right1 = phys_address_right;
+            } else {
+                framebuffer.address_left2 = phys_address_left;
+                framebuffer.address_right2 = phys_address_right;
+            }
 
-        framebuffer.stride = info.stride;
-        framebuffer.format = info.format;
-        framebuffer.active_fb = info.shown_fb;
+            framebuffer.stride = info.stride;
+            framebuffer.format = info.format;
+            framebuffer.active_fb = info.shown_fb;
+        }
 
         if screen_id == 0 {
             host.end_game_frame();
@@ -358,7 +377,7 @@ impl Gpu {
                     "Assertion Failed!"
                 );
                 assert!(index < Regs::NUM_REGS, "Assertion Failed!");
-                self.pica.regs.reg_array()[index]
+                self.pica.regs.borrow().reg_array()[index]
             }
             _ => unreachable!("Read from unknown GPU address {:#08X}", addr),
         }
@@ -386,7 +405,7 @@ impl Gpu {
                     "Assertion Failed!"
                 );
                 assert!(index < Regs::NUM_REGS, "Assertion Failed!");
-                self.pica.regs.reg_array_mut()[index] = data;
+                self.pica.regs.borrow_mut().reg_array_mut()[index] = data;
 
                 // Handle registers that trigger GPU actions
                 match index {
@@ -438,14 +457,16 @@ impl Gpu {
 
     fn submit_cmd_list(&mut self, index: u32) {
         // Check if a command list was triggered.
-        let config = &self.pica.regs.internal.pipeline.command_buffer;
-        if config.trigger[index as usize] == 0 {
-            return;
-        }
+        let (addr, size) = {
+            let regs = self.pica.regs.borrow();
+            let config = &regs.internal.pipeline.command_buffer;
+            if config.trigger[index as usize] == 0 {
+                return;
+            }
 
-        // Forward command list processing to the PICA core.
-        let addr = config.get_physical_address(index);
-        let size = config.get_size(index);
+            // Forward command list processing to the PICA core.
+            (config.get_physical_address(index), config.get_size(index))
+        };
         let allow = self.right_eye_disabler.should_allow_cmd_queue_trigger(
             &mut self.pica,
             self.disable_right_eye_render,
@@ -454,12 +475,18 @@ impl Gpu {
         );
         self.pica
             .process_cmd_list(self.renderer.rasterizer(), addr, size, !allow);
-        self.pica.regs.internal.pipeline.command_buffer.trigger[index as usize] = 0;
+        self.pica
+            .regs
+            .borrow_mut()
+            .internal
+            .pipeline
+            .command_buffer
+            .trigger[index as usize] = 0;
     }
 
     fn memory_fill(&mut self, index: u32) {
         // Check if a memory fill was triggered.
-        let config = self.pica.regs.memory_fill_config[index as usize];
+        let config = self.pica.regs.borrow().memory_fill_config[index as usize];
         if !config.trigger() {
             return;
         }
@@ -482,14 +509,15 @@ impl Gpu {
 
         // Reset "trigger" flag and set the "finish" flag
         // This was confirmed to happen on hardware even if "address_start" is zero.
-        let config = &mut self.pica.regs.memory_fill_config[index as usize];
+        let mut regs = self.pica.regs.borrow_mut();
+        let config = &mut regs.memory_fill_config[index as usize];
         config.set_trigger(false);
         config.set_finished(true);
     }
 
     fn memory_transfer(&mut self) {
         // Check if a transfer was triggered.
-        let config = self.pica.regs.display_transfer_config;
+        let config = self.pica.regs.borrow().display_transfer_config;
         if !config.triggered() {
             return;
         }
@@ -509,7 +537,11 @@ impl Gpu {
         }
 
         // Complete transfer.
-        self.pica.regs.display_transfer_config.set_triggered(false);
+        self.pica
+            .regs
+            .borrow_mut()
+            .display_transfer_config
+            .set_triggered(false);
         self.signal_interrupt(InterruptId::PPF);
     }
 
