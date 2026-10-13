@@ -1,9 +1,11 @@
 mod aligned;
 mod bits;
+pub mod geometry_pipeline;
 pub mod memory;
 pub mod nihstro;
 pub mod output_vertex;
 pub mod packed_attribute;
+pub mod pica_core;
 pub mod primitive_assembly;
 pub mod regs;
 pub mod shader;

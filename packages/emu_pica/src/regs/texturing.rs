@@ -1,4 +1,4 @@
-use crate::bits::{bits, mask, pica_enum, sbits};
+use crate::bits::{assign, bits, mask, pica_enum, sbits};
 
 pica_enum!(TextureType {
     TEXTURE_2D = 0,
@@ -374,6 +374,10 @@ impl ProcTexLutConfig {
         bits(self.raw, 0, 8)
     }
 
+    pub fn set_index(&mut self, index: u32) {
+        assign(&mut self.raw, 0, 8, index);
+    }
+
     pub fn ref_table(&self) -> ProcTexLutTable {
         ProcTexLutTable(bits(self.raw, 8, 4))
     }
@@ -729,6 +733,10 @@ impl TexturingRegs {
 
     pub fn fog_lut_offset(&self) -> u32 {
         bits(self.fog_lut_offset_raw, 0, 16)
+    }
+
+    pub fn set_fog_lut_offset(&mut self, offset: u32) {
+        assign(&mut self.fog_lut_offset_raw, 0, 16, offset);
     }
 
     pub fn get_tev_stages(&self) -> [TevStageConfig; 6] {

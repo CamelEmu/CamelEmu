@@ -1,6 +1,6 @@
 use emu_pica_types::Vec4;
 
-use crate::bits::{bits, pica_enum};
+use crate::bits::{assign, bits, pica_enum};
 
 pica_enum!(ShaderMode {
     GS = 0x08,
@@ -117,12 +117,20 @@ impl ShaderRegs {
         bits(self.input_buffer_config, 0, 4)
     }
 
+    pub fn set_max_input_attribute_index(&mut self, value: u32) {
+        assign(&mut self.input_buffer_config, 0, 4, value);
+    }
+
     pub fn input_to_uniform(&self) -> u32 {
         bits(self.input_buffer_config, 8, 8)
     }
 
     pub fn shader_mode(&self) -> ShaderMode {
         ShaderMode(bits(self.input_buffer_config, 24, 8))
+    }
+
+    pub fn set_shader_mode(&mut self, mode: ShaderMode) {
+        assign(&mut self.input_buffer_config, 24, 8, mode.0);
     }
 
     pub fn main_offset(&self) -> u32 {
@@ -137,5 +145,9 @@ impl ShaderRegs {
 
     pub fn output_mask(&self) -> u32 {
         bits(self.output_mask_raw, 0, 16)
+    }
+
+    pub fn set_output_mask(&mut self, value: u32) {
+        assign(&mut self.output_mask_raw, 0, 16, value);
     }
 }
