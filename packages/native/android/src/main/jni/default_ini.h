@@ -100,6 +100,19 @@ use_cpu_jit =
 # Range is any positive integer (but we suspect 25 - 400 is a good idea) Default is 100
 cpu_clock_percentage =
 
+# Experimental: whether to run parts of the emulation in the crates of the Rust core.
+# Each part below only has an effect while this is on.
+# 0 (default): Off, 1: On
+use_rust_core =
+
+# Whether to run the renderer, the audio, the network, the kernel or the services in Rust.
+# 0 (default): Off, 1: On
+rust_renderer =
+rust_audio =
+rust_network =
+rust_kernel =
+rust_service =
+
 [Renderer]
 # Whether to render using OpenGL
 # 1: OpenGL ES (default), 2: Vulkan

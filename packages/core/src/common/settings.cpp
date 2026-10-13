@@ -85,6 +85,12 @@ void LogSettings() {
     LOG_INFO(Config, "Azahar Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
     log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
+    log_setting("Core_UseRustCore", values.use_rust_core.GetValue());
+    log_setting("Core_RustRenderer", values.rust_renderer.GetValue());
+    log_setting("Core_RustAudio", values.rust_audio.GetValue());
+    log_setting("Core_RustNetwork", values.rust_network.GetValue());
+    log_setting("Core_RustKernel", values.rust_kernel.GetValue());
+    log_setting("Core_RustService", values.rust_service.GetValue());
     log_setting("Controller_UseArticController", values.use_artic_base_controller.GetValue());
     log_setting("Renderer_UseGLES", values.use_gles.GetValue());
     log_setting("Renderer_GraphicsAPI", GetGraphicsAPIName(values.graphics_api.GetValue()));
