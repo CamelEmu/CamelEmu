@@ -6,7 +6,8 @@
   };
 
   outputs = inputs: {
-    devShells = builtins.mapAttrs (system: _:
+    devShells = builtins.mapAttrs (
+      system: _:
       let
         pkgs = import inputs.nixpkgs {
           inherit system;
@@ -17,8 +18,18 @@
         };
 
         android = pkgs.androidenv.composeAndroidPackages {
-          platformVersions = [ "30" "31" "34" "35" "36" "37" ];
-          buildToolsVersions = [ "36.0.0" "37.0.0" ];
+          platformVersions = [
+            "30"
+            "31"
+            "34"
+            "35"
+            "36"
+            "37"
+          ];
+          buildToolsVersions = [
+            "36.0.0"
+            "37.0.0"
+          ];
           ndkVersions = [ "28.2.13676358" ];
           cmakeVersions = [ "3.22.1" ];
           includeNDK = true;
@@ -35,6 +46,7 @@
             pkg-config
             fvm
             jdk17
+            gh
           ];
 
           buildInputs = with pkgs; [
@@ -49,6 +61,7 @@
           ANDROID_SDK_ROOT = androidHome;
           GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidHome}/build-tools/37.0.0/aapt2";
         };
-      }) inputs.nixpkgs.legacyPackages;
+      }
+    ) inputs.nixpkgs.legacyPackages;
   };
 }
