@@ -75,6 +75,7 @@ impl RendererBase {
 
     pub fn resolution_scale_factor(&self) -> u32 {
         if self.graphics_api == GraphicsApi::Software {
+            // Software renderer always render at native resolution
             return 1;
         }
         if self.resolution_factor != 0 {
