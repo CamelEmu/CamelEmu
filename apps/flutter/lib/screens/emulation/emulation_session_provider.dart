@@ -10,6 +10,7 @@ import '../../app_services.dart';
 import '../../data/games/game_title_provider.dart';
 import '../../data/settings/audio_engine_provider.dart';
 import '../../data/settings/media_volume_provider.dart';
+import '../../data/settings/rust_core_mode_provider.dart';
 import '../../data/settings/sections/media_settings.dart';
 import '../../errors/app_exception.dart';
 import 'emulation_backend.dart';
@@ -17,6 +18,7 @@ import 'emulation_screens_layout.dart';
 import 'emulation_session_state.dart';
 import 'media_session_metadata.dart';
 import 'media_session_service.dart';
+import 'rust_core_emulation_backend.dart';
 
 final emulationSessionProvider =
     NotifierProvider.autoDispose<
@@ -26,7 +28,7 @@ final emulationSessionProvider =
 
 class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
   NativeBridge get _bridge => AppServices.nativeBridge;
-  final EmulationBackend _backend = EmulationBackend();
+  EmulationBackend _backend = EmulationBackend();
   StreamSubscription<void>? _closeRequestSubscription;
   final _mediaSession = MediaSessionService();
   bool _mediaSessionActivated = false;
@@ -65,6 +67,10 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
     );
 
     final audioEngine = await ref.read(audioEngineProvider.notifier).read();
+
+    if (ref.read(rustCoreModeProvider) == RustCoreMode.full) {
+      _backend = RustCoreEmulationBackend();
+    }
 
     state = state.copyWith(bottomTextureSize: bottomSize, isLaunched: true);
     await _backend.start(
