@@ -19,7 +19,11 @@ impl Gpu {
 
     pub fn write_reg(&mut self, _vaddr: u32, _data: u32) {}
 
-    pub fn flush_region(&mut self, _paddr: u32, _size: u32) {}
+    pub fn flush_region(&mut self, paddr: u32, size: u32) {
+        self.renderer.rasterizer().flush_region(paddr, size);
+    }
 
-    pub fn invalidate_region(&mut self, _paddr: u32, _size: u32) {}
+    pub fn invalidate_region(&mut self, paddr: u32, size: u32) {
+        self.renderer.rasterizer().invalidate_region(paddr, size);
+    }
 }
