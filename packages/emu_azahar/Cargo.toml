@@ -1,0 +1,20 @@
+[package]
+name = "emu_azahar"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+emu_audio = { version = "0.1.0", path = "../emu_audio" }
+emu_kernel = { version = "0.1.0", path = "../emu_kernel" }
+emu_network = { version = "0.1.0", path = "../emu_network" }
+emu_pica = { version = "0.1.0", path = "../emu_pica" }
+emu_renderer = { version = "0.1.0", path = "../emu_renderer" }
+emu_service = { version = "0.1.0", path = "../emu_service" }
