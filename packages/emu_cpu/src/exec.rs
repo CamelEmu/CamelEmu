@@ -8,7 +8,6 @@ use crate::decoder;
 use crate::instruction::{Instruction, Step};
 use crate::jit;
 
-/// The most instructions that a block holds.
 const MAX_BLOCK_INSTRUCTIONS: usize = 64;
 
 /// Where a block starts: the page table it was read through, its address and its instruction set.
@@ -105,11 +104,8 @@ impl BlockCache {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Exit {
-    /// The slice has no ticks left.
     Ticks = 0,
-    /// The core asked the CPU to stop.
     Halted = 1,
-    /// An instruction raised an exception that the core has to see.
     Exception = 2,
 }
 
@@ -206,7 +202,11 @@ fn run_block(cpu: &mut Cpu, block: &Block) -> Step {
 
 fn current_location(cpu: &mut Cpu) -> Location {
     let state = cpu.state();
-    let (pc, thumb) = (state.regs[15], state.thumb());
+    let thumb = state.thumb();
+    if thumb {
+        state.regs[15] &= !1;
+    }
+    let pc = state.regs[15];
     Location {
         page_table: cpu.page_table_key,
         pc,
@@ -265,7 +265,6 @@ pub fn run(cpu: &mut Cpu) -> Exit {
 
     let exit = loop {
         let location = current_location(cpu);
-        // The cache only changes between blocks, so the block stays alive while it runs.
         let block = unsafe { &*block_at(cpu, location) };
         let step = run_block(cpu, block);
         apply_requests(cpu);
