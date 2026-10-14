@@ -8,6 +8,7 @@ use emu_audio::Audio;
 use emu_kernel::{Kernel, Timer};
 use emu_network::Network;
 use emu_pica::Gpu;
+use emu_pica::pica_core::SharedRegs;
 use emu_renderer::GraphicsApi;
 use emu_service::ServiceManager;
 
@@ -61,17 +62,23 @@ pub struct Session {
 
 impl Session {
     pub fn new(config: SessionConfig) -> Option<Box<Self>> {
-        let gpu = match config.graphics_api {
+        let mut system = Box::new(System {
+            memory: Memory::new()?,
+            kernel: Kernel::new(),
+        });
+
+        let renderer = match config.graphics_api {
             1 => emu_renderer::create(GraphicsApi::OpenGl),
             2 => emu_renderer::create(GraphicsApi::Vulkan),
             _ => emu_renderer::create(GraphicsApi::Software),
+        };
+        if let Some(renderer) = renderer {
+            let physical_memory = system.memory.physical_memory();
+            let regs = SharedRegs::default();
+            system
+                .memory
+                .set_gpu(Gpu::new(renderer, regs, physical_memory, true));
         }
-        .map(Gpu::new);
-
-        let mut system = Box::new(System {
-            memory: Memory::new(gpu)?,
-            kernel: Kernel::new(),
-        });
         let system_ptr = NonNull::from(system.as_mut());
 
         let monitor = Monitor::new(config.num_cores)?;

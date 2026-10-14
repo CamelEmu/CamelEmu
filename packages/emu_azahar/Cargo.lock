@@ -87,11 +87,15 @@ version = "0.1.0"
 dependencies = [
  "emu_pica_types",
  "emu_renderer",
+ "log",
 ]
 
 [[package]]
 name = "emu_pica_types"
 version = "0.1.0"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "emu_renderer"
@@ -100,6 +104,7 @@ dependencies = [
  "emu_opengles",
  "emu_pica_types",
  "emu_vulkan",
+ "log",
 ]
 
 [[package]]

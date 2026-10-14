@@ -1,11 +1,9 @@
+use crate::bits::{assign, bits};
+
 /// Most physical addresses which GPU registers refer to are 8-byte aligned.
 /// This function should be used to get the address from a raw register value.
 pub const fn decode_address_register(register_value: u32) -> u32 {
     register_value.wrapping_mul(8)
-}
-
-const fn bits(value: u32, position: u32, width: u32) -> u32 {
-    (value >> position) & ((1u32 << width) - 1)
 }
 
 /// Components are laid out in reverse byte order, most significant bits first.
@@ -65,9 +63,17 @@ impl MemoryFillConfig {
         bits(self.control, 0, 1) != 0
     }
 
+    pub fn set_trigger(&mut self, trigger: bool) {
+        assign(&mut self.control, 0, 1, u32::from(trigger));
+    }
+
     // Set to 1 upon completion.
     pub fn finished(&self) -> bool {
         bits(self.control, 1, 1) != 0
+    }
+
+    pub fn set_finished(&mut self, finished: bool) {
+        assign(&mut self.control, 1, 1, u32::from(finished));
     }
 
     // If both of these bits are unset, then it will fill the memory with a 16 bit value
@@ -127,17 +133,35 @@ pub struct FramebufferConfig {
 
 const _: () = assert!(size_of::<FramebufferConfig>() == 0x100);
 
+impl Default for FramebufferConfig {
+    fn default() -> Self {
+        unsafe { std::mem::zeroed() }
+    }
+}
+
 impl FramebufferConfig {
     pub fn width(&self) -> u32 {
         bits(self.size, 0, 16)
+    }
+
+    pub fn set_width(&mut self, width: u32) {
+        assign(&mut self.size, 0, 16, width);
     }
 
     pub fn height(&self) -> u32 {
         bits(self.size, 16, 16)
     }
 
+    pub fn set_height(&mut self, height: u32) {
+        assign(&mut self.size, 16, 16, height);
+    }
+
     pub fn color_format(&self) -> PixelFormat {
         PixelFormat(bits(self.format, 0, 3))
+    }
+
+    pub fn set_color_format(&mut self, format: PixelFormat) {
+        assign(&mut self.format, 0, 3, format.0);
     }
 
     // 0: Use parameters ending with "1"
@@ -269,6 +293,10 @@ impl DisplayTransferConfig {
 
     pub fn triggered(&self) -> bool {
         bits(self.trigger, 0, 1) != 0
+    }
+
+    pub fn set_triggered(&mut self, triggered: bool) {
+        assign(&mut self.trigger, 0, 1, u32::from(triggered));
     }
 
     pub fn debug_name(&self) -> String {
