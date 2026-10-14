@@ -12,6 +12,7 @@ import 'app_services.dart';
 import 'data/flutter_restart_recovery.dart';
 import 'data/settings/debug_settings_provider.dart';
 import 'errors/app_exception.dart';
+import 'errors/crash_reporting.dart';
 import 'i18n/translations.g.dart';
 import 'routing/app_routes.dart';
 import 'screens/profiles/legacy_data_prompt_page.dart';
@@ -44,6 +45,18 @@ void main(List<String> args) {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await CrashReporting.initialize();
+
+      final defaultOnError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        if (details.exception case final AppException error) {
+          reportAppException(error);
+        } else {
+          defaultOnError?.call(details);
+          CrashReporting.recordFlutterError(details);
+        }
+      };
+
       await initializeRust();
       if (await recoverFromFlutterRestart()) return;
       await AppServices.prepareMasterDatabase();
@@ -62,15 +75,6 @@ void main(List<String> args) {
           softwareKeyboard: context.t.applets.softwareKeyboard,
         ),
       );
-
-      final defaultOnError = FlutterError.onError;
-      FlutterError.onError = (details) {
-        if (details.exception case final AppException error) {
-          reportAppException(error);
-        } else {
-          defaultOnError?.call(details);
-        }
-      };
 
       runApp(const AzaharRoot());
     },
