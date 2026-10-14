@@ -6,6 +6,7 @@ class BoolOptionWidget extends BoolOptionTile {
   const BoolOptionWidget({
     super.key,
     required super.option,
+    super.enabled,
     required super.onAccessed,
     required super.onLongPress,
   });

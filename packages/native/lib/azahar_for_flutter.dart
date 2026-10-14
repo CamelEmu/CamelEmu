@@ -24,6 +24,7 @@ export 'src/models/shader_cache_progress.dart';
 export 'src/models/vec3.dart';
 export 'src/models/wifi_channel.dart';
 export 'src/native/applet_channel.dart';
+export 'src/native/emu_azahar_bridge.dart';
 export 'src/native/native_bridge.dart';
 export 'src/native/rust_runtime.dart';
 export 'src/rust/api/audio.dart';

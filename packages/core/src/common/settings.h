@@ -448,12 +448,21 @@ struct Values {
 
     // Core
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
+    // Experimental: runs the CPU and creates the memory in the Rust crates emu_cpu and emu_mem. It
+    // only has an effect on builds for Android arm64.
+    Setting<bool> use_rust_cpu{false, "use_rust_cpu"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
     SwitchableSetting<bool> lle_applets{true, "lle_applets"};
     SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
     SwitchableSetting<bool> enable_required_online_lle_modules{
         false, "enable_required_online_lle_modules"};
+    Setting<bool> use_rust_core{false, "use_rust_core"};
+    Setting<bool> rust_renderer{false, "rust_renderer"};
+    Setting<bool> rust_audio{false, "rust_audio"};
+    Setting<bool> rust_network{false, "rust_network"};
+    Setting<bool> rust_kernel{false, "rust_kernel"};
+    Setting<bool> rust_service{false, "rust_service"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};

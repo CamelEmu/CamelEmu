@@ -109,6 +109,8 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
+CMAKE_DEPENDENT_OPTION(ENABLE_RUST_CPU "Builds the experimental CPU and memory of the emu_cpu and emu_mem crates, for arm64" ON "ANDROID" OFF)
+
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})

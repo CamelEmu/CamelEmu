@@ -20,6 +20,8 @@
 #include "core/movie.h"
 #include "core/perf_stats.h"
 
+struct EmuAzahar;
+
 namespace Frontend {
 class EmuWindow;
 class ImageInterface;
@@ -468,6 +470,8 @@ private:
     std::unique_ptr<Timing> timing;
 
     std::unique_ptr<Core::ExclusiveMonitor> exclusive_monitor;
+
+    EmuAzahar* emu_azahar = nullptr;
 
 private:
     static System s_instance;

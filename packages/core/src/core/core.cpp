@@ -20,6 +20,11 @@
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
 #include "core/arm/dyncom/arm_dyncom.h"
+#include "core/arm/rust/rust_cpu.h"
+#if CITRA_HAS_RUST_CPU
+#include <emu_azahar.h>
+#include "core/arm/rust/arm_rust.h"
+#endif
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -456,6 +461,20 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     memory = std::make_unique<Memory::MemorySystem>(*this);
 
+#if CITRA_HAS_RUST_CPU
+    if (Settings::values.use_rust_core.GetValue()) {
+        const EmuAzaharConfig config{
+            .renderer = Settings::values.rust_renderer.GetValue(),
+            .audio = Settings::values.rust_audio.GetValue(),
+            .network = Settings::values.rust_network.GetValue(),
+            .kernel = Settings::values.rust_kernel.GetValue(),
+            .service = Settings::values.rust_service.GetValue(),
+        };
+        emu_azahar = emu_azahar_create(&config);
+        LOG_INFO(Core, "Created the Rust core of emu_azahar {}", emu_azahar_version());
+    }
+#endif
+
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue(),
                                       movie.GetOverrideBaseTicks());
 
@@ -465,7 +484,15 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     exclusive_monitor = MakeExclusiveMonitor(*memory, num_cores);
     cpu_cores.reserve(num_cores);
-    if (Settings::values.use_cpu_jit) {
+    if (memory->IsEmuMemEnabled()) {
+#if CITRA_HAS_RUST_CPU
+        for (u32 i = 0; i < num_cores; ++i) {
+            cpu_cores.push_back(std::make_shared<ARM_Rust>(*this, *memory, i, timing->GetTimer(i),
+                                                           *exclusive_monitor));
+        }
+        LOG_INFO(Core, "Running the CPU in emu_cpu");
+#endif
+    } else if (Settings::values.use_cpu_jit) {
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(std::make_shared<ARM_Dynarmic>(
@@ -674,6 +701,11 @@ void System::Shutdown(bool is_deserializing) {
     }
 
     memory.reset();
+
+#if CITRA_HAS_RUST_CPU
+    emu_azahar_destroy(emu_azahar);
+    emu_azahar = nullptr;
+#endif
 
     if (self_delete_pending)
         FileUtil::Delete(m_filepath);

@@ -94,11 +94,28 @@ use_artic_base_controller=
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_cpu_jit =
 
+# Experimental: whether to run the CPU and create the memory in the Rust crates. Only on arm64.
+# 0 (default): Off, 1: On
+use_rust_cpu =
+
 # Change the Clock Frequency of the emulated 3DS CPU.
 # Underclocking can increase the performance of the game at the risk of freezing.
 # Overclocking may fix lag that happens on console, but also comes with the risk of freezing.
 # Range is any positive integer (but we suspect 25 - 400 is a good idea) Default is 100
 cpu_clock_percentage =
+
+# Experimental: whether to run parts of the emulation in the crates of the Rust core.
+# Each part below only has an effect while this is on.
+# 0 (default): Off, 1: On
+use_rust_core =
+
+# Whether to run the renderer, the audio, the network, the kernel or the services in Rust.
+# 0 (default): Off, 1: On
+rust_renderer =
+rust_audio =
+rust_network =
+rust_kernel =
+rust_service =
 
 [Renderer]
 # Whether to render using OpenGL

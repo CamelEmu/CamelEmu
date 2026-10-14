@@ -13,6 +13,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.view.TextureRegistry
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.CitraApplication
+import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.EmuAzaharLibrary
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.NativeLibrary
 import java.util.concurrent.CountDownLatch
 
@@ -24,6 +25,7 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
     private var surfaceProducer: TextureRegistry.SurfaceProducer? = null
     private var secondarySurfaceProducer: TextureRegistry.SurfaceProducer? = null
     private var screensSwapped = false
+    private var rustCore = false
 
     private val frameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
@@ -47,6 +49,8 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
     }
 
     val handlers: List<AzaharMethodHandler> = listOf(
+        CreateRustCoreTexture(),
+        ReleaseRustCoreTextures(),
         AdvanceFrame(),
         PauseRendering(),
         ResumeRendering(),
@@ -65,9 +69,15 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
      *
      * @return The id of the texture, or -1 when it could not be created.
      */
-    fun createSessionTexture(width: Int, height: Int, secondary: Boolean): Long {
+    fun createSessionTexture(
+        width: Int,
+        height: Int,
+        secondary: Boolean,
+        rustCore: Boolean = false
+    ): Long {
         return runOnPlatformThread(-1L) {
             screensSwapped = false
+            this.rustCore = rustCore
             val producer = textureRegistry.createSurfaceProducer()
             producer.setSize(width, height)
             producer.setCallback(surfaceCallback(secondary))
@@ -105,7 +115,9 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
             override fun onSurfaceAvailable() {
                 val producer = if (secondary) secondarySurfaceProducer else surfaceProducer
                 val surface = producer?.surface?.takeIf { it.isValid } ?: return
-                if (secondary) {
+                if (rustCore) {
+                    EmuAzaharLibrary.surfaceChanged(surface, secondary)
+                } else if (secondary) {
                     NativeLibrary.surfaceChangedSecondary(surface)
                 } else {
                     NativeLibrary.surfaceChanged(surface)
@@ -113,7 +125,9 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
             }
 
             override fun onSurfaceCleanup() {
-                if (secondary) {
+                if (rustCore) {
+                    EmuAzaharLibrary.surfaceChanged(null, secondary)
+                } else if (secondary) {
                     NativeLibrary.surfaceDestroyedSecondary()
                 } else {
                     NativeLibrary.surfaceDestroyed()
@@ -157,6 +171,36 @@ class EmulationController(private val textureRegistry: TextureRegistry) {
         }
         done.await()
         return result
+    }
+
+    /**
+     * Creates a screen texture for a game that runs only in the Rust core, whose surface goes to
+     * [EmuAzaharLibrary] instead of the C++ core.
+     */
+    private inner class CreateRustCoreTexture : AzaharMethodHandler {
+        override val name = "createRustCoreTexture"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            val width = call.argument<Int>("width") ?: 0
+            val height = call.argument<Int>("height") ?: 0
+            val secondary = call.argument<Boolean>("secondary") ?: false
+            val textureId = createSessionTexture(width, height, secondary, rustCore = true)
+            val surface = sessionSurface(secondary)
+            if (surface != null) {
+                EmuAzaharLibrary.surfaceChanged(surface, secondary)
+            }
+            result.success(textureId)
+        }
+    }
+
+    private inner class ReleaseRustCoreTextures : AzaharMethodHandler {
+        override val name = "releaseRustCoreTextures"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            EmuAzaharLibrary.surfaceChanged(null, false)
+            EmuAzaharLibrary.surfaceChanged(null, true)
+            releaseSessionTextures()
+            rustCore = false
+            result.success(null)
+        }
     }
 
     private inner class AdvanceFrame : AzaharMethodHandler {
