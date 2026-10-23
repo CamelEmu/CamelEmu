@@ -1,14 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 import 'app_neumorphic.dart';
 
-/// A panel drawn as Liquid Glass, or as a flat [Material] when [blurSigma] is zero (Legacy theme)
-/// or [backdropBlur] is false.
-///
-/// Set [refract] for floating chrome to use a refracting [LiquidGlass]; otherwise the
-/// shader-free [FakeGlass] is used. [FakeGlass] still blurs the backdrop with a `BackdropFilter`,
-/// which is costly for every item of a scrollable, so set [backdropBlur] to false there.
 class AppLiquidGlass extends StatelessWidget {
   const AppLiquidGlass({
     super.key,
@@ -17,7 +12,6 @@ class AppLiquidGlass extends StatelessWidget {
     required this.fillColor,
     required this.borderColor,
     required this.child,
-    this.refract = false,
     this.backdropBlur = true,
     this.shadow = const [],
   });
@@ -26,12 +20,9 @@ class AppLiquidGlass extends StatelessWidget {
   final double blurSigma;
   final Color fillColor;
   final Color borderColor;
-  final bool refract;
   final bool backdropBlur;
   final List<BoxShadow> shadow;
   final Widget child;
-
-  static const double _maxCornerRadius = 32;
 
   @override
   Widget build(BuildContext context) {
@@ -44,50 +35,34 @@ class AppLiquidGlass extends StatelessWidget {
       );
     }
 
-    final decoration = BoxDecoration(
+    final shape = RoundedRectangleBorder(
       borderRadius: borderRadius,
-      boxShadow: shadow,
-    );
-
-    if (blurSigma <= 0 || !backdropBlur) {
-      return DecoratedBox(
-        decoration: decoration,
-        child: Material(
-          color: fillColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: borderRadius,
-            side: BorderSide(color: borderColor),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: child,
-        ),
-      );
-    }
-
-    final shape = LiquidRoundedRectangle(
-      borderRadius: borderRadius.topLeft.x.clamp(0.0, _maxCornerRadius),
       side: BorderSide(color: borderColor),
     );
-    final settings = LiquidGlassSettings(
-      glassColor: fillColor,
-      blur: blurSigma,
-    );
-    final content = Material(
-      type: MaterialType.transparency,
-      borderRadius: borderRadius,
+
+    Widget surface = Material(
+      color: fillColor,
+      shape: shape,
       clipBehavior: Clip.antiAlias,
       child: child,
     );
 
+    if (blurSigma > 0 && backdropBlur) {
+      surface = ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: surface,
+        ),
+      );
+    }
+
     return DecoratedBox(
-      decoration: decoration,
-      child: refract
-          ? LiquidGlass.withOwnLayer(
-              shape: shape,
-              settings: settings.copyWith(thickness: 24),
-              child: content,
-            )
-          : FakeGlass(shape: shape, settings: settings, child: content),
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        boxShadow: shadow,
+      ),
+      child: surface,
     );
   }
 }

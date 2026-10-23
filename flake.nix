@@ -53,6 +53,9 @@
             alsa-lib
             libsysprof-capture
             systemd
+            systemd.dev
+            libepoxy
+            fontconfig
             pcre2
             util-linux.dev
           ];
@@ -64,6 +67,13 @@
           GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidHome}/build-tools/37.0.0/aapt2";
 
           shellHook = ''
+            for flag in $NIX_LDFLAGS; do
+              case $flag in
+                -L*) NIX_LDFLAGS="$NIX_LDFLAGS -rpath-link ''${flag#-L}" ;;
+              esac
+            done
+            export NIX_LDFLAGS
+
             if [ -f .fvmrc ]; then
               [ -x .fvm/flutter_sdk/bin/flutter ] || fvm install
               export PATH="$PWD/.fvm/flutter_sdk/bin:$PATH"
