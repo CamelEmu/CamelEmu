@@ -58,6 +58,7 @@
             fontconfig
             pcre2
             util-linux.dev
+            libselinux
           ];
 
           CMAKE_GENERATOR = "Ninja";
