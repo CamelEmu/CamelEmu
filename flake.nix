@@ -32,6 +32,9 @@
             printf '#!%s\nexec %s "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc}/bin/$tool > $out/bin/$tool
           done
           printf '#!%s\nexec %s "$@"\n' ${pkgs.runtimeShell} ${pkgs.clang}/bin/clang > $out/bin/clang
+          for tool in ar ranlib; do
+            printf '#!%s\nplugin=$(%s/bin/gcc -print-prog-name=lto-wrapper)\nexec %s/bin/%s --plugin "$(dirname "$plugin")/liblto_plugin.so" "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc} ${pkgs.binutils} $tool > $out/bin/$tool
+          done
           chmod +x $out/bin/*
         '';
       in
@@ -68,6 +71,11 @@
           GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidHome}/build-tools/37.0.0/aapt2";
 
           shellHook = ''
+            export AR=${gccWithClang}/bin/ar
+            export RANLIB=${gccWithClang}/bin/ranlib
+            export CMAKE_AR="$AR"
+            export CMAKE_RANLIB="$RANLIB"
+
             for flag in $NIX_LDFLAGS; do
               case $flag in
                 -L*) NIX_LDFLAGS="$NIX_LDFLAGS -rpath-link ''${flag#-L}" ;;
