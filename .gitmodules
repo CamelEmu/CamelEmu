@@ -93,13 +93,13 @@
 	url = https://github.com/merryhime/oaknut.git
 [submodule "babstrap_settings_screen"]
 	path = apps/flutter/packages/babstrap_settings_screen
-	url = git@github.com:Hashibutogarasu/babstrap_settings_screen.git
+	url = git@github.com:CamelEmu/babstrap_settings_screen.git
 [submodule "src/flutter/packages/glass_bottom_navigation"]
 	path = apps/flutter/packages/glass_bottom_navigation
-	url = git@github.com:Hashibutogarasu/glass_bottom_navigation.git
+	url = git@github.com:CamelEmu/glass_bottom_navigation.git
 [submodule "packages/externals/flutter_liquid_glass"]
 	path = packages/externals/flutter_liquid_glass
-	url = git@github.com:Hashibutogarasu/flutter_liquid_glass.git
+	url = git@github.com:CamelEmu/flutter_liquid_glass.git
 [submodule "apps/flutter/packages/flutter-neumorphic"]
 	path = apps/flutter/packages/flutter-neumorphic
-	url = https://github.com/Hashibutogarasu/Flutter-Neumorphic.git
+	url = https://github.com/CamelEmu/Flutter-Neumorphic.git
