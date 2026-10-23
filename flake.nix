@@ -29,11 +29,11 @@
         gccWithClang = pkgs.runCommand "gcc-with-clang" { } ''
           mkdir -p $out/bin
           for tool in gcc g++; do
-            printf '#!%s\nexec %s "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc}/bin/$tool > $out/bin/$tool
+            printf '#!%s\nexec %s "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc13}/bin/$tool > $out/bin/$tool
           done
           printf '#!%s\nexec %s "$@"\n' ${pkgs.runtimeShell} ${pkgs.clang}/bin/clang > $out/bin/clang
           for tool in ar ranlib; do
-            printf '#!%s\nplugin=$(%s/bin/gcc -print-prog-name=lto-wrapper)\nexec %s/bin/%s --plugin "$(dirname "$plugin")/liblto_plugin.so" "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc} ${pkgs.binutils} $tool > $out/bin/$tool
+            printf '#!%s\nplugin=$(%s/bin/gcc -print-prog-name=lto-wrapper)\nexec %s/bin/%s --plugin "$(dirname "$plugin")/liblto_plugin.so" "$@"\n' ${pkgs.runtimeShell} ${pkgs.gcc13} ${pkgs.binutils} $tool > $out/bin/$tool
           done
           chmod +x $out/bin/*
         '';
@@ -44,6 +44,7 @@
             rustup
             cmake
             ninja
+            sccache
             pkg-config
             fvm
             jdk17
@@ -65,6 +66,8 @@
           ];
 
           CMAKE_GENERATOR = "Ninja";
+          CMAKE_C_COMPILER_LAUNCHER = "sccache";
+          CMAKE_CXX_COMPILER_LAUNCHER = "sccache";
           JAVA_HOME = "${pkgs.jdk17}";
           ANDROID_HOME = androidHome;
           ANDROID_SDK_ROOT = androidHome;
