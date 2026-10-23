@@ -4,8 +4,10 @@ cmake_minimum_required(VERSION 3.13)
 # The bundled citra_core/citra_common static libraries under ../../build are
 # built with GCC's LTO object format, which Clang's LTO cannot read. Pin this
 # project to the same compiler so runner/CMakeLists.txt can link against them.
-set(CMAKE_C_COMPILER "/usr/bin/gcc" CACHE FILEPATH "" FORCE)
-set(CMAKE_CXX_COMPILER "/usr/bin/g++" CACHE FILEPATH "" FORCE)
+find_program(GCC_C_COMPILER gcc REQUIRED)
+find_program(GCC_CXX_COMPILER g++ REQUIRED)
+set(CMAKE_C_COMPILER "${GCC_C_COMPILER}" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "${GCC_CXX_COMPILER}" CACHE FILEPATH "" FORCE)
 
 project(runner LANGUAGES CXX)
 

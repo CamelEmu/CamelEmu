@@ -53,6 +53,26 @@ set(AZAHAR_BUILD "${AZAHAR_ROOT}/build")
 set(AZAHAR_CORE "${AZAHAR_ROOT}/packages/core")
 
 find_program(NINJA_EXECUTABLE ninja REQUIRED)
+
+if(NOT EXISTS "${AZAHAR_BUILD}/build.ninja")
+  execute_process(
+    COMMAND "${CMAKE_COMMAND}" -S "${AZAHAR_CORE}" -B "${AZAHAR_BUILD}" -G Ninja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+      -DENABLE_QT=OFF
+      -DENABLE_TESTS=OFF
+      -DENABLE_ROOM=OFF
+      -DCITRA_USE_PRECOMPILED_HEADERS=OFF
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+  execute_process(
+    COMMAND "${NINJA_EXECUTABLE}" citra_core citra_common network input_common web_service
+    WORKING_DIRECTORY "${AZAHAR_BUILD}"
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+endif()
+
 add_custom_target(azahar_core_libs
   COMMAND "${NINJA_EXECUTABLE}" citra_core citra_common network input_common web_service
   WORKING_DIRECTORY "${AZAHAR_BUILD}"
