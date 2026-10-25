@@ -15,3 +15,5 @@
 - Run build and analysis commands (`flutter`, `cargo`, `cmake`, `ninja`) inside the development shell of the repository, with `nix develop`, instead of looking for tools on the host or in the Nix store.
 - Do not copy packages out of the pub local store (`~/.pub-cache`) into the repository, and do not modify the files inside it. When a dependency needs a change, make it in the dependency's own repository, added as a submodule.
 - Do not chain commands that serve different concerns into one Bash call with `&&`, `;` or a loop, such as an edit with `sed` followed by a build, or a `git checkout` followed by a build. Run each concern as its own call.
+- Create a new crate with `cargo new`, and do not write a new `Cargo.toml` by hand from guesswork.
+- Add a dependency with `cargo add`, and do not write a crate version into `Cargo.toml` from guesswork.
