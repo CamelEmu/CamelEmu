@@ -246,6 +246,7 @@ name = "emu"
 version = "0.1.0"
 dependencies = [
  "emu_http",
+ "emu_random",
  "flutter_rust_bridge",
  "jni",
  "libc",
@@ -270,6 +271,13 @@ dependencies = [
  "openssl",
  "tokio",
  "tower-service",
+]
+
+[[package]]
+name = "emu_random"
+version = "0.1.0"
+dependencies = [
+ "getrandom",
 ]
 
 [[package]]
