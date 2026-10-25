@@ -1,18 +1,18 @@
-#include "azahar_session.h"
+#include "emu_session.h"
 
 #include <memory>
 #include <string>
 
 #include "emulation.h"
 
-struct AzaharSession {
-  AzaharSessionCallbacks callbacks;
+struct EmuSession {
+  EmuSessionCallbacks callbacks;
   std::unique_ptr<Emulation::Session> session;
 };
 
 namespace {
 
-Emulation::SessionCallbacks MakeCallbacks(const AzaharSessionCallbacks& raw) {
+Emulation::SessionCallbacks MakeCallbacks(const EmuSessionCallbacks& raw) {
   Emulation::SessionCallbacks callbacks;
   if (raw.on_shader_progress != nullptr) {
     callbacks.on_shader_progress = [raw](int32_t stage, uint64_t progress, uint64_t max) {
@@ -44,12 +44,12 @@ Emulation::SessionCallbacks MakeCallbacks(const AzaharSessionCallbacks& raw) {
 
 extern "C" {
 
-AzaharSession* azahar_session_create(const char* game_path, const AzaharSessionOptions* options,
-                                     const AzaharSessionCallbacks* callbacks) {
+EmuSession* emu_session_create(const char* game_path, const EmuSessionOptions* options,
+                                     const EmuSessionCallbacks* callbacks) {
   if (game_path == nullptr || options == nullptr || callbacks == nullptr) {
     return nullptr;
   }
-  auto wrapper = std::make_unique<AzaharSession>();
+  auto wrapper = std::make_unique<EmuSession>();
   wrapper->callbacks = *callbacks;
 
   Emulation::SessionOptions session_options;
@@ -64,55 +64,55 @@ AzaharSession* azahar_session_create(const char* game_path, const AzaharSessionO
   return wrapper.release();
 }
 
-int32_t azahar_session_start(AzaharSession* session) {
+int32_t emu_session_start(EmuSession* session) {
   if (session == nullptr) {
-    return AZAHAR_STATUS_INVALID_ARGUMENT;
+    return EMU_STATUS_INVALID_ARGUMENT;
   }
-  return session->session->Start() ? AZAHAR_STATUS_OK : AZAHAR_STATUS_LOAD_FAILED;
+  return session->session->Start() ? EMU_STATUS_OK : EMU_STATUS_LOAD_FAILED;
 }
 
-int32_t azahar_session_pause(AzaharSession* session) {
+int32_t emu_session_pause(EmuSession* session) {
   if (session == nullptr) {
-    return AZAHAR_STATUS_INVALID_ARGUMENT;
+    return EMU_STATUS_INVALID_ARGUMENT;
   }
   session->session->Pause();
-  return AZAHAR_STATUS_OK;
+  return EMU_STATUS_OK;
 }
 
-int32_t azahar_session_resume(AzaharSession* session) {
+int32_t emu_session_resume(EmuSession* session) {
   if (session == nullptr) {
-    return AZAHAR_STATUS_INVALID_ARGUMENT;
+    return EMU_STATUS_INVALID_ARGUMENT;
   }
   session->session->Resume();
-  return AZAHAR_STATUS_OK;
+  return EMU_STATUS_OK;
 }
 
-size_t azahar_session_fcram_size(const AzaharSession* session) {
+size_t emu_session_fcram_size(const EmuSession* session) {
   return session == nullptr ? 0 : session->session->FcramSize();
 }
 
-int32_t azahar_session_read_memory(AzaharSession* session, uint32_t address, uint8_t* out,
+int32_t emu_session_read_memory(EmuSession* session, uint32_t address, uint8_t* out,
                                    size_t len) {
   if (session == nullptr || out == nullptr) {
-    return AZAHAR_STATUS_INVALID_ARGUMENT;
+    return EMU_STATUS_INVALID_ARGUMENT;
   }
-  return session->session->ReadMemory(address, out, len) ? AZAHAR_STATUS_OK
-                                                         : AZAHAR_STATUS_INVALID_ADDRESS;
+  return session->session->ReadMemory(address, out, len) ? EMU_STATUS_OK
+                                                         : EMU_STATUS_INVALID_ADDRESS;
 }
 
-int32_t azahar_session_read_fcram(AzaharSession* session, size_t offset, uint8_t* out, size_t len) {
+int32_t emu_session_read_fcram(EmuSession* session, size_t offset, uint8_t* out, size_t len) {
   if (session == nullptr || out == nullptr) {
-    return AZAHAR_STATUS_INVALID_ARGUMENT;
+    return EMU_STATUS_INVALID_ARGUMENT;
   }
-  return session->session->ReadFcram(offset, out, len) ? AZAHAR_STATUS_OK
-                                                       : AZAHAR_STATUS_INVALID_ADDRESS;
+  return session->session->ReadFcram(offset, out, len) ? EMU_STATUS_OK
+                                                       : EMU_STATUS_INVALID_ADDRESS;
 }
 
 // TODO: Linux does not raise the Artic country mismatch callback yet, so there is no pending
 // question to answer. Implement this together with the callback.
-void azahar_session_answer_artic_country(AzaharSession*, int32_t) {}
+void emu_session_answer_artic_country(EmuSession*, int32_t) {}
 
-void azahar_session_destroy(AzaharSession* session) {
+void emu_session_destroy(EmuSession* session) {
   delete session;
 }
 

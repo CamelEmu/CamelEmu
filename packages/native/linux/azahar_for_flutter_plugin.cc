@@ -19,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "azahar_storage.h"
+#include "emu_storage.h"
 #include "common/storage.h"
 #include "native_bridge/cheats.h"
 #include "native_bridge/cia_install.h"
@@ -885,7 +885,7 @@ void RegisterControllerMotionChannel(FlBinaryMessenger* messenger) {
 }  // namespace
 
 void azahar_for_flutter_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  Common::Storage::Register(azahar_storage_api());
+  Common::Storage::Register(emu_storage_api());
   FlView* view = fl_plugin_registrar_get_view(registrar);
   if (view == nullptr) {
     return;
