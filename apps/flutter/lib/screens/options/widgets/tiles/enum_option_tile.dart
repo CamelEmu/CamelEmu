@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/options/abstract_base_option.dart';
 import '../../../../data/options/option_values_revision_provider.dart';
 import '../../../../i18n/translations.g.dart';
+import '../../../../widgets/app_widgets.dart';
 import '../../../settings/dialogs/choice_dialog.dart';
 import 'option_commit.dart';
 
@@ -33,6 +34,18 @@ class EnumOptionTile<T> extends ConsumerWidget {
       for (final choice in option.choices)
         if (choice.value == current) choice.label(t),
     ].firstOrNull;
+    final labels = [for (final choice in option.choices) choice.label(t)];
+    final values = [for (final choice in option.choices) choice.value];
+    Future<void> commit(T result) {
+      return ref.commitOptionValue(context, option.value, result, onAccessed);
+    }
+
+    final select = AppWidgets.of(context).select<T>(
+      labels: labels,
+      values: values,
+      value: current,
+      onChanged: commit,
+    );
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onLongPress: onLongPress,
@@ -40,23 +53,20 @@ class EnumOptionTile<T> extends ConsumerWidget {
         icons: option.icon,
         title: title,
         subtitle: option.description?.call(t),
-        trailing: Text(currentLabel ?? ''),
-        onTap: () async {
-          final result = await ChoiceDialog.show<T>(
-            context,
-            title: title,
-            labels: [for (final choice in option.choices) choice.label(t)],
-            values: [for (final choice in option.choices) choice.value],
-            current: current,
-          );
-          if (result == null || !context.mounted) return;
-          await ref.commitOptionValue(
-            context,
-            option.value,
-            result,
-            onAccessed,
-          );
-        },
+        trailing: select ?? Text(currentLabel ?? ''),
+        onTap: select != null
+            ? null
+            : () async {
+                final result = await ChoiceDialog.show<T>(
+                  context,
+                  title: title,
+                  labels: labels,
+                  values: values,
+                  current: current,
+                );
+                if (result == null || !context.mounted) return;
+                await commit(result);
+              },
       ),
     );
   }

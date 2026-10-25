@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class SetupNavigationBar extends StatelessWidget {
   const SetupNavigationBar({
@@ -26,10 +27,10 @@ class SetupNavigationBar extends StatelessWidget {
       child: Row(
         children: [
           if (showBack)
-            TextButton(onPressed: onBack, child: Text(t.setup.back)),
+            AppTextButton(onPressed: onBack, child: Text(t.setup.back)),
           const Spacer(),
           if (showNext)
-            TextButton(
+            AppTextButton(
               onPressed: onNext,
               child: Text(nextLabel ?? t.setup.next),
             ),

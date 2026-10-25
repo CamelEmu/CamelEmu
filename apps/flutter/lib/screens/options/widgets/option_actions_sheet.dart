@@ -6,6 +6,7 @@ import '../../../data/options/option_history_provider.dart';
 import '../../../data/options/pinned_options_provider.dart';
 import '../../../data/user/repositories/pinned_options_repository.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/long_press_menu_sheet.dart';
 
 /// The bottom sheet opened by pressing and holding an Options item, inside the same
@@ -48,7 +49,7 @@ class OptionActionsSheet extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ListTile(
+          AppListTile(
             enabled: !limitReached,
             leading: Icon(isPinned ? Icons.push_pin_outlined : Icons.push_pin),
             title: Text(isPinned ? t.options.unpin : t.options.pin),
@@ -70,7 +71,7 @@ class OptionActionsSheet extends ConsumerWidget {
             },
           ),
           if (removableFromHistory)
-            ListTile(
+            AppListTile(
               leading: const Icon(Icons.delete_outline),
               title: Text(t.options.removeFromHistory),
               onTap: () async {

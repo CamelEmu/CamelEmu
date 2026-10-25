@@ -2,6 +2,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../widgets/app_widgets.dart';
 import 'emulation_game_icon.dart';
 import '../emulation_focus_provider.dart';
 import 'emulation_drawer.dart';
@@ -88,7 +89,7 @@ class _EmulationSidePanelState extends ConsumerState<EmulationSidePanel> {
       game: widget.game,
       isPaused: widget.isPaused,
       actions: widget.actions,
-      headerTrailing: IconButton(
+      headerTrailing: AppIconButton(
         icon: const Icon(Icons.menu_open),
         onPressed: () => setState(() => _collapsed = true),
       ),
@@ -111,7 +112,7 @@ class _EmulationSidePanelState extends ConsumerState<EmulationSidePanel> {
           ),
           const SizedBox(height: 8),
           Align(
-            child: IconButton(
+            child: AppIconButton(
               icon: const Icon(Icons.menu),
               onPressed: () => setState(() => _collapsed = false),
             ),

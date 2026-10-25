@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../theme/extensions/glass_surface_theme.dart';
 import '../../../widgets/app_panel.dart';
+import '../../../widgets/app_widgets.dart';
 import 'tag_color_dot.dart';
 
 /// A single glass chip showing the tag [color] as a dot. When [selected] it is highlighted with the
@@ -23,6 +24,18 @@ class TagChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final custom = AppWidgets.of(context).filterChip(
+      label: Text(label),
+      avatar: TagColorDot(color: color),
+      selected: selected,
+      onPressed: onTap,
+    );
+    if (custom != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: custom,
+      );
+    }
     final surfaceTheme = Theme.of(context).extension<GlassSurfaceTheme>()!;
     final highlight = Theme.of(context).colorScheme.primary;
     final radius = BorderRadius.circular(20);

@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
+import 'package:shadcn_flutter_material/shadcn_flutter_material.dart'
+    as shadcn_material;
 import 'package:stack_trace/stack_trace.dart' as stack_trace;
 
 import 'app_services.dart';
@@ -22,7 +25,9 @@ import 'theme/neumorphic/neumorphism_theme.dart';
 import 'theme/no_overscroll_indicator_behavior.dart';
 import 'theme/theme_settings_provider.dart';
 import 'theme/theme_style.dart';
+import 'widgets/app_widgets.dart';
 import 'widgets/gamepad/gamepad_action_host.dart';
+import 'widgets/shadcn_widget_set.dart';
 
 final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
@@ -176,6 +181,45 @@ class AzaharApp extends ConsumerWidget {
                 materialYou: themeSettings.materialYou,
                 dynamicScheme: darkDynamic,
               );
+              if (themeSettings.themeStyle == ThemeStyle.shadcn) {
+                return shadcn_material.MaterialShadcnApp.router(
+                  title: context.t.appName,
+                  themeMode: shadcn.ThemeMode.values.byName(themeMode.name),
+                  theme: shadcn.ThemeData(
+                    colorScheme: shadcn.ColorSchemes.lightZinc,
+                    radius: 0.5,
+                  ),
+                  darkTheme: shadcn.ThemeData.dark(
+                    colorScheme: shadcn.ColorSchemes.darkZinc,
+                    radius: 0.5,
+                  ),
+                  scrollBehavior: const NoOverscrollIndicatorBehavior(),
+                  routerConfig: _router,
+                  scaffoldMessenger: false,
+                  localizationsDelegates: const [
+                    DefaultMaterialLocalizations.delegate,
+                  ],
+                  shortcuts: _shortcutsWithoutGameButtons(),
+                  builder: (context, child) {
+                    final isDark =
+                        shadcn.Theme.of(context).colorScheme.brightness ==
+                        Brightness.dark;
+                    return ScaffoldMessenger(
+                      key: _scaffoldMessengerKey,
+                      child: AppWidgets(
+                        set: const ShadcnWidgetSet(),
+                        child: Theme(
+                          data: isDark ? darkTheme : lightTheme,
+                          child: GamepadActionHost(
+                            navigatorKey: _navigatorKey,
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
               return MaterialApp.router(
                 title: context.t.appName,
                 themeMode: themeMode,

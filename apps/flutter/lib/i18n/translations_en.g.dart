@@ -2510,6 +2510,9 @@ class Translations$settings$themes$en {
 
   /// en: 'Neumorphism'
   String get neumorphic => 'Neumorphism';
+
+  /// en: 'Shadcn'
+  String get shadcn => 'Shadcn';
 }
 
 // Path: settings.accessibility
@@ -4005,6 +4008,7 @@ extension on Translations {
           'settings.themes.azahar' => 'Azahar',
           'settings.themes.legacy' => 'Legacy',
           'settings.themes.neumorphic' => 'Neumorphism',
+          'settings.themes.shadcn' => 'Shadcn',
           'settings.accessibility.title' => 'Accessibility',
           'settings.accessibility.reduceMotion' => 'Reduce Motion',
           'settings.accessibility.reduceMotionDescription' =>

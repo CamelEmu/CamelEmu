@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/games/game_title_provider.dart';
 import '../../../data/games/user_game_infos_provider.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 /// The name of [game] shown large and editable in place.
 ///
@@ -86,7 +87,7 @@ class _EditableGameTitleState extends ConsumerState<EditableGameTitle> {
           ),
         ),
         if (isEdited)
-          IconButton(
+          AppIconButton(
             tooltip: context.t.games.resetTitle,
             icon: const Icon(Icons.close),
             onPressed: _reset,

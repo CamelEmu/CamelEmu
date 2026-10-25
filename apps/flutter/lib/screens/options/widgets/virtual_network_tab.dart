@@ -4,6 +4,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../data/settings/wifi_access_points_provider.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../dialogs/access_point_form_dialog.dart';
 import 'wifi_signal_icon.dart';
 
@@ -32,7 +33,7 @@ class VirtualNetworkTab extends ConsumerWidget {
             )
           else
             for (final accessPoint in state.accessPoints)
-              ListTile(
+              AppListTile(
                 leading: WifiSignalIcon(level: accessPoint.level),
                 title: Text(
                   accessPoint.ssid.isEmpty ? n.hiddenNetwork : accessPoint.ssid,
@@ -40,7 +41,7 @@ class VirtualNetworkTab extends ConsumerWidget {
                 subtitle: Text(
                   '${n.bssid}: ${accessPoint.bssid}  ${n.frequency}: ${accessPoint.frequency} MHz',
                 ),
-                trailing: IconButton(
+                trailing: AppIconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () => notifier.removeAccessPoint(accessPoint),
                 ),

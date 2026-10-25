@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class MessageDialog extends StatelessWidget {
   const MessageDialog({
@@ -39,14 +40,14 @@ class MessageDialog extends StatelessWidget {
       content: description != null ? Text(description!) : null,
       actions: [
         if (helpUrl != null)
-          TextButton(
+          AppTextButton(
             onPressed: () => launchUrl(
               Uri.parse(helpUrl!),
               mode: LaunchMode.externalApplication,
             ),
             child: Text(t.setup.warningHelp),
           ),
-        TextButton(
+        AppTextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(t.setup.close),
         ),

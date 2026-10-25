@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/cheat_repository.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 /// Collects the name, notes and gateway code of a new cheat and adds it through [repository].
@@ -106,7 +107,7 @@ class _AddCheatDialogState extends State<AddCheatDialog> {
       ),
       actions: [
         const DialogCancelButton(),
-        TextButton(onPressed: _submit, child: Text(t.emulation.addCheat)),
+        AppTextButton(onPressed: _submit, child: Text(t.emulation.addCheat)),
       ],
     );
   }

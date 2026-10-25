@@ -3,6 +3,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../app_services.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 /// Mirrors the Compose client's `DeleteShaderCacheButton`: asks which graphics backend's disk
@@ -52,7 +53,7 @@ class _DeleteShaderCacheDialogState extends State<DeleteShaderCacheDialog> {
       ),
       actions: [
         const DialogCancelButton(),
-        TextButton(
+        AppTextButton(
           onPressed: _selected == null
               ? null
               : () async {

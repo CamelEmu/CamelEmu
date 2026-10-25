@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../i18n/translations.g.dart';
+import '../../widgets/app_widgets.dart';
 
 /// Asks at startup whether to move the core data found in [path] into the built-in profile.
 class LegacyDataPromptPage extends StatefulWidget {
@@ -56,15 +57,18 @@ class _LegacyDataPromptPageState extends State<LegacyDataPromptPage> {
             title: Text(t.title),
             content: Text(t.failed(error: error)),
             actions: [
-              TextButton(onPressed: widget.onDone, child: Text(t.proceed)),
+              AppTextButton(onPressed: widget.onDone, child: Text(t.proceed)),
             ],
           ),
           _ => AlertDialog(
             title: Text(t.title),
             content: Text(t.description(path: widget.path)),
             actions: [
-              TextButton(onPressed: () => _choose(false), child: Text(t.keep)),
-              FilledButton(
+              AppTextButton(
+                onPressed: () => _choose(false),
+                child: Text(t.keep),
+              ),
+              AppFilledButton(
                 onPressed: () => _choose(true),
                 child: Text(t.migrate),
               ),

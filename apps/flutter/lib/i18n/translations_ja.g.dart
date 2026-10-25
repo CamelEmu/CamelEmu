@@ -1994,6 +1994,8 @@ class _Translations$settings$themes$ja extends Translations$settings$themes$en {
   String get legacy => '旧テーマ';
   @override
   String get neumorphic => 'ニューモフィズム';
+  @override
+  String get shadcn => 'Shadcn';
 }
 
 // Path: settings.accessibility
@@ -3277,6 +3279,7 @@ extension on TranslationsJa {
           'settings.themes.azahar' => 'Azahar',
           'settings.themes.legacy' => '旧テーマ',
           'settings.themes.neumorphic' => 'ニューモフィズム',
+          'settings.themes.shadcn' => 'Shadcn',
           'settings.accessibility.title' => 'アクセシビリティ',
           'settings.accessibility.reduceMotion' => '視差効果を減らす',
           'settings.accessibility.reduceMotionDescription' =>

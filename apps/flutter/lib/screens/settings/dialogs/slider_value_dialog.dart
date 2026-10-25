@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../errors/app_exception.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 /// Edits an integer within [min]..[max] with a text field and a slider, popping the chosen value.
@@ -108,7 +109,7 @@ class _SliderValueDialogState extends State<SliderValueDialog> {
               }
             },
           ),
-          Slider(
+          AppSlider(
             value: _sliderValue.toDouble(),
             min: widget.min.toDouble(),
             max: widget.max.toDouble(),
@@ -120,13 +121,13 @@ class _SliderValueDialogState extends State<SliderValueDialog> {
         ],
       ),
       actions: [
-        TextButton(
+        AppTextButton(
           onPressed: () =>
               setState(() => _applySliderValue(widget.defaultValue)),
           child: Text(t.settings.sliderDialog.kDefault),
         ),
         const DialogCancelButton(),
-        TextButton(
+        AppTextButton(
           onPressed: _submit,
           child: Text(MaterialLocalizations.of(context).okButtonLabel),
         ),

@@ -56,6 +56,10 @@ final themeOptionsProvider = Provider<OptionCategory>((ref) {
                 label: (t) => t.settings.themes.neumorphic,
                 value: ThemeStyle.neumorphic,
               ),
+              EnumChoice(
+                label: (t) => t.settings.themes.shadcn,
+                value: ThemeStyle.shadcn,
+              ),
             ],
           ),
           BoolOption(

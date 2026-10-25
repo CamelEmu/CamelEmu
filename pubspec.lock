@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  animation_kit:
+    dependency: transitive
+    description:
+      name: animation_kit
+      sha256: d9b0944b3ee02fae3fedbc6cb04d9a9ea26ad1d29f3261e0b55443b1e0bfba63
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   ansi_styles:
     dependency: transitive
     description:
@@ -256,6 +264,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.13"
+  data_widget:
+    dependency: transitive
+    description:
+      name: data_widget
+      sha256: "4947aae3c50635496d56f94ad18de98e19015c5ebf01abee0f39a2c098c7021a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   dbus:
     dependency: transitive
     description:
@@ -555,6 +571,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.2"
+  gap:
+    dependency: transitive
+    description:
+      name: gap
+      sha256: f19387d4e32f849394758b91377f9153a1b41d79513ef7668c088c77dbc6955d
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   glass_bottom_navigation:
     dependency: transitive
     description:
@@ -1066,6 +1090,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.2"
+  shadcn_flutter:
+    dependency: transitive
+    description:
+      name: shadcn_flutter
+      sha256: da1cb2f93176f62f1e869e38f2ff944d1af0a24ddf7fc8f02f7ef3066f397886
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.55"
+  shadcn_flutter_material:
+    dependency: transitive
+    description:
+      name: shadcn_flutter_material
+      sha256: "026ea46aab1c04b5d631fc91eb29369041d709c0a671c46e0f3c79861544a6c5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.54"
   shelf:
     dependency: transitive
     description:

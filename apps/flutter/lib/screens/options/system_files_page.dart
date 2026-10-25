@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/settings/system_files_provider.dart';
 import '../../i18n/translations.g.dart';
+import '../../widgets/app_widgets.dart';
 import '../../widgets/confirmation_dialog.dart';
 import '../games/game_process_provider.dart';
 import 'dialogs/artic_base_address_entry_dialog.dart';
@@ -156,12 +157,12 @@ class _SystemFilesPageState extends ConsumerState<SystemFilesPage> {
         children: [
           Text(s.preamble),
           const SizedBox(height: 16),
-          FilledButton(
+          AppFilledButton(
             onPressed: _connectSetupTool,
             child: Text(s.connectSetupTool),
           ),
           const SizedBox(height: 16),
-          FilledButton(
+          AppFilledButton(
             onPressed: _consoleLinked ? _confirmDeleteSystemFiles : null,
             child: Text(s.deleteSystemFiles),
           ),
@@ -179,7 +180,7 @@ class _SystemFilesPageState extends ConsumerState<SystemFilesPage> {
                 : (value) => setState(() => _selectedRegion = value),
           ),
           const SizedBox(height: 16),
-          FilledButton(
+          AppFilledButton(
             onPressed: _selectedRegion == null
                 ? null
                 : () => _launchHomeMenu(_selectedRegion!),

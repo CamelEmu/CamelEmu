@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/cheat_repository.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import 'add_cheat_dialog.dart';
 import 'cheat_toggle_tile.dart';
 
@@ -72,7 +73,7 @@ class _CheatsDialogState extends State<CheatsDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        AppTextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(MaterialLocalizations.of(context).closeButtonLabel),
         ),
@@ -88,7 +89,7 @@ class _AddCheatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
+    return AppIconButton(
       icon: const Icon(Icons.add),
       tooltip: context.t.emulation.addCheat,
       onPressed: onPressed,
