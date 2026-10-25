@@ -47,7 +47,7 @@ Set up the environment before you change any code. Run the real commands and fix
    ```
 
    If GitHub returns HTTP 429, retry with `--jobs 1`.
-3. Install the Rust toolchain (`cargo`). The Linux plugin builds `packages/emu` with it.
+3. Install the Rust toolchain (`cargo`). The Linux and Android plugins build the `emu` crate of the `packages/emu` workspace (`cargo rustc -p emu`) as the one static library that every other crate is linked into. Regenerate the flutter_rust_bridge bindings with `flutter_rust_bridge_codegen generate` in `packages/native`; its entry is `emu`.
 4. For the Linux desktop build, install the development packages:
 
    ```sh

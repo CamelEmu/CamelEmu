@@ -3,15 +3,15 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../error.dart';
 import '../frb_generated.dart';
-import '../session.dart';
-import 'audio.dart';
+import 'mirror.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Starts a game and streams its events (shader progress, textures, state
 /// changes, errors) to Dart.
+///
+/// It lives here because `StreamSink` is generated into the crate that holds the bindings.
 Stream<SessionEvent> startGame({
   required String gamePath,
   required SessionOptions options,
@@ -19,32 +19,3 @@ Stream<SessionEvent> startGame({
   gamePath: gamePath,
   options: options,
 );
-
-Future<void> pauseGame() => RustLib.instance.api.crateApiSessionPauseGame();
-
-Future<void> resumeGame() => RustLib.instance.api.crateApiSessionResumeGame();
-
-/// Stops the game and returns after all of its resources have been freed.
-///
-/// With `persist`, the saves, system data and titles the game changed are
-/// written to the storage; otherwise the changes are discarded.
-Future<void> stopGame({required bool persist}) =>
-    RustLib.instance.api.crateApiSessionStopGame(persist: persist);
-
-Future<void> answerArticCountry({int? country}) =>
-    RustLib.instance.api.crateApiSessionAnswerArticCountry(country: country);
-
-Future<void> setVolume({required double volume}) =>
-    RustLib.instance.api.crateApiSessionSetVolume(volume: volume);
-
-/// Reads `len` bytes of 3DS memory starting at the virtual address `address`.
-Future<Uint8List> readMemory({required int address, required int len}) =>
-    RustLib.instance.api.crateApiSessionReadMemory(address: address, len: len);
-
-Future<int> readU32({required int address}) =>
-    RustLib.instance.api.crateApiSessionReadU32(address: address);
-
-Future<BigInt> fcramSize() => RustLib.instance.api.crateApiSessionFcramSize();
-
-Future<Uint8List> dumpFcram() =>
-    RustLib.instance.api.crateApiSessionDumpFcram();

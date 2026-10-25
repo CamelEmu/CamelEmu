@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::api::audio::AudioEngine;
 #[cfg(target_os = "android")]
 use crate::audio::AudioOutput;
-use crate::error::{AzaharError, Result};
+use crate::error::{AzaharError, SessionResult};
 use crate::ffi::{CallbackContext, CoreListener, SessionHandle};
 use memory::Memory3ds;
 
@@ -114,7 +114,7 @@ pub struct GameSession {
 
 impl GameSession {
     /// Creates the session and starts emulation and shader preparation.
-    pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> Result<Self> {
+    pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> SessionResult<Self> {
         let audio = open_audio(options.audio_engine.effective(), &events);
         let context = CallbackContext::new(Arc::new(Listener {
             events: Arc::clone(&events),
@@ -138,7 +138,7 @@ impl GameSession {
         self.state
     }
 
-    pub fn pause(&mut self) -> Result<()> {
+    pub fn pause(&mut self) -> SessionResult<()> {
         if self.state != SessionState::Running {
             return Err(AzaharError::InvalidState);
         }
@@ -151,7 +151,7 @@ impl GameSession {
         Ok(())
     }
 
-    pub fn resume(&mut self) -> Result<()> {
+    pub fn resume(&mut self) -> SessionResult<()> {
         if self.state != SessionState::Paused {
             return Err(AzaharError::InvalidState);
         }

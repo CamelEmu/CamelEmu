@@ -17,7 +17,7 @@ import '../models/installed_title_path.dart';
 import '../models/shader_cache_backend.dart';
 import '../models/vec3.dart';
 import '../models/wifi_channel.dart';
-import '../rust/api/storage.dart' as rust_storage;
+import '../rust/third_party/session/api/storage.dart' as storage_api;
 
 class NativeBridge {
   NativeBridge()
@@ -178,7 +178,7 @@ class NativeBridge {
   /// Creates the folders of a profile through the storage of the Rust crate, the same storage the
   /// core reads them from, so that the folders exist however [location] is reached.
   Future<void> initializeStorage(String location) {
-    return rust_storage.initializeStorage(location: location);
+    return storage_api.initializeStorage(location: location);
   }
 
   Future<bool> hasUserDirectoryWriteAccess() async {

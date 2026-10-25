@@ -3,20 +3,20 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/audio.dart';
+import 'api/mirror.dart';
 import 'api/session.dart';
-import 'api/storage.dart';
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 
-import 'error.dart';
 import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
-import 'session.dart';
+import 'third_party/session/api/audio.dart';
+import 'third_party/session/api/session.dart';
+import 'third_party/session/api/storage.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
