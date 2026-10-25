@@ -32,10 +32,16 @@ import 'widgets/game_ended_dialog.dart';
 import 'widgets/top_screen.dart';
 
 class EmulationPage extends ConsumerStatefulWidget {
-  const EmulationPage({super.key, required this.gamePath, this.game});
+  const EmulationPage({
+    super.key,
+    required this.gamePath,
+    required this.ready,
+    this.game,
+  });
 
   final String gamePath;
   final Game? game;
+  final Future<void> ready;
 
   @override
   ConsumerState<EmulationPage> createState() => _EmulationPageState();
@@ -103,8 +109,10 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     if (layout.topScreen.isEmpty || layout.bottomScreen.isEmpty) return;
     _launchRequested = true;
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await widget.ready;
+      if (!mounted) return;
+      await ref
           .read(emulationSessionProvider.notifier)
           .launch(
             gamePath: widget.gamePath,
