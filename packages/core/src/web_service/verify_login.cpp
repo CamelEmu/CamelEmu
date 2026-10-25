@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <json.hpp>
+#include <memory>
+#include <string>
 #include "common/web_result.h"
+#include "emu_json.h"
 #include "web_service/verify_login.h"
 #include "web_service/web_backend.h"
 
@@ -15,14 +17,20 @@ bool VerifyLogin(const std::string& host, const std::string& username, const std
     if (reply.empty()) {
         return false;
     }
-    nlohmann::json json = nlohmann::json::parse(reply);
-    const auto iter = json.find("username");
-
-    if (iter == json.end()) {
+    using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
+    const JsonHandle json(emu_json_parse(reply.data(), reply.size()), &emu_json_free);
+    if (!json) {
+        return false;
+    }
+    const JsonHandle iter(emu_json_get(json.get(), "username"), &emu_json_free);
+    if (!iter) {
         return username.empty();
     }
-
-    return *iter == username;
+    if (emu_json_type(iter.get()) != EMU_JSON_STRING) {
+        return false;
+    }
+    const char* value = emu_json_string(iter.get());
+    return value != nullptr && username == std::string(value, emu_json_string_len(iter.get()));
 }
 
 } // namespace WebService

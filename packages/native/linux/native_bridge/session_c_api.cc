@@ -108,6 +108,10 @@ int32_t azahar_session_read_fcram(AzaharSession* session, size_t offset, uint8_t
                                                        : AZAHAR_STATUS_INVALID_ADDRESS;
 }
 
+// TODO: Linux does not raise the Artic country mismatch callback yet, so there is no pending
+// question to answer. Implement this together with the callback.
+void azahar_session_answer_artic_country(AzaharSession*, int32_t) {}
+
 void azahar_session_destroy(AzaharSession* session) {
   delete session;
 }

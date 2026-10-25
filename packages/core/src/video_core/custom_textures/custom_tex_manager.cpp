@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <json.hpp>
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/memory_detect.h"
@@ -14,6 +13,7 @@
 #include "core/frontend/image_interface.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
+#include "emu_json.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/rasterizer_cache/surface_params.h"
 #include "video_core/rasterizer_cache/utils.h"
@@ -189,19 +189,24 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
         return;
     }
 
-    nlohmann::ordered_json json;
-    json["author"] = "citra";
-    json["version"] = "1.0.0";
-    json["description"] = "A graphics pack";
+    using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
+    const JsonHandle json(emu_json_new_object(), &emu_json_free);
+    emu_json_set(json.get(), "author", emu_json_new_string("citra"));
+    emu_json_set(json.get(), "version", emu_json_new_string("1.0.0"));
+    emu_json_set(json.get(), "description", emu_json_new_string("A graphics pack"));
 
-    auto& options = json["options"];
-    options["skip_mipmap"] = false;
-    options["flip_png_files"] = true;
-    options["use_new_hash"] = true;
+    JsonHandle options(emu_json_new_object(), &emu_json_free);
+    emu_json_set(options.get(), "skip_mipmap", emu_json_new_bool(0));
+    emu_json_set(options.get(), "flip_png_files", emu_json_new_bool(1));
+    emu_json_set(options.get(), "use_new_hash", emu_json_new_bool(1));
+    emu_json_set(json.get(), "options", options.release());
 
     FileUtil::IOFile file{pack_config, "w"};
-    const std::string output = json.dump(4);
-    file.WriteString(output);
+    char* output = emu_json_stringify_indent(json.get(), 4, nullptr);
+    if (output != nullptr) {
+        file.WriteString(output);
+        emu_json_free_string(output);
+    }
 }
 
 void CustomTexManager::PreloadTextures(const std::atomic_bool& stop_run,
@@ -330,23 +335,50 @@ bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
         return false;
     }
 
-    nlohmann::json json = nlohmann::json::parse(config, nullptr, false, true);
+    using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
+    const JsonHandle json(emu_json_parse(config.data(), read_size), &emu_json_free);
+    if (!json) {
+        LOG_ERROR(Render, "Failed to parse pack config {}: {}", config_path, emu_json_error());
+        return false;
+    }
 
-    const auto& options = json["options"];
-    skip_mipmap = options["skip_mipmap"].get<bool>();
-    flip_png_files = options["flip_png_files"].get<bool>();
-    use_new_hash = options["use_new_hash"].get<bool>();
+    const JsonHandle options(emu_json_get(json.get(), "options"), &emu_json_free);
+    if (!options || emu_json_type(options.get()) != EMU_JSON_OBJECT) {
+        return false;
+    }
+    const auto get_bool = [&options](const char* key, bool& out) {
+        const JsonHandle value(emu_json_get(options.get(), key), &emu_json_free);
+        if (!value || emu_json_type(value.get()) != EMU_JSON_BOOL) {
+            return false;
+        }
+        out = emu_json_bool(value.get()) != 0;
+        return true;
+    };
+    if (!get_bool("skip_mipmap", skip_mipmap) || !get_bool("flip_png_files", flip_png_files) ||
+        !get_bool("use_new_hash", use_new_hash)) {
+        return false;
+    }
 
     if (options_only) {
         return true;
     }
 
-    const auto& textures = json["textures"];
-    for (const auto& material : textures.items()) {
+    const JsonHandle textures(emu_json_get(json.get(), "textures"), &emu_json_free);
+    if (!textures || emu_json_type(textures.get()) != EMU_JSON_OBJECT) {
+        return true;
+    }
+    const std::size_t material_count = emu_json_object_len(textures.get());
+    for (std::size_t i = 0; i < material_count; ++i) {
+        std::size_t key_len{};
+        const char* key_ptr = emu_json_key_at(textures.get(), i, &key_len);
+        if (key_ptr == nullptr) {
+            continue;
+        }
+        const std::string key(key_ptr, key_len);
         std::size_t idx{};
-        const u64 hash = std::stoull(material.key(), &idx, 16);
+        const u64 hash = std::stoull(key, &idx, 16);
         if (!idx) {
-            LOG_ERROR(Render, "Key {} is invalid, skipping", material.key());
+            LOG_ERROR(Render, "Key {} is invalid, skipping", key);
             continue;
         }
         const auto parse = [&](const std::string& file) {
@@ -354,17 +386,20 @@ bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
             auto [it, new_hash] = path_to_hash_map.try_emplace(filename);
             it->second.push_back(hash);
         };
-        const auto value = material.value();
-        if (value.is_string()) {
-            const auto file = value.get<std::string>();
-            parse(file);
-        } else if (value.is_array()) {
-            const auto files = value.get<std::vector<std::string>>();
-            for (const std::string& file : files) {
-                parse(file);
+        const JsonHandle value(emu_json_object_value_at(textures.get(), i), &emu_json_free);
+        if (emu_json_type(value.get()) == EMU_JSON_STRING) {
+            parse(std::string(emu_json_string(value.get()), emu_json_string_len(value.get())));
+        } else if (emu_json_type(value.get()) == EMU_JSON_ARRAY) {
+            const std::size_t file_count = emu_json_array_len(value.get());
+            for (std::size_t j = 0; j < file_count; ++j) {
+                const JsonHandle file(emu_json_array_at(value.get(), j), &emu_json_free);
+                if (emu_json_type(file.get()) == EMU_JSON_STRING) {
+                    parse(std::string(emu_json_string(file.get()),
+                                      emu_json_string_len(file.get())));
+                }
             }
         } else {
-            LOG_ERROR(Render, "Material with key {} is invalid", material.key());
+            LOG_ERROR(Render, "Material with key {} is invalid", key);
         }
     }
     return true;

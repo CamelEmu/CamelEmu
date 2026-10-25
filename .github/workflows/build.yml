@@ -62,7 +62,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             ${{ env.CCACHE_DIR }}
-            packages/azahar_rust/target
+            packages/emu/target
           key: ${{ runner.os }}-flutter-android-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ${{ runner.os }}-flutter-android-
@@ -123,7 +123,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             ${{ env.CCACHE_DIR }}
-            packages/azahar_rust/target
+            packages/emu/target
           key: ${{ runner.os }}-flutter-android-${{ github.run_id }}-${{ github.run_attempt }}
 
   linux:
@@ -146,7 +146,7 @@ jobs:
           path: |
             ${{ env.CCACHE_DIR }}
             build
-            packages/azahar_rust/target
+            packages/emu/target
             apps/flutter/build
           key: ${{ runner.os }}-flutter-linux-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
@@ -186,7 +186,7 @@ jobs:
           path: |
             ${{ env.CCACHE_DIR }}
             build
-            packages/azahar_rust/target
+            packages/emu/target
             apps/flutter/build
           key: ${{ runner.os }}-flutter-linux-${{ github.run_id }}-${{ github.run_attempt }}
 
