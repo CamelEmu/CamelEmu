@@ -296,30 +296,8 @@ if (NOT OPENSSL_FOUND)
         DEFINITION OPENSSL_LIBS)
 endif()
 
-# httplib
-add_library(httplib INTERFACE)
-if(USE_SYSTEM_CPP_HTTPLIB)
-    find_package(CppHttp 0.14.1)
-    # Detect if system cpphttplib is a shared library
-    # this breaks building as Citra relies on functions that are moved
-    # into the shared object.
-    get_target_property(HTTP_LIBS httplib::httplib INTERFACE_LINK_LIBRARIES)
-    if(HTTP_LIBS)
-        message(WARNING "Shared cpp-http (${HTTP_LIBS}) not supported. Falling back to bundled...")
-        target_include_directories(httplib SYSTEM INTERFACE ./httplib)
-    else()
-        if(CppHttp_FOUND)
-            target_link_libraries(httplib INTERFACE httplib::httplib)
-        else()
-            message(STATUS "Cpp-httplib not found or not suitable version! Falling back to bundled...")
-            target_include_directories(httplib SYSTEM INTERFACE ./httplib)
-        endif()
-    endif()
-else()
-    target_include_directories(httplib SYSTEM INTERFACE ./httplib)
-endif()
-target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
-target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
+add_library(openssl-libs INTERFACE)
+target_link_libraries(openssl-libs INTERFACE ${OPENSSL_LIBRARIES})
 
 if (UNIX AND NOT APPLE)
     add_subdirectory(gamemode)
