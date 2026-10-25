@@ -2,6 +2,7 @@
 
 - Do not end a report with an offer, a suggestion or a question about further work the user did not ask for, such as staging a file, committing, or making another change. Report what was done and what was verified, and stop there.
 - Do not mention a physical device in a report, such as saying that something was or was not checked on one. State only what was verified.
+- Do not use the expression "実機" in any text, including reports, comments, commit messages and pull request descriptions.
 - Do not mention whether changes are committed or uncommitted in a report. Say only what was changed and what was verified.
 - Do not append an `echo` that announces the end of a command or its result, such as `; echo finished`, `; echo done` or `&& echo identical`. A background task already reports its completion, and a foreground command returns when it ends.
 - Do not open a pull request on a repository owned by an external team or account, such as the upstream of a fork, unless explicitly instructed to. Open pull requests only on repositories the user owns.
