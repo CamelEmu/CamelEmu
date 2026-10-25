@@ -2,8 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <system_error>
-#include <jwt/jwt.hpp>
+#include <algorithm>
+#include <emu_crypto.h>
+#include <emu_json.h>
 #include "common/logging/log.h"
 #include "common/web_result.h"
 #include "web_service/verify_user_jwt.h"
@@ -25,34 +26,85 @@ std::string GetPublicKey(const std::string& host) {
     return public_key;
 }
 
-VerifyUserJWT::VerifyUserJWT(const std::string& host) : pub_key(GetPublicKey(host)) {}
+namespace {
+
+struct JsonDeleter {
+    void operator()(EmuJson* json) const {
+        emu_json_free(json);
+    }
+};
+
+struct StringDeleter {
+    void operator()(char* string) const {
+        emu_crypto_string_free(string);
+    }
+};
+
+std::string StringOf(const EmuJson* json) {
+    const char* value = emu_json_string(json);
+    return value ? std::string(value, emu_json_string_len(json)) : std::string{};
+}
+
+} // namespace
+
+void VerifyUserJWT::KeyDeleter::operator()(EmuKeyHandle* key) const {
+    emu_crypto_key_free(key);
+}
+
+VerifyUserJWT::VerifyUserJWT(const std::string& host) {
+    const std::string pub_key = GetPublicKey(host);
+    key.reset(emu_crypto_key_parse(reinterpret_cast<const uint8_t*>(pub_key.data()),
+                                   pub_key.size()));
+    if (!key) {
+        LOG_ERROR(WebService, "Could not parse external JWT public key, verification will fail");
+    }
+}
+
+VerifyUserJWT::~VerifyUserJWT() = default;
 
 Network::VerifyUser::UserData VerifyUserJWT::LoadUserData(const std::string& verify_UID,
                                                           const std::string& token) {
-    const std::string audience = fmt::format("external-{}", verify_UID);
-    using namespace jwt::params;
-    std::error_code error;
-    auto decoded =
-        jwt::decode(token, algorithms({"rs256"}), error, secret(pub_key), issuer("citra-core"),
-                    aud(audience), validate_iat(true), validate_jti(true));
-    if (error) {
-        LOG_INFO(WebService, "Verification failed: category={}, code={}, message={}",
-                 error.category().name(), error.value(), error.message());
+    if (!key) {
         return {};
     }
+    const std::string audience = fmt::format("external-{}", verify_UID);
+    const int32_t status =
+        emu_crypto_jwt_verify_rs256(key.get(), token.c_str(), "citra-core", audience.c_str());
+    if (status != EMU_CRYPTO_JWT_OK) {
+        LOG_INFO(WebService, "Verification failed: status={}", status);
+        return {};
+    }
+
+    size_t claims_len = 0;
+    std::unique_ptr<char, StringDeleter> claims_text(
+        emu_crypto_jwt_claims(key.get(), token.c_str(), "citra-core", audience.c_str(),
+                              &claims_len));
+    if (!claims_text) {
+        return {};
+    }
+    std::unique_ptr<EmuJson, JsonDeleter> claims(emu_json_parse(claims_text.get(), claims_len));
+    if (!claims) {
+        return {};
+    }
+
     Network::VerifyUser::UserData user_data{};
-    if (decoded.payload().has_claim("username")) {
-        user_data.username = decoded.payload().get_claim_value<std::string>("username");
+    if (const EmuJson* username = emu_json_get(claims.get(), "username")) {
+        user_data.username = StringOf(username);
     }
-    if (decoded.payload().has_claim("displayName")) {
-        user_data.display_name = decoded.payload().get_claim_value<std::string>("displayName");
+    if (const EmuJson* display_name = emu_json_get(claims.get(), "displayName")) {
+        user_data.display_name = StringOf(display_name);
     }
-    if (decoded.payload().has_claim("avatarUrl")) {
-        user_data.avatar_url = decoded.payload().get_claim_value<std::string>("avatarUrl");
+    if (const EmuJson* avatar_url = emu_json_get(claims.get(), "avatarUrl")) {
+        user_data.avatar_url = StringOf(avatar_url);
     }
-    if (decoded.payload().has_claim("roles")) {
-        auto roles = decoded.payload().get_claim_value<std::vector<std::string>>("roles");
-        user_data.moderator = std::find(roles.begin(), roles.end(), "moderator") != roles.end();
+    if (const EmuJson* roles = emu_json_get(claims.get(), "roles")) {
+        const size_t count = emu_json_array_len(roles);
+        for (size_t i = 0; i < count; ++i) {
+            if (StringOf(emu_json_array_at(roles, i)) == "moderator") {
+                user_data.moderator = true;
+                break;
+            }
+        }
     }
     return user_data;
 }

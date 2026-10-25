@@ -37,9 +37,6 @@
 [submodule "discord-rpc"]
 	path = packages/core/externals/discord-rpc
     url = https://github.com/azahar-emu/discord-rpc.git
-[submodule "cpp-jwt"]
-	path = packages/core/externals/cpp-jwt
-    url = https://github.com/arun11299/cpp-jwt.git
 [submodule "teakra"]
 	path = packages/core/externals/teakra
     url = https://github.com/wwylele/teakra.git
