@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +17,9 @@ final gameProcessProvider =
 ///
 /// The game runs in this process: the emulation screen is pushed onto the navigator and the
 /// session is released when the screen is left, so another game can be started afterwards.
+///
+/// The screen is pushed at once. What has to finish before the core starts is handed to the
+/// screen, which waits for it while its loading overlay is shown.
 class GameProcessNotifier extends Notifier<bool> {
   bool _disposed = false;
 
@@ -34,19 +39,28 @@ class GameProcessNotifier extends Notifier<bool> {
     final navigator = Navigator.of(context, rootNavigator: true);
     final games = ref.read(gamesProvider.notifier);
     state = true;
+    final scansHeld = games.holdScans();
+    if (game != null) {
+      unawaited(_markLastPlayed(game));
+    }
     try {
-      await games.holdScans();
-      if (game != null) {
-        await AppServices.gameRepository.markLastPlayed(game.path);
-      }
       await navigator.push(
         MaterialPageRoute<void>(
-          builder: (_) => EmulationPage(gamePath: path, game: game),
+          builder: (_) =>
+              EmulationPage(gamePath: path, game: game, ready: scansHeld),
         ),
       );
     } finally {
       games.releaseScans();
       if (!_disposed) state = false;
+    }
+  }
+
+  Future<void> _markLastPlayed(Game game) async {
+    try {
+      await AppServices.gameRepository.markLastPlayed(game.path);
+    } catch (error) {
+      debugPrint('Recording the last played time failed: $error');
     }
   }
 }
