@@ -7,7 +7,7 @@ use crate::api::audio::AudioEngine;
 use crate::audio::AudioOutput;
 use crate::error::{AzaharError, Result};
 use crate::ffi::{CallbackContext, CoreListener, SessionHandle};
-use crate::memory::Memory3ds;
+use memory::Memory3ds;
 
 /// Phase of the shader cache preparation reported by the core.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
