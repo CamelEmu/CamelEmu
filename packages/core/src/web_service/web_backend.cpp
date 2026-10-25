@@ -7,8 +7,8 @@
 #include <mutex>
 #include <string>
 #include <fmt/format.h>
-#include <httplib.h>
 #include "common/common_types.h"
+#include "common/http_client.h"
 #include "common/logging/log.h"
 #include "common/web_result.h"
 #include "web_service/web_backend.h"
@@ -67,69 +67,58 @@ struct Client::Impl {
                                      const std::string& jwt = "", const std::string& username = "",
                                      const std::string& token = "") {
         if (cli == nullptr) {
-            cli = std::make_unique<httplib::Client>(host.c_str());
-            cli->set_connection_timeout(TIMEOUT_SECONDS);
-            cli->set_read_timeout(TIMEOUT_SECONDS);
-            cli->set_write_timeout(TIMEOUT_SECONDS);
+            cli = Common::Http::Client::Open(host, TIMEOUT_SECONDS);
         }
-        if (!cli->is_valid()) {
+        if (cli == nullptr) {
             LOG_ERROR(WebService, "Invalid URL {}", host + path);
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "Invalid URL"};
         }
 
-        httplib::Headers params;
-        if (!jwt.empty()) {
-            params = {
-                {std::string("Authorization"), fmt::format("Bearer {}", jwt)},
-            };
-        } else if (!username.empty()) {
-            params = {
-                {std::string("x-username"), username},
-                {std::string("x-token"), token},
-            };
-        }
-
-        params.emplace(std::string("api-version"),
-                       std::string(API_VERSION.begin(), API_VERSION.end()));
-        if (method != "GET") {
-            params.emplace(std::string("Content-Type"), std::string("application/json"));
-        };
-
-        httplib::Request request;
+        Common::Http::Request request;
         request.method = method;
         request.path = path;
-        request.headers = params;
+        if (!jwt.empty()) {
+            request.headers.emplace_back("Authorization", fmt::format("Bearer {}", jwt));
+        } else if (!username.empty()) {
+            request.headers.emplace_back("x-username", username);
+            request.headers.emplace_back("x-token", token);
+        }
+        request.headers.emplace_back("api-version",
+                                     std::string(API_VERSION.begin(), API_VERSION.end()));
+        if (method != "GET") {
+            request.headers.emplace_back("Content-Type", "application/json");
+        }
         request.body = data;
 
-        httplib::Result result = cli->send(request);
+        const Common::Http::Response response = cli->Send(request);
 
-        if (!result) {
-            LOG_ERROR(WebService, "{} to {} returned null", method, host + path);
+        if (response.Failed()) {
+            LOG_ERROR(WebService, "{} to {} returned null: {}", method, host + path,
+                      response.Error());
             return Common::WebResult{Common::WebResult::Code::LibError, "Null response"};
         }
 
-        httplib::Response response = result.value();
-
-        if (response.status >= 400) {
+        if (response.Status() >= 400) {
             LOG_ERROR(WebService, "{} to {} returned error status code: {}", method, host + path,
-                      response.status);
+                      response.Status());
             return Common::WebResult{Common::WebResult::Code::HttpError,
-                                     std::to_string(response.status)};
+                                     std::to_string(response.Status())};
         }
 
-        auto content_type = response.headers.find("content-type");
+        const auto content_type = response.Header("content-type");
 
-        if (content_type == response.headers.end()) {
+        if (!content_type) {
             LOG_ERROR(WebService, "{} to {} returned no content", method, host + path);
             return Common::WebResult{Common::WebResult::Code::WrongContent, ""};
         }
 
-        if (content_type->second.find(accept) == std::string::npos) {
+        if (content_type->find(accept) == std::string::npos) {
             LOG_ERROR(WebService, "{} to {} returned wrong content: {}", method, host + path,
-                      content_type->second);
+                      *content_type);
             return Common::WebResult{Common::WebResult::Code::WrongContent, "Wrong content"};
         }
-        return Common::WebResult{Common::WebResult::Code::Success, "", response.body};
+        return Common::WebResult{Common::WebResult::Code::Success, "",
+                                 std::string{response.Body()}};
     }
 
     // Retrieve a new JWT from given username and token
@@ -153,7 +142,7 @@ struct Client::Impl {
     std::string username;
     std::string token;
     std::string jwt;
-    std::unique_ptr<httplib::Client> cli;
+    std::unique_ptr<Common::Http::Client> cli;
 
     struct JWTCache {
         std::mutex mutex;

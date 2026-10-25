@@ -10,6 +10,7 @@ pub mod api;
 pub mod audio;
 pub mod error;
 mod ffi;
+pub use emu_http::*;
 mod frb_generated;
 pub mod json;
 mod library;

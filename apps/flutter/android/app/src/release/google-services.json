@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "838360343452",
+    "project_id": "camelemu-4f821",
+    "storage_bucket": "camelemu-4f821.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838360343452:android:8df886a322629551085e59",
+        "android_client_info": {
+          "package_name": "io.github.lime3ds.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxggiavbjX5YsoKU0cKPNyvFJVM62tTEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838360343452:android:7cec94fc69f7c9ee085e59",
+        "android_client_info": {
+          "package_name": "io.github.lime3ds.android.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxggiavbjX5YsoKU0cKPNyvFJVM62tTEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <tuple>
 #include <unordered_map>
 #include <boost/algorithm/string/replace.hpp>
@@ -158,124 +160,56 @@ static URLInfo SplitUrl(const std::string& url) {
     };
 }
 
-static std::size_t WriteHeaders(httplib::Stream& stream,
-                                std::span<const Context::RequestHeader> headers) {
-    std::size_t write_len = 0;
-    for (const auto& header : headers) {
-        auto len = stream.write_format("%s: %s\r\n", header.name.c_str(), header.value.c_str());
-        if (len < 0) {
-            return len;
-        }
-        write_len += len;
-    }
-    auto len = stream.write("\r\n");
-    if (len < 0) {
-        return len;
-    }
-    write_len += len;
-    return write_len;
-}
-
-static void SerializeChunkedAsciiPostData(httplib::DataSink& sink, const Context::Params& params) {
-    std::string query;
+static std::string SerializeChunkedAsciiPostData(const Context::Params& params) {
+    std::string out;
 
     for (auto it = params.begin(); it != params.end(); ++it) {
         if (it != params.begin()) {
-            sink.os << "&";
+            out += "&";
         }
 
-        query =
-            fmt::format("{}={}", it->first, httplib::detail::encode_query_param(it->second.value));
+        std::string query =
+            fmt::format("{}={}", it->first, Multipart::EncodeQueryParam(it->second.value));
         boost::replace_all(query, "*", "%2A");
-        sink.os << query;
+        out += query;
     }
+    return out;
 }
 
-static void SerializeChunkedMultipartPostData(httplib::DataSink& sink,
-                                              const Context::Params& params,
-                                              const std::string& boundary) {
+static std::string SerializeChunkedMultipartPostData(const Context::Params& params,
+                                                     const std::string& boundary) {
+    std::string out;
     for (const auto& param : params) {
         const auto item = param.second.ToMultipartForm();
-        std::string body = httplib::detail::serialize_multipart_formdata_item_begin(item, boundary);
-        body += item.content + httplib::detail::serialize_multipart_formdata_item_end();
-        sink.os << body;
+        out += Multipart::SerializeItemBegin(item, boundary) + item.content +
+               Multipart::SerializeItemEnd();
     }
 
-    sink.os << httplib::detail::serialize_multipart_formdata_finish(boundary);
+    out += Multipart::SerializeFinish(boundary);
+    return out;
 }
 
-std::size_t Context::HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
-                                       httplib::Stream& strm, httplib::Headers& httplib_headers) {
-    std::vector<Context::RequestHeader> final_headers;
-    std::vector<Context::RequestHeader>::iterator it_pending_headers;
-    httplib::Headers::iterator it_httplib_headers;
-
-    auto find_pending_header = [&pending_headers](const std::string& str) {
-        return std::find_if(pending_headers.begin(), pending_headers.end(),
-                            [&str](Context::RequestHeader& rh) { return rh.name == str; });
-    };
-
-    // Watch out for header ordering!!
-    // First: Host
-    it_pending_headers = find_pending_header("Host");
-    if (it_pending_headers != pending_headers.end()) {
-        final_headers.push_back(
-            Context::RequestHeader(it_pending_headers->name, it_pending_headers->value));
-        pending_headers.erase(it_pending_headers);
-    } else {
-        it_httplib_headers = httplib_headers.find("Host");
-        if (it_httplib_headers != httplib_headers.end()) {
-            final_headers.push_back(
-                Context::RequestHeader(it_httplib_headers->first, it_httplib_headers->second));
-        }
-    }
-
-    // Second, user defined headers
-    // Third, Content-Type (optional, appended by MakeRequest)
-    for (const auto& header : pending_headers) {
-        final_headers.push_back(header);
-    }
-
-    // Fourth: Content-Length
-    it_pending_headers = find_pending_header("Content-Length");
-    if (it_pending_headers == pending_headers.end()) {
-        if ((method == RequestMethod::Post || method == RequestMethod::Put) && !chunked_request) {
-            it_httplib_headers = httplib_headers.find("Content-Length");
-            if (it_httplib_headers != httplib_headers.end()) {
-                final_headers.push_back(
-                    Context::RequestHeader(it_httplib_headers->first, it_httplib_headers->second));
-            }
-        }
-    }
-
-    // Fifth: Transfer-Encoding
-    if (chunked_request) {
-        final_headers.push_back(Context::RequestHeader("Transfer-Encoding", "chunked"));
-    }
-
-    return WriteHeaders(strm, final_headers);
-};
-
 void Context::ParseAsciiPostData() {
-    httplib::Params ascii_form;
-    for (auto param : post_data) {
-        ascii_form.emplace(param.first, param.second.value);
+    post_data_raw.clear();
+    for (const auto& param : post_data) {
+        if (!post_data_raw.empty()) {
+            post_data_raw += "&";
+        }
+        post_data_raw += Multipart::EncodeQueryParam(param.first) + "=" +
+                         Multipart::EncodeQueryParam(param.second.value);
     }
-
-    post_data_raw = httplib::detail::params_to_query_str(ascii_form);
     boost::replace_all(post_data_raw, "*", "%2A");
 }
 
 std::string Context::ParseMultipartFormData() {
-    httplib::MultipartFormDataItems multipart_form;
-    for (auto param : post_data) {
+    std::vector<Multipart::Item> multipart_form;
+    for (const auto& param : post_data) {
         multipart_form.push_back(param.second.ToMultipartForm());
     }
 
-    multipart_boundary = httplib::detail::make_multipart_data_boundary();
-    post_data_raw =
-        httplib::detail::serialize_multipart_formdata(multipart_form, multipart_boundary);
-    return httplib::detail::serialize_multipart_formdata_get_content_type(multipart_boundary);
+    multipart_boundary = Multipart::MakeBoundary();
+    post_data_raw = Multipart::Serialize(multipart_form, multipart_boundary);
+    return Multipart::ContentType(multipart_boundary);
 }
 
 void Context::MakeRequest() {
@@ -292,24 +226,11 @@ void Context::MakeRequest() {
 
     URLInfo url_info = SplitUrl(url);
 
-    httplib::Request request;
     std::vector<Context::RequestHeader> pending_headers;
-    request.method = request_method_strings.at(method);
-    request.path = url_info.path;
-
-    request.progress = [this](u64 current, u64 total) -> bool {
-        // TODO(B3N30): Is there a state that shows response header are available
-        current_download_size_bytes = current;
-        total_download_size_bytes = total;
-        return true;
-    };
-
     for (const auto& header : headers) {
         pending_headers.push_back(header);
     }
 
-    httplib::Params ascii_form;
-    httplib::MultipartFormDataItems multipart_form;
     if ((method == RequestMethod::Post || method == RequestMethod::Put) && !chunked_request) {
         switch (post_data_encoding) {
         case PostDataEncoding::AsciiForm:
@@ -336,155 +257,134 @@ void Context::MakeRequest() {
         }
     }
 
-    // httplib doesn't expose setting the content provider for the request when not using the usual
-    // send methods like Client::Post or Client::Put, so we have to set the internal fields manually
-    if (!chunked_request) {
-        request.content_length_ = post_data_raw.size();
-        request.content_provider_ = [this](size_t offset, size_t length, httplib::DataSink& sink) {
-            return ContentProvider(offset, length, sink);
-        };
-    } else {
+    send_buffer_ready = false;
+    std::size_t body_length = post_data_raw.size();
+    if (chunked_request) {
         if (post_data_type == PostDataType::MultipartForm) {
-            multipart_boundary = httplib::detail::make_multipart_data_boundary();
-            pending_headers.push_back(Context::RequestHeader(
-                "Content-Type", httplib::detail::serialize_multipart_formdata_get_content_type(
-                                    multipart_boundary)));
+            multipart_boundary = Multipart::MakeBoundary();
+            pending_headers.push_back(
+                Context::RequestHeader("Content-Type", Multipart::ContentType(multipart_boundary)));
         }
 
-        if (post_data_type == PostDataType::Raw && chunked_content_length > 0) {
-            pending_headers.push_back(Context::RequestHeader(
-                "Content-Length", fmt::format("{}", chunked_content_length)));
-        }
-
-        request.content_length_ = 0;
-        request.content_provider_ =
-            httplib::detail::ContentProviderAdapter([this](size_t offset, httplib::DataSink& sink) {
-                return ChunkedContentProvider(offset, sink);
-            });
-        request.is_chunked_content_provider_ = true;
+        body_length = post_data_type == PostDataType::Raw ? chunked_content_length : 0;
     }
 
+    Common::Http::Request request;
+    request.method = request_method_strings.at(method);
+    request.path = url_info.path;
+    for (const auto& header : pending_headers) {
+        // The length and the framing of the body are decided by the transfer layer
+        if (Common::Http::HeaderNameEquals(header.name, "Content-Length") ||
+            Common::Http::HeaderNameEquals(header.name, "Transfer-Encoding")) {
+            continue;
+        }
+        request.headers.emplace_back(header.name, header.value);
+    }
+    if (chunked_request || !post_data_raw.empty()) {
+        request.provide_body = [](void* user, std::uint8_t* buf, std::size_t len,
+                                  std::int32_t* eof) -> std::int32_t {
+            return static_cast<Context*>(user)->ProvideBody(buf, len, eof);
+        };
+        request.user = this;
+        request.body_length = body_length;
+    }
+
+    std::unique_ptr<EmuTlsContext, decltype(&emu_tls_context_free)> tls{nullptr,
+                                                                       &emu_tls_context_free};
     if (url_info.is_https) {
-        MakeRequestSSL(request, url_info, pending_headers);
-    } else {
-        MakeRequestNonSSL(request, url_info, pending_headers);
+        const std::vector<u8>* cert = nullptr;
+        const std::vector<u8>* key = nullptr;
+        const auto client_cert = ssl_config.client_cert_ctx.lock();
+        if (uses_default_client_cert) {
+            cert = &clcert_data->certificate;
+            key = &clcert_data->private_key;
+        } else if (client_cert) {
+            cert = &client_cert->certificate;
+            key = &client_cert->private_key;
+        }
+
+        // TODO(B3N30): Check for SSLOptions-Bits and set the verify method accordingly
+        // https://www.3dbrew.org/wiki/SSL_Services#SSLOpt
+        // Hack: Since for now RootCerts are not implemented we do not verify the server.
+        const bool has_client_cert = cert != nullptr && key != nullptr;
+        tls.reset(emu_tls_context_new(0, has_client_cert ? cert->data() : nullptr,
+                                      has_client_cert ? cert->size() : 0,
+                                      has_client_cert ? key->data() : nullptr,
+                                      has_client_cert ? key->size() : 0));
+        if (tls == nullptr) {
+            LOG_ERROR(Service_HTTP, "Invalid client certificate");
+            state = RequestState::Completed;
+            return;
+        }
     }
-}
 
-void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
-                                std::vector<Context::RequestHeader>& pending_headers) {
-    httplib::Error error{-1};
-    std::unique_ptr<httplib::Client> client =
-        std::make_unique<httplib::Client>(url_info.host, url_info.port);
-
-    client->set_header_writer(
-        [this, &pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
-            return HandleHeaderWrite(pending_headers, strm, httplib_headers);
-        });
-
-    if (!client->send(request, response, error)) {
-        LOG_ERROR(Service_HTTP, "Request failed: {}: {}", error, httplib::to_string(error));
+    const auto client = Common::Http::Client::Open(
+        fmt::format("{}://{}:{}", url_info.is_https ? "https" : "http", url_info.host,
+                    url_info.port),
+        0, tls.get());
+    if (client == nullptr) {
+        LOG_ERROR(Service_HTTP, "Invalid URL {}", url);
         state = RequestState::Completed;
-    } else {
-        LOG_DEBUG(Service_HTTP, "Request successful");
-        state = RequestState::ReceivingBody;
-    }
-}
-
-void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
-                             std::vector<Context::RequestHeader>& pending_headers) {
-    httplib::Error error{-1};
-    X509* cert = nullptr;
-    EVP_PKEY* key = nullptr;
-    const unsigned char* cert_data = nullptr;
-    const unsigned char* key_data = nullptr;
-    long cert_size = 0;
-    long key_size = 0;
-    SCOPE_EXIT({
-        if (cert) {
-            X509_free(cert);
-        }
-        if (key) {
-            EVP_PKEY_free(key);
-        }
-    });
-
-    if (uses_default_client_cert) {
-        cert_data = clcert_data->certificate.data();
-        key_data = clcert_data->private_key.data();
-        cert_size = static_cast<long>(clcert_data->certificate.size());
-        key_size = static_cast<long>(clcert_data->private_key.size());
-    } else if (auto client_cert = ssl_config.client_cert_ctx.lock()) {
-        cert_data = client_cert->certificate.data();
-        key_data = client_cert->private_key.data();
-        cert_size = static_cast<long>(client_cert->certificate.size());
-        key_size = static_cast<long>(client_cert->private_key.size());
+        return;
     }
 
-    std::unique_ptr<httplib::SSLClient> client;
-    if (cert_data && key_data) {
-        cert = d2i_X509(nullptr, &cert_data, cert_size);
-        key = d2i_PrivateKey(EVP_PKEY_RSA, nullptr, &key_data, key_size);
-        client = std::make_unique<httplib::SSLClient>(url_info.host, url_info.port, cert, key);
-    } else {
-        client = std::make_unique<httplib::SSLClient>(url_info.host, url_info.port);
-    }
-
-    // TODO(B3N30): Check for SSLOptions-Bits and set the verify method accordingly
-    // https://www.3dbrew.org/wiki/SSL_Services#SSLOpt
-    // Hack: Since for now RootCerts are not implemented we set the VerifyMode to None.
-    client->enable_server_certificate_verification(false);
-
-    client->set_header_writer(
-        [this, &pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
-            return HandleHeaderWrite(pending_headers, strm, httplib_headers);
-        });
-
-    if (!client->send(request, response, error)) {
-        LOG_ERROR(Service_HTTP, "Request failed: {}: {}", error, httplib::to_string(error));
+    const auto result = client->Send(request);
+    if (result.Failed()) {
+        LOG_ERROR(Service_HTTP, "Request failed: {}", result.Error());
         state = RequestState::Completed;
-    } else {
-        LOG_DEBUG(Service_HTTP, "Request successful");
-        state = RequestState::ReceivingBody;
-    }
-}
-
-bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
-
-    if (!post_data_raw.empty()) {
-        sink.write(post_data_raw.data() + offset, length);
+        return;
     }
 
-    // This state is set after sending the request, even if it hasn't received a response yet
-    state = RequestState::ReceivingResponse;
-    return true;
+    response = {
+        .status = result.Status(),
+        .reason = result.Reason(),
+        .headers = result.AllHeaders(),
+        .body = std::string{result.Body()},
+    };
+    current_download_size_bytes = response.body.size();
+    total_download_size_bytes = response.body.size();
+    LOG_DEBUG(Service_HTTP, "Request successful");
+    state = RequestState::ReceivingBody;
 }
 
-bool Context::ChunkedContentProvider(size_t offset, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
+std::int32_t Context::ProvideBody(std::uint8_t* buf, std::size_t len, std::int32_t* eof) {
+    if (!send_buffer_ready) {
+        state = RequestState::SendingRequest;
 
-    finish_post_data.Wait();
+        if (chunked_request) {
+            finish_post_data.Wait();
 
-    switch (post_data_type) {
-    case PostDataType::AsciiForm:
-        SerializeChunkedAsciiPostData(sink, post_data);
-        break;
-    case PostDataType::MultipartForm:
-        SerializeChunkedMultipartPostData(sink, post_data, multipart_boundary);
-        break;
-    // Write the data values
-    case PostDataType::Raw:
-        for (const auto& data : post_data) {
-            sink.os << data.second.value;
+            switch (post_data_type) {
+            case PostDataType::AsciiForm:
+                send_buffer = SerializeChunkedAsciiPostData(post_data);
+                break;
+            case PostDataType::MultipartForm:
+                send_buffer = SerializeChunkedMultipartPostData(post_data, multipart_boundary);
+                break;
+            // Write the data values
+            case PostDataType::Raw:
+                send_buffer.clear();
+                for (const auto& data : post_data) {
+                    send_buffer += data.second.value;
+                }
+                break;
+            }
+        } else {
+            send_buffer = post_data_raw;
         }
-        break;
+        send_offset = 0;
+        send_buffer_ready = true;
     }
 
-    sink.done();
-    // This state is set after sending the request, even if it hasn't received a response yet
-    state = RequestState::ReceivingResponse;
-    return true;
+    const std::size_t count = std::min(len, send_buffer.size() - send_offset);
+    std::memcpy(buf, send_buffer.data() + send_offset, count);
+    send_offset += count;
+    if (send_offset == send_buffer.size()) {
+        *eof = 1;
+        // This state is set after sending the request, even if it hasn't received a response yet
+        state = RequestState::ReceivingResponse;
+    }
+    return static_cast<std::int32_t>(count);
 }
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
@@ -1478,11 +1378,10 @@ void HTTP_C::GetResponseDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
                 LOG_DEBUG(Service_HTTP, "");
             }
 
-            // httplib does not keep the raw HTTP header data, so we need to reconstruct it.
-            // Sadly, the order of headers is lost, but for now it's good enough.
-            std::string hdr =
-                fmt::format("{} {} {}\r\n", http_context.response.version,
-                            http_context.response.status, http_context.response.reason);
+            // The raw HTTP header data is not kept, so we need to reconstruct it.
+            // Sadly, the original order and case of headers is lost, but for now it's good enough.
+            std::string hdr = fmt::format("HTTP/1.1 {} {}\r\n", http_context.response.status,
+                                          http_context.response.reason);
             out.insert(out.end(), hdr.begin(), hdr.end());
 
             for (auto& h : headers) {
@@ -1571,7 +1470,6 @@ void HTTP_C::GetResponseHeaderImpl(Kernel::HLERequestContext& ctx, bool timeout)
 
             Context& http_context = GetContext(async_data->context_handle);
 
-            auto& headers = http_context.response.headers;
             u32 copied_size = 0;
 
             if (async_data->timeout) {
@@ -1582,9 +1480,8 @@ void HTTP_C::GetResponseHeaderImpl(Kernel::HLERequestContext& ctx, bool timeout)
                           async_data->value_buffer->GetSize());
             }
 
-            auto header = headers.find(header_name_str);
-            if (header != headers.end()) {
-                std::string header_value = header->second;
+            if (auto header = http_context.response.Header(header_name_str)) {
+                std::string header_value = *header;
                 copied_size = static_cast<u32>(header_value.size());
                 if (header_value.size() >= async_data->value_buffer->GetSize()) {
                     header_value.resize(async_data->value_buffer->GetSize() - 1);
@@ -2024,10 +1921,8 @@ void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
     const bool is_complete = http_context.request_future.wait_for(std::chrono::milliseconds(0)) ==
                              std::future_status::ready;
     if (is_complete) {
-        const auto& headers = http_context.response.headers;
-        const auto& it = headers.find("Content-Length");
-        if (it != headers.end()) {
-            content_length = std::stoi(it->second);
+        if (const auto length = http_context.response.Header("Content-Length")) {
+            content_length = std::stoi(*length);
         }
     }
 

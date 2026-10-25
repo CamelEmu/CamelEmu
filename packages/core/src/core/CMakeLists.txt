@@ -329,6 +329,8 @@ add_library(citra_core STATIC
     hle/service/hid/hid_user.h
     hle/service/http/http_c.cpp
     hle/service/http/http_c.h
+    hle/service/http/multipart.cpp
+    hle/service/http/multipart.h
     hle/service/ir/extra_hid.cpp
     hle/service/ir/extra_hid.h
     hle/service/ir/ir.cpp
@@ -500,7 +502,7 @@ add_library(citra_core STATIC
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
-target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams httplib)
+target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams openssl-libs)
 target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt lodepng open_source_archives)
 
 if (ENABLE_WEB_SERVICE)
