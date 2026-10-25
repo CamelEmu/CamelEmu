@@ -38,5 +38,17 @@ pub enum AzaharError {
     StorageCommit(Vec<String>),
 }
 
+impl From<memory::MemoryError> for AzaharError {
+    fn from(error: memory::MemoryError) -> Self {
+        match error {
+            memory::MemoryError::Unavailable => Self::InvalidState,
+            memory::MemoryError::InvalidAddress { address, len } => {
+                Self::InvalidAddress { address, len }
+            }
+            memory::MemoryError::Core(status) => Self::Core(status),
+        }
+    }
+}
+
 /// Result alias used across the crate.
 pub type Result<T> = std::result::Result<T, AzaharError>;

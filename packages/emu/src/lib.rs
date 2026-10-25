@@ -1,4 +1,5 @@
-//! Rust-owned 3DS game session, memory access, audio output and file storage.
+//! Rust-owned 3DS game session, audio output and file storage. The memory of a session is read
+//! through the `memory` crate.
 //!
 //! The C++ core is reached only through the C ABI declared in
 //! `packages/camel_emu/include/azahar_session.h`, and it reaches the storage of the crate through the one declared
@@ -12,7 +13,6 @@ mod ffi;
 mod frb_generated;
 pub mod json;
 mod library;
-pub mod memory;
 mod raw;
 pub mod registry;
 pub mod session;
