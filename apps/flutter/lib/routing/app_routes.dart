@@ -10,6 +10,7 @@ import '../screens/home/slide_branch_container.dart';
 import '../screens/options/about_page.dart';
 import '../screens/options/emulated_network_page.dart';
 import '../screens/options/gpu_driver_manager_page.dart';
+import '../screens/options/history_page.dart';
 import '../screens/options/legacy_options_page.dart';
 import '../screens/options/options_page.dart';
 import '../screens/options/system_files_page.dart';

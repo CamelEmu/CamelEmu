@@ -5,6 +5,7 @@ import '../../data/options/options_search_provider.dart';
 import '../../data/settings/settings_load_provider.dart';
 import '../../i18n/translations.g.dart';
 import '../../widgets/app_search_bar.dart';
+import '../../routing/app_routes.dart';
 import '../../widgets/gamepad/gamepad_focus_region.dart';
 import 'widgets/options_home_content.dart';
 import 'widgets/options_search_results.dart';
@@ -57,12 +58,25 @@ class _OptionsPageState extends ConsumerState<OptionsPage> {
         child: Column(
           children: [
             GamepadFocusRegion(
-              child: AppSearchBar(
-                controller: _queryController,
-                hintText: context.t.options.searchHint,
-                onChanged: ref.read(optionsSearchProvider.notifier).setQuery,
-                onClear: _handleClear,
-                onFocusChanged: _handleFocusChanged,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppSearchBar(
+                      controller: _queryController,
+                      hintText: context.t.options.searchHint,
+                      onChanged:
+                          ref.read(optionsSearchProvider.notifier).setQuery,
+                      onClear: _handleClear,
+                      onFocusChanged: _handleFocusChanged,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.history),
+                    tooltip: context.t.options.history,
+                    onPressed: () => const OptionsHistoryRoute().push(context),
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
             ),
             Expanded(

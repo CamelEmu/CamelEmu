@@ -1,5 +1,15 @@
 part of 'app_routes.dart';
 
+@TypedGoRoute<OptionsHistoryRoute>(path: '/options/history')
+class OptionsHistoryRoute extends AppRouteData with $OptionsHistoryRoute {
+  const OptionsHistoryRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const HistoryPage();
+  }
+}
+
 @TypedGoRoute<OptionsGeneralSettingsRoute>(path: '/options/general')
 class OptionsGeneralSettingsRoute extends AppRouteData
     with $OptionsGeneralSettingsRoute {
