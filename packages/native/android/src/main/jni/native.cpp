@@ -689,51 +689,6 @@ void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_
     FileUtil::SetUserPath();
 }
 
-jobjectArray Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_getInstalledGamePaths(
-    JNIEnv* env, [[maybe_unused]] jclass clazz, jobjectArray j_roots, jobjectArray j_paths) {
-    std::vector<std::string> games;
-    const FileUtil::DirectoryEntryCallable ScanDir =
-        [&games, &ScanDir](u64*, const std::string& directory, const std::string& virtual_name) {
-            std::string path = directory + virtual_name;
-            if (FileUtil::IsDirectory(path)) {
-                path += '/';
-                FileUtil::ForeachDirectoryEntry(nullptr, path, ScanDir);
-            } else {
-                if (!FileUtil::Exists(path))
-                    return false;
-                auto loader = Loader::GetLoader(path);
-                if (loader) {
-                    bool executable{};
-                    const Loader::ResultStatus result = loader->IsExecutable(executable);
-                    if (Loader::ResultStatus::Success == result && executable) {
-                        games.emplace_back(path);
-                    }
-                }
-            }
-            return true;
-        };
-
-    const jsize entry_count = env->GetArrayLength(j_roots);
-    for (jsize i = 0; i < entry_count; ++i) {
-        auto* j_root = static_cast<jstring>(env->GetObjectArrayElement(j_roots, i));
-        auto* j_path = static_cast<jstring>(env->GetObjectArrayElement(j_paths, i));
-        const std::string root = GetJString(env, j_root);
-        const std::string path = GetJString(env, j_path);
-        env->DeleteLocalRef(j_root);
-        env->DeleteLocalRef(j_path);
-
-        const FileUtil::UserPath user_path =
-            root == "nand" ? FileUtil::UserPath::NANDDir : FileUtil::UserPath::SDMCDir;
-        ScanDir(nullptr, "", FileUtil::GetUserPath(user_path) + path);
-    }
-
-    jobjectArray jgames = env->NewObjectArray(static_cast<jsize>(games.size()),
-                                              env->FindClass("java/lang/String"), nullptr);
-    for (jsize i = 0; i < games.size(); ++i)
-        env->SetObjectArrayElement(jgames, i, env->NewStringUTF(games[i].c_str()));
-    return jgames;
-}
-
 jlongArray Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_getSystemTitleIds(JNIEnv* env,
                                                                      [[maybe_unused]] jobject obj,
                                                                      jint system_type,
@@ -902,34 +857,6 @@ void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_
                                                           [[maybe_unused]] jobject obj, jfloat x,
                                                           jfloat y) {
     GetTouchscreenWindow()->OnTouchMoved((int)x, (int)y);
-}
-
-jlong Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_getTitleId(JNIEnv* env, [[maybe_unused]] jobject obj,
-                                                         jstring j_filename) {
-    std::string filepath = GetJString(env, j_filename);
-    const auto loader = Loader::GetLoader(filepath);
-
-    u64 title_id{};
-    if (loader) {
-        loader->ReadProgramId(title_id);
-    }
-    return static_cast<jlong>(title_id);
-}
-
-jboolean Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_getIsSystemTitle(JNIEnv* env,
-                                                                  [[maybe_unused]] jobject obj,
-                                                                  jstring path) {
-    const std::string filepath = GetJString(env, path);
-    const auto loader = Loader::GetLoader(filepath);
-
-    // Since we also read through invalid file extensions, we have to check if the loader is valid
-    if (loader == nullptr) {
-        return false;
-    }
-
-    u64 program_id = 0;
-    loader->ReadProgramId(program_id);
-    return ((program_id >> 32) & 0xFFFFFFFF) == 0x00040010;
 }
 
 void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_createConfigFile([[maybe_unused]] JNIEnv* env,

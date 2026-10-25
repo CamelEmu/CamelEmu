@@ -3,10 +3,15 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../../../api/mirror.dart';
 import '../../../frb_generated.dart';
+import 'audio.dart';
+import 'error.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'session.freezed.dart';
+
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Future<void> pauseGame() => RustLib.instance.api.sessionApiSessionPauseGame();
 
@@ -39,3 +44,76 @@ Future<BigInt> fcramSize() => RustLib.instance.api.sessionApiSessionFcramSize();
 
 Future<Uint8List> dumpFcram() =>
     RustLib.instance.api.sessionApiSessionDumpFcram();
+
+@freezed
+sealed class SessionEvent with _$SessionEvent {
+  const SessionEvent._();
+
+  const factory SessionEvent.shaderProgress({
+    required ShaderStage stage,
+    required BigInt progress,
+    required BigInt max,
+  }) = SessionEvent_ShaderProgress;
+  const factory SessionEvent.texture({
+    required PlatformInt64 textureId,
+    required bool secondary,
+  }) = SessionEvent_Texture;
+  const factory SessionEvent.stateChanged({required SessionState state}) =
+      SessionEvent_StateChanged;
+  const factory SessionEvent.error({required String message}) =
+      SessionEvent_Error;
+  const factory SessionEvent.shutdownRequested() =
+      SessionEvent_ShutdownRequested;
+  const factory SessionEvent.failed({required String message}) =
+      SessionEvent_Failed;
+  const factory SessionEvent.articCountryMismatch({
+    required int region,
+    required int country,
+  }) = SessionEvent_ArticCountryMismatch;
+}
+
+/// Size of the screen textures of a session and the engine that plays its audio.
+class SessionOptions {
+  final int primaryWidth;
+  final int primaryHeight;
+  final int secondaryWidth;
+  final int secondaryHeight;
+  final bool dualScreen;
+  final AudioEngine audioEngine;
+
+  const SessionOptions({
+    required this.primaryWidth,
+    required this.primaryHeight,
+    required this.secondaryWidth,
+    required this.secondaryHeight,
+    required this.dualScreen,
+    required this.audioEngine,
+  });
+
+  @override
+  int get hashCode =>
+      primaryWidth.hashCode ^
+      primaryHeight.hashCode ^
+      secondaryWidth.hashCode ^
+      secondaryHeight.hashCode ^
+      dualScreen.hashCode ^
+      audioEngine.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SessionOptions &&
+          runtimeType == other.runtimeType &&
+          primaryWidth == other.primaryWidth &&
+          primaryHeight == other.primaryHeight &&
+          secondaryWidth == other.secondaryWidth &&
+          secondaryHeight == other.secondaryHeight &&
+          dualScreen == other.dualScreen &&
+          audioEngine == other.audioEngine;
+}
+
+/// Lifecycle state of a session.
+enum SessionState { idle, running, paused }
+
+/// Phase of the shader cache preparation reported by the core.
+enum ShaderStage { prepare, decompile, build, complete }

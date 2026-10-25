@@ -1,8 +1,67 @@
 use flutter_rust_bridge::frb;
 
-use crate::error::AzaharError;
+use crate::api::audio::AudioEngine;
+use crate::api::error::AzaharError;
 use crate::registry;
-pub use crate::session::{SessionEvent, SessionOptions, SessionState, ShaderStage};
+
+/// Phase of the shader cache preparation reported by the core.
+#[frb(unignore)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShaderStage {
+    Prepare,
+    Decompile,
+    Build,
+    Complete,
+}
+
+/// Lifecycle state of a session.
+#[frb(unignore)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SessionState {
+    Idle,
+    Running,
+    Paused,
+}
+
+/// Notification delivered from the session to the application.
+#[frb(non_opaque)]
+#[derive(Debug, Clone)]
+pub enum SessionEvent {
+    ShaderProgress {
+        stage: ShaderStage,
+        progress: u64,
+        max: u64,
+    },
+    Texture {
+        texture_id: i64,
+        secondary: bool,
+    },
+    StateChanged {
+        state: SessionState,
+    },
+    Error {
+        message: String,
+    },
+    ShutdownRequested,
+    Failed {
+        message: String,
+    },
+    ArticCountryMismatch {
+        region: u32,
+        country: u32,
+    },
+}
+
+/// Size of the screen textures of a session and the engine that plays its audio.
+#[derive(Debug, Clone, Copy)]
+pub struct SessionOptions {
+    pub primary_width: i32,
+    pub primary_height: i32,
+    pub secondary_width: i32,
+    pub secondary_height: i32,
+    pub dual_screen: bool,
+    pub audio_engine: AudioEngine,
+}
 
 #[frb(init)]
 pub fn init_app() {

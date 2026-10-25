@@ -1,3 +1,4 @@
+pub mod ecc;
 mod jwt;
 mod key;
 mod tls;

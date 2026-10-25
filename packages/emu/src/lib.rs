@@ -4,6 +4,7 @@
 pub mod api;
 mod frb_generated;
 
+pub use emu_app_scanner;
 pub use emu_crypto;
 pub use emu_http;
 pub use emu_random;

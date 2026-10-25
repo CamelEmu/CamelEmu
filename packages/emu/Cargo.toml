@@ -15,6 +15,7 @@ default = []
 link_core = ["session/link_core"]
 
 [dependencies]
+emu_app_scanner = { version = "0.1.0", path = "crates/app_scanner" }
 emu_crypto = { version = "0.1.0", path = "crates/crypto" }
 emu_http = { version = "0.1.0", path = "crates/http" }
 emu_random = { version = "0.1.0", path = "crates/random" }

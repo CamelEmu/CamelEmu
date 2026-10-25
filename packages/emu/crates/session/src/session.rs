@@ -9,61 +9,7 @@ use crate::error::{AzaharError, SessionResult};
 use crate::ffi::{CallbackContext, CoreListener, SessionHandle};
 use memory::Memory3ds;
 
-/// Phase of the shader cache preparation reported by the core.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ShaderStage {
-    Prepare,
-    Decompile,
-    Build,
-    Complete,
-}
-
-/// Lifecycle state of a session.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SessionState {
-    Idle,
-    Running,
-    Paused,
-}
-
-/// Notification delivered from the session to the application.
-#[derive(Debug, Clone)]
-pub enum SessionEvent {
-    ShaderProgress {
-        stage: ShaderStage,
-        progress: u64,
-        max: u64,
-    },
-    Texture {
-        texture_id: i64,
-        secondary: bool,
-    },
-    StateChanged {
-        state: SessionState,
-    },
-    Error {
-        message: String,
-    },
-    ShutdownRequested,
-    Failed {
-        message: String,
-    },
-    ArticCountryMismatch {
-        region: u32,
-        country: u32,
-    },
-}
-
-/// Size of the screen textures of a session and the engine that plays its audio.
-#[derive(Debug, Clone, Copy)]
-pub struct SessionOptions {
-    pub primary_width: i32,
-    pub primary_height: i32,
-    pub secondary_width: i32,
-    pub secondary_height: i32,
-    pub dual_screen: bool,
-    pub audio_engine: AudioEngine,
-}
+pub use crate::api::session::{SessionEvent, SessionOptions, SessionState, ShaderStage};
 
 /// Audio output opened by this crate. Only Oboe is played here; the other engines are owned by
 /// the core.

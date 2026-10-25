@@ -28,7 +28,6 @@
 #include "native_bridge/emulator_config.h"
 #include "native_bridge/game_actions.h"
 #include "native_bridge/gamepad.h"
-#include "native_bridge/game_scanner.h"
 #include "native_bridge/system_files.h"
 #include "native_bridge/system_save_game.h"
 #include "native_bridge/user_directory.h"
@@ -51,29 +50,6 @@ gboolean RequestPermissionNatively(GtkWindow* parent,
   gint response = gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
   return response == GTK_RESPONSE_YES;
-}
-
-FlValue* GameEntryToFlValue(const GameScanner::GameEntry& game) {
-  FlValue* map = fl_value_new_map();
-  fl_value_set_string_take(map, "title", fl_value_new_string(game.title.c_str()));
-  fl_value_set_string_take(map, "description",
-                            fl_value_new_string(game.description.c_str()));
-  fl_value_set_string_take(map, "path", fl_value_new_string(game.path.c_str()));
-  fl_value_set_string_take(
-      map, "titleId", fl_value_new_int(static_cast<int64_t>(game.title_id)));
-  fl_value_set_string_take(map, "company", fl_value_new_string(game.company.c_str()));
-  fl_value_set_string_take(map, "regions", fl_value_new_string(game.regions.c_str()));
-  fl_value_set_string_take(map, "isInstalled", fl_value_new_bool(game.is_installed));
-  fl_value_set_string_take(map, "isSystemTitle", fl_value_new_bool(game.is_system_title));
-  fl_value_set_string_take(map, "isVisibleSystemTitle",
-                            fl_value_new_bool(game.is_visible_system_title));
-  fl_value_set_string_take(map, "filename", fl_value_new_string(game.filename.c_str()));
-  if (game.icon_path.empty()) {
-    fl_value_set_string_take(map, "iconPath", fl_value_new_null());
-  } else {
-    fl_value_set_string_take(map, "iconPath", fl_value_new_string(game.icon_path.c_str()));
-  }
-  return map;
 }
 
 std::string StringArgument(FlValue* args, const char* key) {
@@ -258,34 +234,6 @@ FlMethodResponse* HandleConfirmUserDirectory(GtkWindow* window, FlValue* args) {
     SetUserDirectory(directory);
   }
   return FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
-}
-
-std::vector<GameScanner::InstalledTitlePath> InstalledTitlePathsArgument(FlValue* args) {
-  std::vector<GameScanner::InstalledTitlePath> paths;
-  FlValue* list_value = fl_value_lookup_string(args, "installedTitlePaths");
-  if (list_value == nullptr || fl_value_get_type(list_value) != FL_VALUE_TYPE_LIST) {
-    return paths;
-  }
-  for (std::size_t i = 0; i < fl_value_get_length(list_value); ++i) {
-    FlValue* entry = fl_value_get_list_value(list_value, i);
-    if (fl_value_get_type(entry) != FL_VALUE_TYPE_MAP) {
-      continue;
-    }
-    const std::string root = StringArgument(entry, "root");
-    paths.push_back({root == "nand" ? GameScanner::InstalledTitleRoot::NandDir
-                                     : GameScanner::InstalledTitleRoot::SdmcDir,
-                      StringArgument(entry, "path")});
-  }
-  return paths;
-}
-
-FlMethodResponse* HandleGetGames(GtkWindow* window, FlValue* args) {
-  g_autoptr(FlValue) games = fl_value_new_list();
-  for (const GameScanner::GameEntry& game : GameScanner::ScanGames(
-           StringArgument(args, "gamesDirectory"), InstalledTitlePathsArgument(args))) {
-    fl_value_append_take(games, GameEntryToFlValue(game));
-  }
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(games));
 }
 
 FlMethodResponse* HandleInstallCiaFiles(GtkWindow* window, FlValue* args) {
@@ -688,7 +636,6 @@ const std::unordered_map<std::string, BridgeMethodHandler>& BridgeMethodHandlers
   static const std::unordered_map<std::string, BridgeMethodHandler> handlers = {
       {"hasUserDirectoryWriteAccess", HandleHasUserDirectoryWriteAccess},
       {"confirmUserDirectory", HandleConfirmUserDirectory},
-      {"getGames", HandleGetGames},
       {"readEmulatorConfig", HandleReadEmulatorConfig},
       {"writeEmulatorConfig", HandleWriteEmulatorConfig},
       {"reloadEmulatorSettings", HandleReloadEmulatorSettings},

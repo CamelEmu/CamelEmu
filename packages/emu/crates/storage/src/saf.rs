@@ -3,7 +3,7 @@ use std::os::fd::RawFd;
 use jni::objects::{JObjectArray, JString, JValue};
 
 use super::android_jni::{call, call_bool, strings};
-use super::{OpenMode, Storage};
+use super::{DirEntry, OpenMode, Storage};
 
 /// Splits `path` into its parent and its name, because a document is created by its parent.
 fn split_parent(path: &str) -> (&str, &str) {
@@ -135,6 +135,41 @@ impl Storage for SafStorage {
                 env.delete_local_ref(item)?;
             }
             Ok(names)
+        })
+    }
+
+    fn list_entries(&self, path: &str) -> Option<Vec<DirEntry>> {
+        call(|env, class| {
+            let path = env.new_string(path)?;
+            let array = JObjectArray::from(
+                env.call_static_method(
+                    class,
+                    "listEntries",
+                    "(Ljava/lang/String;)[Ljava/lang/String;",
+                    &[JValue::Object(&path)],
+                )?
+                .l()?,
+            );
+            let length = env.get_array_length(&array)?;
+            let mut values = Vec::with_capacity(length.max(0) as usize);
+            for index in 0..length {
+                let item = env.get_object_array_element(&array, index)?;
+                if item.is_null() {
+                    values.push(String::new());
+                    continue;
+                }
+                let item = JString::from(item);
+                values.push(env.get_string(&item)?.into());
+                env.delete_local_ref(item)?;
+            }
+            Ok(values
+                .chunks_exact(3)
+                .map(|entry| DirEntry {
+                    name: entry[0].clone(),
+                    path: entry[1].clone(),
+                    is_directory: entry[2] == "1",
+                })
+                .collect())
         })
     }
 }

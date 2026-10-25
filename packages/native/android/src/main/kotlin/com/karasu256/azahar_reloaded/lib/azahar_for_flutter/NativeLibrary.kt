@@ -146,10 +146,6 @@ object NativeLibrary {
 
     external fun reloadSettings()
 
-    external fun getTitleId(filename: String): Long
-
-    external fun getIsSystemTitle(path: String): Boolean
-
     /**
      * Hands the user directory to the storage of the Rust crate, which decides how the core
      * reaches it, so that a folder of the app is not reached through the Storage Access Framework.
@@ -161,7 +157,6 @@ object NativeLibrary {
      * to query the audio system with.
      */
     external fun setApplicationContext(context: Context)
-    external fun getInstalledGamePaths(roots: Array<String>, paths: Array<String>): Array<String?>
 
     // Create the config.ini file.
     external fun createConfigFile()
@@ -905,6 +900,20 @@ object NativeLibrary {
             CitraApplication.documentsTree.getFilesName(path)
         } else {
             FileUtil.getFilesName(path)
+        }
+
+    @Keep
+    @JvmStatic
+    fun listEntries(path: String): Array<String?> =
+        if (FileUtil.isNativePath(path)) {
+            val base = path.trimEnd('/')
+            CitraApplication.documentsTree.getEntries(path).flatMap { (name, isDirectory) ->
+                listOf(name, "$base/$name", if (isDirectory) "1" else "0")
+            }.toTypedArray()
+        } else {
+            FileUtil.listFiles(Uri.parse(path)).flatMap {
+                listOf(it.filename, it.uri.toString(), if (it.isDirectory) "1" else "0")
+            }.toTypedArray()
         }
 
     @Keep

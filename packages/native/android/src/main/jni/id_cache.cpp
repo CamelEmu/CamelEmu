@@ -46,7 +46,6 @@ static jclass s_cheat_class;
 static jfieldID s_cheat_pointer;
 static jmethodID s_cheat_constructor;
 
-static jfieldID s_game_info_pointer;
 
 static jclass s_disk_cache_progress_class;
 static jmethodID s_disk_cache_load_progress;
@@ -183,10 +182,6 @@ jmethodID GetCheatConstructor() {
     return s_cheat_constructor;
 }
 
-jfieldID GetGameInfoPointer() {
-    return s_game_info_pointer;
-}
-
 jclass GetDiskCacheProgressClass() {
     return s_disk_cache_progress_class;
 }
@@ -260,11 +255,6 @@ static jint InitializeIds(JNIEnv* env) {
     s_cheat_pointer = env->GetFieldID(cheat_class, "mPointer", "J");
     s_cheat_constructor = env->GetMethodID(cheat_class, "<init>", "(J)V");
     env->DeleteLocalRef(cheat_class);
-
-    // Initialize GameInfo
-    const jclass game_info_class = IDCache::FindClass(env,"com/karasu256/azahar_reloaded/lib/azahar_for_flutter/model/GameInfo");
-    s_game_info_pointer = env->GetFieldID(game_info_class, "pointer", "J");
-    env->DeleteLocalRef(game_info_class);
 
     // Initialize Disk Shader Cache Progress Dialog
     s_disk_cache_progress_class = reinterpret_cast<jclass>(

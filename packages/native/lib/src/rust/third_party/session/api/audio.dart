@@ -3,7 +3,6 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../../../api/mirror.dart';
 import '../../../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -18,3 +17,16 @@ List<AudioEngine> availableAudioEngines() =>
 /// Returns the engine used when none has been chosen yet.
 AudioEngine defaultAudioEngine() =>
     RustLib.instance.api.sessionApiAudioDefaultAudioEngine();
+
+/// Engine that plays the audio of a session.
+///
+/// Every variant exists on every platform so that the generated Dart type is the same
+/// everywhere. Which engines a build can actually use is reported by
+/// [`available_audio_engines`].
+enum AudioEngine {
+  /// The OpenAL sink of the core.
+  openAl,
+
+  /// Oboe, driven by this crate. Only available on Android.
+  oboe,
+}

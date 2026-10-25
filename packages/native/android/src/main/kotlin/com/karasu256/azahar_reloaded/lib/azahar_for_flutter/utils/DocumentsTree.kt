@@ -91,6 +91,16 @@ class DocumentsTree {
     }
 
     @Synchronized
+    fun getEntries(filepath: String): List<Pair<String, Boolean>> {
+        val node = resolvePath(filepath)
+        if (node == null || !node.isDirectory) {
+            return emptyList()
+        }
+        if (!node.loaded) structTree(node)
+        return node.children.values.mapNotNull { child -> child?.let { it.name to it.isDirectory } }
+    }
+
+    @Synchronized
     fun getFileSize(filepath: String): Long {
         val node = resolvePath(filepath)
         return if (node == null || node.isDirectory) {

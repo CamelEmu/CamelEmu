@@ -62,7 +62,7 @@ abstract final class AppServices {
   static final PermissionRepository permissionRepository =
       PermissionRepository.forPlatform(nativeBridge);
   static final InstalledTitlesRepository installedTitlesRepository =
-      InstalledTitlesRepository(nativeBridge);
+      InstalledTitlesRepository();
   static final EmulatorSettingsRepository emulatorSettingsRepository =
       EmulatorSettingsRepository(nativeBridge);
   static final SystemSaveRepository systemSaveRepository = SystemSaveRepository(

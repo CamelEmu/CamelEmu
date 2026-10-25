@@ -7,16 +7,15 @@ import '../models/cheat.dart';
 import '../models/cia_install_result.dart';
 import '../models/copy_dir_progress.dart';
 import '../models/create_shortcut_request.dart';
-import '../models/game.dart';
 import '../models/game_folder_kind.dart';
 import '../models/game_folder_status.dart';
 import '../models/game_uninstall_target.dart';
 import '../models/gamepad_context.dart';
 import '../models/gpu_driver_info.dart';
-import '../models/installed_title_path.dart';
 import '../models/shader_cache_backend.dart';
 import '../models/vec3.dart';
 import '../models/wifi_channel.dart';
+import '../rust/third_party/emu_app_scanner/api.dart';
 import '../rust/third_party/session/api/storage.dart' as storage_api;
 
 class NativeBridge {
@@ -283,23 +282,6 @@ class NativeBridge {
     return _channel.invokeMethod<void>('setSystemSetupNeeded', {
       'needed': needed,
     });
-  }
-
-  Future<List<Game>> getGames(
-    String? gamesDirectory, {
-    List<InstalledTitlePath> installedTitlePaths = const [],
-  }) async {
-    final result = await _channel.invokeMethod<List<Object?>>('getGames', {
-      'gamesDirectory': gamesDirectory,
-      'installedTitlePaths': installedTitlePaths
-          .map((entry) => {'root': entry.root.name, 'path': entry.path})
-          .toList(),
-    });
-    if (result == null) return const [];
-    return result
-        .cast<Map<Object?, Object?>>()
-        .map((entry) => _gameFromMap(entry))
-        .toList();
   }
 
   Future<List<AccessPoint>> scanRealWifiAccessPoints() async {
@@ -633,22 +615,6 @@ class NativeBridge {
       bssid: map['bssid'] as String? ?? '',
       frequency: (map['frequency'] as num?)?.toInt() ?? 0,
       level: (map['level'] as num?)?.toInt() ?? 0,
-    );
-  }
-
-  Game _gameFromMap(Map<Object?, Object?> map) {
-    return Game(
-      title: map['title'] as String? ?? '',
-      description: map['description'] as String? ?? '',
-      path: map['path'] as String? ?? '',
-      titleId: (map['titleId'] as num?)?.toInt() ?? 0,
-      company: map['company'] as String? ?? '',
-      regions: map['regions'] as String? ?? '',
-      isInstalled: map['isInstalled'] as bool? ?? false,
-      isSystemTitle: map['isSystemTitle'] as bool? ?? false,
-      isVisibleSystemTitle: map['isVisibleSystemTitle'] as bool? ?? false,
-      filename: map['filename'] as String? ?? '',
-      iconPath: map['iconPath'] as String?,
     );
   }
 }

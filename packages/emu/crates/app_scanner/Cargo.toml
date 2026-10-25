@@ -1,0 +1,18 @@
+[package]
+name = "emu_app_scanner"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aes = "0.9.3"
+cbc = "0.2.1"
+cipher = "0.5.2"
+ctr = "0.10.1"
+emu_crypto = { version = "0.1.0", path = "../crypto" }
+emu_storage = { version = "0.1.0", path = "../storage" }
+png = "0.18.1"
+sha2 = "0.11.1"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+tempfile = "3.27.0"
