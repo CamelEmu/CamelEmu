@@ -4,7 +4,6 @@ use std::sync::{Mutex, MutexGuard};
 
 use crate::error::{AzaharError, Result};
 use crate::session::{EventSink, GameSession, SessionOptions};
-use crate::storage;
 
 static LIFECYCLE: Mutex<()> = Mutex::new(());
 static ACTIVE: Mutex<Option<GameSession>> = Mutex::new(None);
@@ -30,12 +29,12 @@ pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> Re
         return Err(AzaharError::SessionActive);
     }
     if !writes_directly(game_path) {
-        storage::begin_overlay();
+        emu_storage::begin_overlay();
     }
     let session = match GameSession::start(game_path, options, events) {
         Ok(session) => session,
         Err(error) => {
-            storage::end_overlay();
+            emu_storage::end_overlay();
             return Err(error);
         }
     };
@@ -53,12 +52,12 @@ pub fn stop(persist: bool) -> Result<()> {
     let session = lock(&ACTIVE).take().ok_or(AzaharError::NoSession)?;
     session.stop();
     let committed = if persist {
-        storage::commit_overlay()
+        emu_storage::commit_overlay()
     } else {
         Ok(())
     };
-    storage::end_overlay();
-    committed
+    emu_storage::end_overlay();
+    Ok(committed?)
 }
 
 /// Runs `operation` against the active session.
