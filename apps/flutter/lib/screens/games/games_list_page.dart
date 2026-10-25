@@ -17,7 +17,7 @@ import 'games_provider.dart';
 import 'widgets/about_game_bottom_sheet.dart';
 import 'widgets/about_game_dialog.dart';
 import 'widgets/game_card.dart';
-import 'widgets/tag_filter_bar.dart';
+import 'widgets/game_filter_section.dart';
 
 class GamesListPage extends ConsumerStatefulWidget {
   const GamesListPage({super.key});
@@ -111,26 +111,23 @@ class _GamesListPageState extends ConsumerState<GamesListPage>
       child: Column(
         children: [
           GamepadFocusRegion(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppSearchBar(
-                  controller: _queryController,
-                  hintText: t.games.searchHint,
-                  onChanged: ref.read(gameQueryProvider.notifier).update,
-                  onClear: () {
-                    _queryController.clear();
-                    ref.read(gameQueryProvider.notifier).update('');
-                  },
-                ),
-                TagFilterBar(
-                  tags: tagsState.value ?? const [],
-                  selectedTagIds: selectedTagIdsState.value ?? const {},
-                  enabled: tagsState.hasValue && selectedTagIdsState.hasValue,
-                  onToggle: ref.read(selectedTagIdsProvider.notifier).toggle,
-                  onSelectAll: ref.read(selectedTagIdsProvider.notifier).clear,
-                ),
-              ],
+            child: AppSearchBar(
+              controller: _queryController,
+              hintText: t.games.searchHint,
+              onChanged: ref.read(gameQueryProvider.notifier).update,
+              onClear: () {
+                _queryController.clear();
+                ref.read(gameQueryProvider.notifier).update('');
+              },
+            ),
+          ),
+          GamepadFocusRegion(
+            child: GameFilterSection(
+              tags: tagsState.value ?? const [],
+              selectedTagIds: selectedTagIdsState.value ?? const {},
+              enabled: tagsState.hasValue && selectedTagIdsState.hasValue,
+              onToggle: ref.read(selectedTagIdsProvider.notifier).toggle,
+              onSelectAll: ref.read(selectedTagIdsProvider.notifier).clear,
             ),
           ),
           Expanded(
