@@ -31,7 +31,6 @@ import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.DirectoryCon
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.EmulationController
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.GameActionsController
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.GamepadController
-import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.GamesController
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.GpuDriverController
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.LogStreamHandler
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.channel.MediaNotificationController
@@ -79,7 +78,6 @@ internal class MainEngineSession(
         openUserDirectoryLauncher,
         openGamesDirectoryLauncher
     )
-    private val gamesController = GamesController(activity, activity.cacheDir)
     private val gameActionsController = GameActionsController(activity)
     private val settingsController = SettingsController()
     private val gpuDriverController = GpuDriverController()
@@ -123,7 +121,7 @@ internal class MainEngineSession(
     /** Registers every channel and starts observing the activity lifecycle. */
     fun attach() {
         val handlers: Map<String, AzaharMethodHandler> =
-            (directoryController.handlers + gamesController.handlers +
+            (directoryController.handlers +
                 gameActionsController.handlers +
                 emulationController.handlers + cheatsController.handlers +
                 settingsController.handlers +

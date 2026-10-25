@@ -26,7 +26,6 @@ function(azahar_android_library target)
         default_ini.h
         emu_window/emu_window.cpp
         emu_window/emu_window.h
-        game_info.cpp
         id_cache.cpp
         id_cache.h
         native.cpp

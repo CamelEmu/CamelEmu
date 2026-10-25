@@ -33,6 +33,8 @@ pub enum StorageError {
 
 pub type Result<T> = std::result::Result<T, StorageError>;
 
+pub const FILE_SCHEME: &str = "file://";
+
 /// Folders the core expects in a user directory before it first runs, since it does not create
 /// the folders of its settings and logs by itself.
 const USER_DIRECTORIES: [&str; 6] = ["config", "nand", "sdmc", "sysdata", "cheats", "log"];
@@ -59,6 +61,30 @@ pub trait Storage: Send + Sync {
     fn copy(&self, from: &str, to: &str) -> bool;
     fn open(&self, path: &str, mode: OpenMode) -> Option<RawFd>;
     fn list(&self, path: &str) -> Option<Vec<String>>;
+
+    fn list_entries(&self, path: &str) -> Option<Vec<DirEntry>> {
+        let base = path.trim_end_matches('/');
+        Some(
+            self.list(path)?
+                .into_iter()
+                .map(|name| {
+                    let path = format!("{base}/{name}");
+                    DirEntry {
+                        is_directory: self.is_directory(&path),
+                        name,
+                        path,
+                    }
+                })
+                .collect(),
+        )
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirEntry {
+    pub name: String,
+    pub path: String,
+    pub is_directory: bool,
 }
 
 /// An `fopen` mode, kept as flags because each backend opens files in its own way.
@@ -168,7 +194,9 @@ platform_storage! {
     "android" => {
         default_root: Root::Tree(String::new()),
         backend: |path, root| {
-            if path.starts_with("content://")
+            if path.starts_with(FILE_SCHEME) {
+                &native::NativeStorage
+            } else if path.starts_with("content://")
                 || (matches!(root, Root::Tree(_)) && path.starts_with('/'))
             {
                 &saf::SafStorage
@@ -353,6 +381,66 @@ fn route_any(paths: &[&str]) -> Route {
     } else {
         Route::Backend(storage_for(paths[0]))
     }
+}
+
+pub fn exists(path: &str) -> bool {
+    route(path).storage().exists(path)
+}
+
+pub fn is_directory(path: &str) -> bool {
+    route(path).storage().is_directory(path)
+}
+
+pub fn size(path: &str) -> u64 {
+    route(path).storage().size(path)
+}
+
+pub fn list_entries(path: &str) -> Option<Vec<DirEntry>> {
+    route(path).storage().list_entries(path)
+}
+
+pub fn open_file(path: &str, mode: OpenMode) -> Option<File> {
+    let fd = route(path).storage().open(path, mode)?;
+    Some(unsafe { File::from_raw_fd(fd) })
+}
+
+pub fn create_dir_all(path: &str) -> bool {
+    let (scheme, rest) = match path.strip_prefix(FILE_SCHEME) {
+        Some(rest) => (FILE_SCHEME, rest),
+        None => ("", path),
+    };
+    let mut missing = Vec::new();
+    let mut current = rest.trim_end_matches('/');
+    while !current.is_empty() {
+        let full = format!("{scheme}{current}");
+        if is_directory(&full) {
+            break;
+        }
+        missing.push(full);
+        match current.rfind('/') {
+            Some(index) => current = &current[..index],
+            None => break,
+        }
+    }
+    missing
+        .iter()
+        .rev()
+        .all(|folder| route(folder).storage().create_dir(folder))
+}
+
+pub fn write_file(path: &str, contents: &[u8]) -> bool {
+    let Some(mut file) = open_file(path, overlay::WRITE) else {
+        return false;
+    };
+    io::Write::write_all(&mut file, contents).is_ok()
+}
+
+pub fn user_path() -> String {
+    with_state(|state| state.user_path.to_string_lossy().into_owned())
+}
+
+pub fn set_user_directory(location: &str) -> Result<()> {
+    set_root(location)
 }
 
 /// Moves or copies a file. Between the overlay and a path not held in memory it is copied through

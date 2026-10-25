@@ -8,7 +8,6 @@ set(PLUGIN_NAME "azahar_for_flutter_plugin")
 list(APPEND PLUGIN_SOURCES
   "azahar_for_flutter_plugin.cc"
   "native_bridge/user_directory.cc"
-  "native_bridge/game_scanner.cc"
   "native_bridge/system_save_game.cc"
   "native_bridge/emulator_config.cc"
   "native_bridge/cia_install.cc"
@@ -86,7 +85,6 @@ target_include_directories(${PLUGIN_NAME} PRIVATE
   "${AZAHAR_BUILD}/include"
   "${AZAHAR_BUILD}/src"
   "${AZAHAR_CORE}/externals/boost"
-  "${AZAHAR_CORE}/externals/lodepng/lodepng"
   "${AZAHAR_CORE}/externals/microprofile"
 )
 

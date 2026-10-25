@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1167866999;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1773353680;
 
 // Section: executor
 
@@ -72,7 +72,7 @@ fn wire__session__api__session__answer_artic_country_impl(
             let api_country = <Option<u32>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::answer_artic_country(api_country)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -162,7 +162,7 @@ fn wire__session__api__session__dump_fcram_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::dump_fcram()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -194,7 +194,7 @@ fn wire__session__api__session__fcram_size_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::fcram_size()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -261,7 +261,7 @@ fn wire__session__api__storage__initialize_storage_impl(
             let api_location = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::storage::initialize_storage(api_location)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -293,7 +293,7 @@ fn wire__session__api__session__pause_game_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::pause_game()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -327,7 +327,7 @@ fn wire__session__api__session__read_memory_impl(
             let api_len = <u32>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::read_memory(api_address, api_len)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -360,7 +360,7 @@ fn wire__session__api__session__read_u32_impl(
             let api_address = <u32>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::read_u32(api_address)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -392,8 +392,41 @@ fn wire__session__api__session__resume_game_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::resume_game()?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__emu_app_scanner__api__scan_games_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "scan_games",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request = <emu_app_scanner::api::ScanRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(emu_app_scanner::api::scan_games(api_request))?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -425,7 +458,7 @@ fn wire__session__api__session__set_volume_impl(
             let api_volume = <f32>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::set_volume(api_volume)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -456,14 +489,15 @@ fn wire__crate__api__session__start_game_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_game_path = <String>::sse_decode(&mut deserializer);
-            let api_options = <crate::api::mirror::SessionOptions>::sse_decode(&mut deserializer);
+            let api_options =
+                <session::api::session::SessionOptions>::sse_decode(&mut deserializer);
             let api_events = <StreamSink<
-                crate::api::mirror::SessionEvent,
+                session::api::session::SessionEvent,
                 flutter_rust_bridge::for_generated::SseCodec,
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok =
                         crate::api::session::start_game(api_game_path, api_options, api_events)?;
                     std::result::Result::Ok(output_ok)
@@ -497,7 +531,7 @@ fn wire__session__api__session__stop_game_impl(
             let api_persist = <bool>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, crate::api::mirror::AzaharError>((move || {
+                transform_result_sse::<_, session::api::error::AzaharError>((move || {
                     let output_ok = session::api::session::stop_game(api_persist)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -510,72 +544,91 @@ fn wire__session__api__session__stop_game_impl(
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 const _: fn() = || {
-    match None::<crate::api::mirror::AzaharError>.unwrap() {
-        crate::api::mirror::AzaharError::SessionActive => {}
-        crate::api::mirror::AzaharError::NoSession => {}
-        crate::api::mirror::AzaharError::InvalidPath => {}
-        crate::api::mirror::AzaharError::CreateFailed => {}
-        crate::api::mirror::AzaharError::InvalidState => {}
-        crate::api::mirror::AzaharError::Core(field0) => {
+    match None::<session::api::error::AzaharError>.unwrap() {
+        session::api::error::AzaharError::SessionActive => {}
+        session::api::error::AzaharError::NoSession => {}
+        session::api::error::AzaharError::InvalidPath => {}
+        session::api::error::AzaharError::CreateFailed => {}
+        session::api::error::AzaharError::InvalidState => {}
+        session::api::error::AzaharError::Core(field0) => {
             let _: i32 = field0;
         }
-        crate::api::mirror::AzaharError::InvalidAddress { address, len } => {
+        session::api::error::AzaharError::InvalidAddress { address, len } => {
             let _: u32 = address;
             let _: u32 = len;
         }
-        crate::api::mirror::AzaharError::LibraryLoad(field0) => {
+        session::api::error::AzaharError::LibraryLoad(field0) => {
             let _: String = field0;
         }
-        crate::api::mirror::AzaharError::Audio(field0) => {
+        session::api::error::AzaharError::Audio(field0) => {
             let _: String = field0;
         }
-        crate::api::mirror::AzaharError::Storage(field0) => {
+        session::api::error::AzaharError::Storage(field0) => {
             let _: String = field0;
         }
-        crate::api::mirror::AzaharError::StorageCommit(field0) => {
+        session::api::error::AzaharError::StorageCommit(field0) => {
             let _: Vec<String> = field0;
         }
     }
-    match None::<crate::api::mirror::SessionEvent>.unwrap() {
-        crate::api::mirror::SessionEvent::ShaderProgress {
+    {
+        let Game = None::<emu_app_scanner::api::Game>.unwrap();
+        let _: String = Game.title;
+        let _: String = Game.description;
+        let _: String = Game.path;
+        let _: i64 = Game.title_id;
+        let _: String = Game.company;
+        let _: String = Game.regions;
+        let _: bool = Game.is_installed;
+        let _: bool = Game.is_system_title;
+        let _: bool = Game.is_visible_system_title;
+        let _: String = Game.filename;
+        let _: Option<String> = Game.icon_path;
+    }
+    {
+        let ScanRequest = None::<emu_app_scanner::api::ScanRequest>.unwrap();
+        let _: Option<String> = ScanRequest.games_directory;
+        let _: String = ScanRequest.icons_directory;
+    }
+    match None::<session::api::session::SessionEvent>.unwrap() {
+        session::api::session::SessionEvent::ShaderProgress {
             stage,
             progress,
             max,
         } => {
-            let _: crate::api::mirror::ShaderStage = stage;
+            let _: session::api::session::ShaderStage = stage;
             let _: u64 = progress;
             let _: u64 = max;
         }
-        crate::api::mirror::SessionEvent::Texture {
+        session::api::session::SessionEvent::Texture {
             texture_id,
             secondary,
         } => {
             let _: i64 = texture_id;
             let _: bool = secondary;
         }
-        crate::api::mirror::SessionEvent::StateChanged { state } => {
-            let _: crate::api::mirror::SessionState = state;
+        session::api::session::SessionEvent::StateChanged { state } => {
+            let _: session::api::session::SessionState = state;
         }
-        crate::api::mirror::SessionEvent::Error { message } => {
+        session::api::session::SessionEvent::Error { message } => {
             let _: String = message;
         }
-        crate::api::mirror::SessionEvent::ShutdownRequested => {}
-        crate::api::mirror::SessionEvent::Failed { message } => {
+        session::api::session::SessionEvent::ShutdownRequested => {}
+        session::api::session::SessionEvent::Failed { message } => {
             let _: String = message;
         }
-        crate::api::mirror::SessionEvent::ArticCountryMismatch { region, country } => {
+        session::api::session::SessionEvent::ArticCountryMismatch { region, country } => {
             let _: u32 = region;
             let _: u32 = country;
         }
     }
     {
-        let SessionOptions = None::<crate::api::mirror::SessionOptions>.unwrap();
+        let SessionOptions = None::<session::api::session::SessionOptions>.unwrap();
         let _: i32 = SessionOptions.primary_width;
         let _: i32 = SessionOptions.primary_height;
         let _: i32 = SessionOptions.secondary_width;
         let _: i32 = SessionOptions.secondary_height;
         let _: bool = SessionOptions.dual_screen;
-        let _: crate::api::mirror::AudioEngine = SessionOptions.audio_engine;
+        let _: session::api::audio::AudioEngine = SessionOptions.audio_engine;
     }
 };
 
@@ -590,7 +643,10 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
 }
 
 impl SseDecode
-    for StreamSink<crate::api::mirror::SessionEvent, flutter_rust_bridge::for_generated::SseCodec>
+    for StreamSink<
+        session::api::session::SessionEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -607,65 +663,65 @@ impl SseDecode for String {
     }
 }
 
-impl SseDecode for crate::api::mirror::AudioEngine {
+impl SseDecode for session::api::audio::AudioEngine {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::api::mirror::AudioEngine::OpenAl,
-            1 => crate::api::mirror::AudioEngine::Oboe,
+            0 => session::api::audio::AudioEngine::OpenAl,
+            1 => session::api::audio::AudioEngine::Oboe,
             _ => unreachable!("Invalid variant for AudioEngine: {}", inner),
         };
     }
 }
 
-impl SseDecode for crate::api::mirror::AzaharError {
+impl SseDecode for session::api::error::AzaharError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                return crate::api::mirror::AzaharError::SessionActive;
+                return session::api::error::AzaharError::SessionActive;
             }
             1 => {
-                return crate::api::mirror::AzaharError::NoSession;
+                return session::api::error::AzaharError::NoSession;
             }
             2 => {
-                return crate::api::mirror::AzaharError::InvalidPath;
+                return session::api::error::AzaharError::InvalidPath;
             }
             3 => {
-                return crate::api::mirror::AzaharError::CreateFailed;
+                return session::api::error::AzaharError::CreateFailed;
             }
             4 => {
-                return crate::api::mirror::AzaharError::InvalidState;
+                return session::api::error::AzaharError::InvalidState;
             }
             5 => {
                 let mut var_field0 = <i32>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::Core(var_field0);
+                return session::api::error::AzaharError::Core(var_field0);
             }
             6 => {
                 let mut var_address = <u32>::sse_decode(deserializer);
                 let mut var_len = <u32>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::InvalidAddress {
+                return session::api::error::AzaharError::InvalidAddress {
                     address: var_address,
                     len: var_len,
                 };
             }
             7 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::LibraryLoad(var_field0);
+                return session::api::error::AzaharError::LibraryLoad(var_field0);
             }
             8 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::Audio(var_field0);
+                return session::api::error::AzaharError::Audio(var_field0);
             }
             9 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::Storage(var_field0);
+                return session::api::error::AzaharError::Storage(var_field0);
             }
             10 => {
                 let mut var_field0 = <Vec<String>>::sse_decode(deserializer);
-                return crate::api::mirror::AzaharError::StorageCommit(var_field0);
+                return session::api::error::AzaharError::StorageCommit(var_field0);
             }
             _ => {
                 unimplemented!("");
@@ -685,6 +741,36 @@ impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for emu_app_scanner::api::Game {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_description = <String>::sse_decode(deserializer);
+        let mut var_path = <String>::sse_decode(deserializer);
+        let mut var_titleId = <i64>::sse_decode(deserializer);
+        let mut var_company = <String>::sse_decode(deserializer);
+        let mut var_regions = <String>::sse_decode(deserializer);
+        let mut var_isInstalled = <bool>::sse_decode(deserializer);
+        let mut var_isSystemTitle = <bool>::sse_decode(deserializer);
+        let mut var_isVisibleSystemTitle = <bool>::sse_decode(deserializer);
+        let mut var_filename = <String>::sse_decode(deserializer);
+        let mut var_iconPath = <Option<String>>::sse_decode(deserializer);
+        return emu_app_scanner::api::Game {
+            title: var_title,
+            description: var_description,
+            path: var_path,
+            title_id: var_titleId,
+            company: var_company,
+            regions: var_regions,
+            is_installed: var_isInstalled,
+            is_system_title: var_isSystemTitle,
+            is_visible_system_title: var_isVisibleSystemTitle,
+            filename: var_filename,
+            icon_path: var_iconPath,
+        };
     }
 }
 
@@ -714,13 +800,25 @@ impl SseDecode for Vec<String> {
     }
 }
 
-impl SseDecode for Vec<crate::api::mirror::AudioEngine> {
+impl SseDecode for Vec<session::api::audio::AudioEngine> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::mirror::AudioEngine>::sse_decode(deserializer));
+            ans_.push(<session::api::audio::AudioEngine>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<emu_app_scanner::api::Game> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<emu_app_scanner::api::Game>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -738,6 +836,17 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Option<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<String>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -749,16 +858,28 @@ impl SseDecode for Option<u32> {
     }
 }
 
-impl SseDecode for crate::api::mirror::SessionEvent {
+impl SseDecode for emu_app_scanner::api::ScanRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_gamesDirectory = <Option<String>>::sse_decode(deserializer);
+        let mut var_iconsDirectory = <String>::sse_decode(deserializer);
+        return emu_app_scanner::api::ScanRequest {
+            games_directory: var_gamesDirectory,
+            icons_directory: var_iconsDirectory,
+        };
+    }
+}
+
+impl SseDecode for session::api::session::SessionEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                let mut var_stage = <crate::api::mirror::ShaderStage>::sse_decode(deserializer);
+                let mut var_stage = <session::api::session::ShaderStage>::sse_decode(deserializer);
                 let mut var_progress = <u64>::sse_decode(deserializer);
                 let mut var_max = <u64>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::ShaderProgress {
+                return session::api::session::SessionEvent::ShaderProgress {
                     stage: var_stage,
                     progress: var_progress,
                     max: var_max,
@@ -767,34 +888,34 @@ impl SseDecode for crate::api::mirror::SessionEvent {
             1 => {
                 let mut var_textureId = <i64>::sse_decode(deserializer);
                 let mut var_secondary = <bool>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::Texture {
+                return session::api::session::SessionEvent::Texture {
                     texture_id: var_textureId,
                     secondary: var_secondary,
                 };
             }
             2 => {
-                let mut var_state = <crate::api::mirror::SessionState>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::StateChanged { state: var_state };
+                let mut var_state = <session::api::session::SessionState>::sse_decode(deserializer);
+                return session::api::session::SessionEvent::StateChanged { state: var_state };
             }
             3 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::Error {
+                return session::api::session::SessionEvent::Error {
                     message: var_message,
                 };
             }
             4 => {
-                return crate::api::mirror::SessionEvent::ShutdownRequested;
+                return session::api::session::SessionEvent::ShutdownRequested;
             }
             5 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::Failed {
+                return session::api::session::SessionEvent::Failed {
                     message: var_message,
                 };
             }
             6 => {
                 let mut var_region = <u32>::sse_decode(deserializer);
                 let mut var_country = <u32>::sse_decode(deserializer);
-                return crate::api::mirror::SessionEvent::ArticCountryMismatch {
+                return session::api::session::SessionEvent::ArticCountryMismatch {
                     region: var_region,
                     country: var_country,
                 };
@@ -806,7 +927,7 @@ impl SseDecode for crate::api::mirror::SessionEvent {
     }
 }
 
-impl SseDecode for crate::api::mirror::SessionOptions {
+impl SseDecode for session::api::session::SessionOptions {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_primaryWidth = <i32>::sse_decode(deserializer);
@@ -814,8 +935,8 @@ impl SseDecode for crate::api::mirror::SessionOptions {
         let mut var_secondaryWidth = <i32>::sse_decode(deserializer);
         let mut var_secondaryHeight = <i32>::sse_decode(deserializer);
         let mut var_dualScreen = <bool>::sse_decode(deserializer);
-        let mut var_audioEngine = <crate::api::mirror::AudioEngine>::sse_decode(deserializer);
-        return crate::api::mirror::SessionOptions {
+        let mut var_audioEngine = <session::api::audio::AudioEngine>::sse_decode(deserializer);
+        return session::api::session::SessionOptions {
             primary_width: var_primaryWidth,
             primary_height: var_primaryHeight,
             secondary_width: var_secondaryWidth,
@@ -826,28 +947,28 @@ impl SseDecode for crate::api::mirror::SessionOptions {
     }
 }
 
-impl SseDecode for crate::api::mirror::SessionState {
+impl SseDecode for session::api::session::SessionState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::api::mirror::SessionState::Idle,
-            1 => crate::api::mirror::SessionState::Running,
-            2 => crate::api::mirror::SessionState::Paused,
+            0 => session::api::session::SessionState::Idle,
+            1 => session::api::session::SessionState::Running,
+            2 => session::api::session::SessionState::Paused,
             _ => unreachable!("Invalid variant for SessionState: {}", inner),
         };
     }
 }
 
-impl SseDecode for crate::api::mirror::ShaderStage {
+impl SseDecode for session::api::session::ShaderStage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::api::mirror::ShaderStage::Prepare,
-            1 => crate::api::mirror::ShaderStage::Decompile,
-            2 => crate::api::mirror::ShaderStage::Build,
-            3 => crate::api::mirror::ShaderStage::Complete,
+            0 => session::api::session::ShaderStage::Prepare,
+            1 => session::api::session::ShaderStage::Decompile,
+            2 => session::api::session::ShaderStage::Build,
+            3 => session::api::session::ShaderStage::Complete,
             _ => unreachable!("Invalid variant for ShaderStage: {}", inner),
         };
     }
@@ -904,9 +1025,10 @@ fn pde_ffi_dispatcher_primary_impl(
         9 => wire__session__api__session__read_memory_impl(port, ptr, rust_vec_len, data_len),
         10 => wire__session__api__session__read_u32_impl(port, ptr, rust_vec_len, data_len),
         11 => wire__session__api__session__resume_game_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__session__api__session__set_volume_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__session__start_game_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__session__api__session__stop_game_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__emu_app_scanner__api__scan_games_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__session__api__session__set_volume_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__session__start_game_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__session__api__session__stop_game_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -928,54 +1050,54 @@ fn pde_ffi_dispatcher_sync_impl(
 // Section: rust2dart
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::AudioEngine> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::audio::AudioEngine> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crate::api::mirror::AudioEngine::OpenAl => 0.into_dart(),
-            crate::api::mirror::AudioEngine::Oboe => 1.into_dart(),
+            session::api::audio::AudioEngine::OpenAl => 0.into_dart(),
+            session::api::audio::AudioEngine::Oboe => 1.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::AudioEngine>
+    for FrbWrapper<session::api::audio::AudioEngine>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::AudioEngine>>
-    for crate::api::mirror::AudioEngine
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::audio::AudioEngine>>
+    for session::api::audio::AudioEngine
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::AudioEngine> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::audio::AudioEngine> {
         self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::AzaharError> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::error::AzaharError> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crate::api::mirror::AzaharError::SessionActive => [0.into_dart()].into_dart(),
-            crate::api::mirror::AzaharError::NoSession => [1.into_dart()].into_dart(),
-            crate::api::mirror::AzaharError::InvalidPath => [2.into_dart()].into_dart(),
-            crate::api::mirror::AzaharError::CreateFailed => [3.into_dart()].into_dart(),
-            crate::api::mirror::AzaharError::InvalidState => [4.into_dart()].into_dart(),
-            crate::api::mirror::AzaharError::Core(field0) => {
+            session::api::error::AzaharError::SessionActive => [0.into_dart()].into_dart(),
+            session::api::error::AzaharError::NoSession => [1.into_dart()].into_dart(),
+            session::api::error::AzaharError::InvalidPath => [2.into_dart()].into_dart(),
+            session::api::error::AzaharError::CreateFailed => [3.into_dart()].into_dart(),
+            session::api::error::AzaharError::InvalidState => [4.into_dart()].into_dart(),
+            session::api::error::AzaharError::Core(field0) => {
                 [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::AzaharError::InvalidAddress { address, len } => [
+            session::api::error::AzaharError::InvalidAddress { address, len } => [
                 6.into_dart(),
                 address.into_into_dart().into_dart(),
                 len.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::api::mirror::AzaharError::LibraryLoad(field0) => {
+            session::api::error::AzaharError::LibraryLoad(field0) => {
                 [7.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::AzaharError::Audio(field0) => {
+            session::api::error::AzaharError::Audio(field0) => {
                 [8.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::AzaharError::Storage(field0) => {
+            session::api::error::AzaharError::Storage(field0) => {
                 [9.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::AzaharError::StorageCommit(field0) => {
+            session::api::error::AzaharError::StorageCommit(field0) => {
                 [10.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
             _ => {
@@ -985,21 +1107,72 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::AzaharErro
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::AzaharError>
+    for FrbWrapper<session::api::error::AzaharError>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::AzaharError>>
-    for crate::api::mirror::AzaharError
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::error::AzaharError>>
+    for session::api::error::AzaharError
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::AzaharError> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::error::AzaharError> {
         self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionEvent> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<emu_app_scanner::api::Game> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.title.into_into_dart().into_dart(),
+            self.0.description.into_into_dart().into_dart(),
+            self.0.path.into_into_dart().into_dart(),
+            self.0.title_id.into_into_dart().into_dart(),
+            self.0.company.into_into_dart().into_dart(),
+            self.0.regions.into_into_dart().into_dart(),
+            self.0.is_installed.into_into_dart().into_dart(),
+            self.0.is_system_title.into_into_dart().into_dart(),
+            self.0.is_visible_system_title.into_into_dart().into_dart(),
+            self.0.filename.into_into_dart().into_dart(),
+            self.0.icon_path.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<emu_app_scanner::api::Game>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<emu_app_scanner::api::Game>>
+    for emu_app_scanner::api::Game
+{
+    fn into_into_dart(self) -> FrbWrapper<emu_app_scanner::api::Game> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<emu_app_scanner::api::ScanRequest> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.games_directory.into_into_dart().into_dart(),
+            self.0.icons_directory.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<emu_app_scanner::api::ScanRequest>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<emu_app_scanner::api::ScanRequest>>
+    for emu_app_scanner::api::ScanRequest
+{
+    fn into_into_dart(self) -> FrbWrapper<emu_app_scanner::api::ScanRequest> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::session::SessionEvent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crate::api::mirror::SessionEvent::ShaderProgress {
+            session::api::session::SessionEvent::ShaderProgress {
                 stage,
                 progress,
                 max,
@@ -1010,7 +1183,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionEve
                 max.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::api::mirror::SessionEvent::Texture {
+            session::api::session::SessionEvent::Texture {
                 texture_id,
                 secondary,
             } => [
@@ -1019,17 +1192,17 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionEve
                 secondary.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::api::mirror::SessionEvent::StateChanged { state } => {
+            session::api::session::SessionEvent::StateChanged { state } => {
                 [2.into_dart(), state.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::SessionEvent::Error { message } => {
+            session::api::session::SessionEvent::Error { message } => {
                 [3.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::SessionEvent::ShutdownRequested => [4.into_dart()].into_dart(),
-            crate::api::mirror::SessionEvent::Failed { message } => {
+            session::api::session::SessionEvent::ShutdownRequested => [4.into_dart()].into_dart(),
+            session::api::session::SessionEvent::Failed { message } => {
                 [5.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
-            crate::api::mirror::SessionEvent::ArticCountryMismatch { region, country } => [
+            session::api::session::SessionEvent::ArticCountryMismatch { region, country } => [
                 6.into_dart(),
                 region.into_into_dart().into_dart(),
                 country.into_into_dart().into_dart(),
@@ -1042,18 +1215,18 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionEve
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::SessionEvent>
+    for FrbWrapper<session::api::session::SessionEvent>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::SessionEvent>>
-    for crate::api::mirror::SessionEvent
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::session::SessionEvent>>
+    for session::api::session::SessionEvent
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::SessionEvent> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::session::SessionEvent> {
         self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionOptions> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::session::SessionOptions> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.0.primary_width.into_into_dart().into_dart(),
@@ -1067,58 +1240,58 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionOpt
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::SessionOptions>
+    for FrbWrapper<session::api::session::SessionOptions>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::SessionOptions>>
-    for crate::api::mirror::SessionOptions
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::session::SessionOptions>>
+    for session::api::session::SessionOptions
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::SessionOptions> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::session::SessionOptions> {
         self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::SessionState> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::session::SessionState> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crate::api::mirror::SessionState::Idle => 0.into_dart(),
-            crate::api::mirror::SessionState::Running => 1.into_dart(),
-            crate::api::mirror::SessionState::Paused => 2.into_dart(),
+            session::api::session::SessionState::Idle => 0.into_dart(),
+            session::api::session::SessionState::Running => 1.into_dart(),
+            session::api::session::SessionState::Paused => 2.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::SessionState>
+    for FrbWrapper<session::api::session::SessionState>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::SessionState>>
-    for crate::api::mirror::SessionState
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::session::SessionState>>
+    for session::api::session::SessionState
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::SessionState> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::session::SessionState> {
         self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::mirror::ShaderStage> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::session::ShaderStage> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crate::api::mirror::ShaderStage::Prepare => 0.into_dart(),
-            crate::api::mirror::ShaderStage::Decompile => 1.into_dart(),
-            crate::api::mirror::ShaderStage::Build => 2.into_dart(),
-            crate::api::mirror::ShaderStage::Complete => 3.into_dart(),
+            session::api::session::ShaderStage::Prepare => 0.into_dart(),
+            session::api::session::ShaderStage::Decompile => 1.into_dart(),
+            session::api::session::ShaderStage::Build => 2.into_dart(),
+            session::api::session::ShaderStage::Complete => 3.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::mirror::ShaderStage>
+    for FrbWrapper<session::api::session::ShaderStage>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::mirror::ShaderStage>>
-    for crate::api::mirror::ShaderStage
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::session::ShaderStage>>
+    for session::api::session::ShaderStage
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::api::mirror::ShaderStage> {
+    fn into_into_dart(self) -> FrbWrapper<session::api::session::ShaderStage> {
         self.into()
     }
 }
@@ -1131,7 +1304,10 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
 }
 
 impl SseEncode
-    for StreamSink<crate::api::mirror::SessionEvent, flutter_rust_bridge::for_generated::SseCodec>
+    for StreamSink<
+        session::api::session::SessionEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1146,13 +1322,13 @@ impl SseEncode for String {
     }
 }
 
-impl SseEncode for crate::api::mirror::AudioEngine {
+impl SseEncode for session::api::audio::AudioEngine {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::api::mirror::AudioEngine::OpenAl => 0,
-                crate::api::mirror::AudioEngine::Oboe => 1,
+                session::api::audio::AudioEngine::OpenAl => 0,
+                session::api::audio::AudioEngine::Oboe => 1,
                 _ => {
                     unimplemented!("");
                 }
@@ -1162,47 +1338,47 @@ impl SseEncode for crate::api::mirror::AudioEngine {
     }
 }
 
-impl SseEncode for crate::api::mirror::AzaharError {
+impl SseEncode for session::api::error::AzaharError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::api::mirror::AzaharError::SessionActive => {
+            session::api::error::AzaharError::SessionActive => {
                 <i32>::sse_encode(0, serializer);
             }
-            crate::api::mirror::AzaharError::NoSession => {
+            session::api::error::AzaharError::NoSession => {
                 <i32>::sse_encode(1, serializer);
             }
-            crate::api::mirror::AzaharError::InvalidPath => {
+            session::api::error::AzaharError::InvalidPath => {
                 <i32>::sse_encode(2, serializer);
             }
-            crate::api::mirror::AzaharError::CreateFailed => {
+            session::api::error::AzaharError::CreateFailed => {
                 <i32>::sse_encode(3, serializer);
             }
-            crate::api::mirror::AzaharError::InvalidState => {
+            session::api::error::AzaharError::InvalidState => {
                 <i32>::sse_encode(4, serializer);
             }
-            crate::api::mirror::AzaharError::Core(field0) => {
+            session::api::error::AzaharError::Core(field0) => {
                 <i32>::sse_encode(5, serializer);
                 <i32>::sse_encode(field0, serializer);
             }
-            crate::api::mirror::AzaharError::InvalidAddress { address, len } => {
+            session::api::error::AzaharError::InvalidAddress { address, len } => {
                 <i32>::sse_encode(6, serializer);
                 <u32>::sse_encode(address, serializer);
                 <u32>::sse_encode(len, serializer);
             }
-            crate::api::mirror::AzaharError::LibraryLoad(field0) => {
+            session::api::error::AzaharError::LibraryLoad(field0) => {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crate::api::mirror::AzaharError::Audio(field0) => {
+            session::api::error::AzaharError::Audio(field0) => {
                 <i32>::sse_encode(8, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crate::api::mirror::AzaharError::Storage(field0) => {
+            session::api::error::AzaharError::Storage(field0) => {
                 <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crate::api::mirror::AzaharError::StorageCommit(field0) => {
+            session::api::error::AzaharError::StorageCommit(field0) => {
                 <i32>::sse_encode(10, serializer);
                 <Vec<String>>::sse_encode(field0, serializer);
             }
@@ -1224,6 +1400,23 @@ impl SseEncode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for emu_app_scanner::api::Game {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.description, serializer);
+        <String>::sse_encode(self.path, serializer);
+        <i64>::sse_encode(self.title_id, serializer);
+        <String>::sse_encode(self.company, serializer);
+        <String>::sse_encode(self.regions, serializer);
+        <bool>::sse_encode(self.is_installed, serializer);
+        <bool>::sse_encode(self.is_system_title, serializer);
+        <bool>::sse_encode(self.is_visible_system_title, serializer);
+        <String>::sse_encode(self.filename, serializer);
+        <Option<String>>::sse_encode(self.icon_path, serializer);
     }
 }
 
@@ -1251,12 +1444,22 @@ impl SseEncode for Vec<String> {
     }
 }
 
-impl SseEncode for Vec<crate::api::mirror::AudioEngine> {
+impl SseEncode for Vec<session::api::audio::AudioEngine> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::mirror::AudioEngine>::sse_encode(item, serializer);
+            <session::api::audio::AudioEngine>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<emu_app_scanner::api::Game> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <emu_app_scanner::api::Game>::sse_encode(item, serializer);
         }
     }
 }
@@ -1271,6 +1474,16 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Option<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <String>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1281,21 +1494,29 @@ impl SseEncode for Option<u32> {
     }
 }
 
-impl SseEncode for crate::api::mirror::SessionEvent {
+impl SseEncode for emu_app_scanner::api::ScanRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.games_directory, serializer);
+        <String>::sse_encode(self.icons_directory, serializer);
+    }
+}
+
+impl SseEncode for session::api::session::SessionEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::api::mirror::SessionEvent::ShaderProgress {
+            session::api::session::SessionEvent::ShaderProgress {
                 stage,
                 progress,
                 max,
             } => {
                 <i32>::sse_encode(0, serializer);
-                <crate::api::mirror::ShaderStage>::sse_encode(stage, serializer);
+                <session::api::session::ShaderStage>::sse_encode(stage, serializer);
                 <u64>::sse_encode(progress, serializer);
                 <u64>::sse_encode(max, serializer);
             }
-            crate::api::mirror::SessionEvent::Texture {
+            session::api::session::SessionEvent::Texture {
                 texture_id,
                 secondary,
             } => {
@@ -1303,22 +1524,22 @@ impl SseEncode for crate::api::mirror::SessionEvent {
                 <i64>::sse_encode(texture_id, serializer);
                 <bool>::sse_encode(secondary, serializer);
             }
-            crate::api::mirror::SessionEvent::StateChanged { state } => {
+            session::api::session::SessionEvent::StateChanged { state } => {
                 <i32>::sse_encode(2, serializer);
-                <crate::api::mirror::SessionState>::sse_encode(state, serializer);
+                <session::api::session::SessionState>::sse_encode(state, serializer);
             }
-            crate::api::mirror::SessionEvent::Error { message } => {
+            session::api::session::SessionEvent::Error { message } => {
                 <i32>::sse_encode(3, serializer);
                 <String>::sse_encode(message, serializer);
             }
-            crate::api::mirror::SessionEvent::ShutdownRequested => {
+            session::api::session::SessionEvent::ShutdownRequested => {
                 <i32>::sse_encode(4, serializer);
             }
-            crate::api::mirror::SessionEvent::Failed { message } => {
+            session::api::session::SessionEvent::Failed { message } => {
                 <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(message, serializer);
             }
-            crate::api::mirror::SessionEvent::ArticCountryMismatch { region, country } => {
+            session::api::session::SessionEvent::ArticCountryMismatch { region, country } => {
                 <i32>::sse_encode(6, serializer);
                 <u32>::sse_encode(region, serializer);
                 <u32>::sse_encode(country, serializer);
@@ -1330,7 +1551,7 @@ impl SseEncode for crate::api::mirror::SessionEvent {
     }
 }
 
-impl SseEncode for crate::api::mirror::SessionOptions {
+impl SseEncode for session::api::session::SessionOptions {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.primary_width, serializer);
@@ -1338,18 +1559,18 @@ impl SseEncode for crate::api::mirror::SessionOptions {
         <i32>::sse_encode(self.secondary_width, serializer);
         <i32>::sse_encode(self.secondary_height, serializer);
         <bool>::sse_encode(self.dual_screen, serializer);
-        <crate::api::mirror::AudioEngine>::sse_encode(self.audio_engine, serializer);
+        <session::api::audio::AudioEngine>::sse_encode(self.audio_engine, serializer);
     }
 }
 
-impl SseEncode for crate::api::mirror::SessionState {
+impl SseEncode for session::api::session::SessionState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::api::mirror::SessionState::Idle => 0,
-                crate::api::mirror::SessionState::Running => 1,
-                crate::api::mirror::SessionState::Paused => 2,
+                session::api::session::SessionState::Idle => 0,
+                session::api::session::SessionState::Running => 1,
+                session::api::session::SessionState::Paused => 2,
                 _ => {
                     unimplemented!("");
                 }
@@ -1359,15 +1580,15 @@ impl SseEncode for crate::api::mirror::SessionState {
     }
 }
 
-impl SseEncode for crate::api::mirror::ShaderStage {
+impl SseEncode for session::api::session::ShaderStage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::api::mirror::ShaderStage::Prepare => 0,
-                crate::api::mirror::ShaderStage::Decompile => 1,
-                crate::api::mirror::ShaderStage::Build => 2,
-                crate::api::mirror::ShaderStage::Complete => 3,
+                session::api::session::ShaderStage::Prepare => 0,
+                session::api::session::ShaderStage::Decompile => 1,
+                session::api::session::ShaderStage::Build => 2,
+                session::api::session::ShaderStage::Complete => 3,
                 _ => {
                     unimplemented!("");
                 }

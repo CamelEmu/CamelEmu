@@ -3,7 +3,6 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/mirror.dart';
 import 'api/session.dart';
 
 import 'dart:async';
@@ -14,7 +13,9 @@ import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
+import 'third_party/emu_app_scanner/api.dart';
 import 'third_party/session/api/audio.dart';
+import 'third_party/session/api/error.dart';
 import 'third_party/session/api/session.dart';
 import 'third_party/session/api/storage.dart';
 
@@ -47,6 +48,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  ScanRequest dco_decode_box_autoadd_scan_request(dynamic raw);
+
+  @protected
   SessionOptions dco_decode_box_autoadd_session_options(dynamic raw);
 
   @protected
@@ -54,6 +58,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  Game dco_decode_game(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -68,10 +75,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AudioEngine> dco_decode_list_audio_engine(dynamic raw);
 
   @protected
+  List<Game> dco_decode_list_game(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  ScanRequest dco_decode_scan_request(dynamic raw);
 
   @protected
   SessionEvent dco_decode_session_event(dynamic raw);
@@ -118,6 +134,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  ScanRequest sse_decode_box_autoadd_scan_request(SseDeserializer deserializer);
+
+  @protected
   SessionOptions sse_decode_box_autoadd_session_options(
     SseDeserializer deserializer,
   );
@@ -127,6 +146,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  Game sse_decode_game(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -141,10 +163,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AudioEngine> sse_decode_list_audio_engine(SseDeserializer deserializer);
 
   @protected
+  List<Game> sse_decode_list_game(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  ScanRequest sse_decode_scan_request(SseDeserializer deserializer);
 
   @protected
   SessionEvent sse_decode_session_event(SseDeserializer deserializer);
@@ -195,6 +226,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_scan_request(
+    ScanRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_session_options(
     SessionOptions self,
     SseSerializer serializer,
@@ -205,6 +242,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_game(Game self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -222,13 +262,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_game(List<Game> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_scan_request(ScanRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_session_event(SessionEvent self, SseSerializer serializer);

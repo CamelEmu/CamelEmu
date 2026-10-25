@@ -3,48 +3,52 @@ use std::io::ErrorKind;
 use std::os::fd::{IntoRawFd, RawFd};
 use std::path::{Path, PathBuf};
 
-use super::{OpenMode, Storage};
+use super::{DirEntry, FILE_SCHEME, OpenMode, Storage};
 
 /// Reaches paths of the file system directly.
 pub struct NativeStorage;
 
+fn plain(path: &str) -> &str {
+    path.strip_prefix(FILE_SCHEME).unwrap_or(path)
+}
+
 impl Storage for NativeStorage {
     fn exists(&self, path: &str) -> bool {
-        Path::new(path).exists()
+        Path::new(plain(path)).exists()
     }
 
     fn is_directory(&self, path: &str) -> bool {
-        Path::new(path).is_dir()
+        Path::new(plain(path)).is_dir()
     }
 
     fn size(&self, path: &str) -> u64 {
-        fs::metadata(path)
+        fs::metadata(plain(path))
             .ok()
             .filter(|metadata| metadata.is_file())
             .map_or(0, |metadata| metadata.len())
     }
 
     fn create_dir(&self, path: &str) -> bool {
-        match fs::create_dir(path) {
+        match fs::create_dir(plain(path)) {
             Ok(()) => true,
             Err(error) => error.kind() == ErrorKind::AlreadyExists && self.is_directory(path),
         }
     }
 
     fn remove_file(&self, path: &str) -> bool {
-        fs::remove_file(path).is_ok()
+        fs::remove_file(plain(path)).is_ok()
     }
 
     fn remove_dir(&self, path: &str) -> bool {
-        fs::remove_dir(path).is_ok()
+        fs::remove_dir(plain(path)).is_ok()
     }
 
     fn rename(&self, from: &str, to: &str) -> bool {
-        fs::rename(from, to).is_ok()
+        fs::rename(plain(from), plain(to)).is_ok()
     }
 
     fn copy(&self, from: &str, to: &str) -> bool {
-        fs::copy(from, to).is_ok()
+        fs::copy(plain(from), plain(to)).is_ok()
     }
 
     fn open(&self, path: &str, mode: OpenMode) -> Option<RawFd> {
@@ -54,17 +58,34 @@ impl Storage for NativeStorage {
             .append(mode.append)
             .truncate(mode.truncate)
             .create(mode.creates())
-            .open(path)
+            .open(plain(path))
             .ok()
             .map(IntoRawFd::into_raw_fd)
     }
 
     fn list(&self, path: &str) -> Option<Vec<String>> {
-        let entries = fs::read_dir(path).ok()?;
+        let entries = fs::read_dir(plain(path)).ok()?;
         Some(
             entries
                 .filter_map(|entry| entry.ok())
                 .map(|entry| entry.file_name().to_string_lossy().into_owned())
+                .collect(),
+        )
+    }
+
+    fn list_entries(&self, path: &str) -> Option<Vec<DirEntry>> {
+        let entries = fs::read_dir(plain(path)).ok()?;
+        Some(
+            entries
+                .filter_map(|entry| entry.ok())
+                .map(|entry| {
+                    let entry_path = entry.path();
+                    DirEntry {
+                        name: entry.file_name().to_string_lossy().into_owned(),
+                        is_directory: entry_path.is_dir(),
+                        path: entry_path.to_string_lossy().into_owned(),
+                    }
+                })
                 .collect(),
         )
     }

@@ -1,3 +1,3 @@
 rust_root: ../emu
-rust_input: crate::api, session::api
+rust_input: crate::api, session::api, emu_app_scanner::api
 dart_output: lib/src/rust

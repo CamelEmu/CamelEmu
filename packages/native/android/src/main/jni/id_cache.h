@@ -68,7 +68,6 @@ jclass GetCheatClass();
 jfieldID GetCheatPointer();
 jmethodID GetCheatConstructor();
 
-jfieldID GetGameInfoPointer();
 
 jclass GetDiskCacheProgressClass();
 jmethodID GetDiskCacheLoadProgress();
