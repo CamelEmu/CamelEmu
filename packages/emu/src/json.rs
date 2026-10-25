@@ -1,5 +1,5 @@
 //! Standard JSON (RFC 8259) DOM backed by serde_json, exposed to C++ only
-//! through the C ABI declared in `packages/camel_emu/include/emu_json.h`.
+//! through the C ABI declared in `packages/native/include/emu_json.h`.
 //!
 //! Nothing specific to any caller crosses this boundary: type mapping and
 //! missing-field handling for a particular format stay in the C++ shim of
