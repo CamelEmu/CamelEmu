@@ -65,6 +65,26 @@ impl ServerCertVerifier for AcceptAnyServer {
     }
 }
 
+/// Cuts a DER element off whatever follows it. OpenSSL's `d2i_*` parse one element and ignore the
+/// rest, and the client certificate of the console comes out of a block cipher with its padding
+/// still attached, which rustls and ring reject.
+fn trim_der(mut der: Vec<u8>) -> Vec<u8> {
+    let length = match der.get(1).copied() {
+        Some(first) if first < 0x80 => Some(2 + usize::from(first)),
+        Some(first) => {
+            let count = usize::from(first & 0x7f);
+            der.get(2..2 + count)
+                .filter(|_| (1..=4).contains(&count))
+                .map(|bytes| 2 + count + bytes.iter().fold(0, |acc, &b| (acc << 8) | usize::from(b)))
+        }
+        None => None,
+    };
+    if let Some(length) = length.filter(|&length| length <= der.len()) {
+        der.truncate(length);
+    }
+    der
+}
+
 fn build(
     verify_server: bool,
     client_auth: Option<(Vec<u8>, Vec<u8>)>,
@@ -82,8 +102,9 @@ fn build(
     };
     match client_auth {
         Some((cert, key)) => {
-            let key = PrivateKeyDer::try_from(key).map_err(|error| Error::General(error.to_string()))?;
-            builder.with_client_auth_cert(vec![CertificateDer::from(cert)], key)
+            let key = PrivateKeyDer::try_from(trim_der(key))
+                .map_err(|error| Error::General(error.to_string()))?;
+            builder.with_client_auth_cert(vec![CertificateDer::from(trim_der(cert))], key)
         }
         None => Ok(builder.with_no_client_auth()),
     }
