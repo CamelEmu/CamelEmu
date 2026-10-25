@@ -294,6 +294,11 @@ if (NOT OPENSSL_FOUND)
     get_directory_property(OPENSSL_LIBRARIES
         DIRECTORY libressl
         DEFINITION OPENSSL_LIBS)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/libressl")
+    file(CREATE_LINK "${CMAKE_CURRENT_BINARY_DIR}/libressl/ssl/libssl.a"
+         "${CMAKE_BINARY_DIR}/libressl/libssl.a" SYMBOLIC)
+    file(CREATE_LINK "${CMAKE_CURRENT_BINARY_DIR}/libressl/crypto/libcrypto.a"
+         "${CMAKE_BINARY_DIR}/libressl/libcrypto.a" SYMBOLIC)
 endif()
 
 add_library(openssl-libs INTERFACE)
