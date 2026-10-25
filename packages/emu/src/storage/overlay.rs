@@ -8,7 +8,7 @@ use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
 use std::sync::{Mutex, MutexGuard};
 
-use super::{OpenMode, Storage, storage_for};
+use super::{OpenMode, Storage, scratch, storage_for};
 
 /// A file the game only reads and that is larger than this is read from the storage directly,
 /// so that installed titles and other large contents are never copied into memory.
@@ -241,7 +241,7 @@ impl Storage for Overlay {
                     if !mode.creates() || kind(&entries, parent(&path)) != Kind::Directory {
                         return None;
                     }
-                    let file = memory_file()?;
+                    let file = scratch::create()?;
                     entries.insert(path.clone(), Entry::File { file, dirty: true });
                 }
                 Kind::File => {
@@ -328,17 +328,6 @@ fn list_in(entries: &HashMap<String, Entry>, path: &str) -> Option<Vec<String>> 
     Some(names.into_iter().collect())
 }
 
-/// Creates an anonymous file in memory. The system call is made directly so that it does not
-/// depend on the API level of the C library on Android.
-fn memory_file() -> Option<File> {
-    let name = c"azahar-storage";
-    let fd = unsafe { libc::syscall(libc::SYS_memfd_create, name.as_ptr(), libc::MFD_CLOEXEC) };
-    if fd < 0 {
-        return None;
-    }
-    Some(unsafe { File::from_raw_fd(fd as RawFd) })
-}
-
 /// Opens the memory file again through `/proc`, which, unlike `dup`, gives the new descriptor an
 /// offset of its own.
 fn reopen(file: &File, mode: OpenMode) -> Option<RawFd> {
@@ -363,7 +352,7 @@ fn reopen(file: &File, mode: OpenMode) -> Option<RawFd> {
 fn load(path: &str) -> Option<File> {
     let fd = storage_for(path).open(path, READ)?;
     let mut source = unsafe { File::from_raw_fd(fd) };
-    let mut file = memory_file()?;
+    let mut file = scratch::create()?;
     io::copy(&mut source, &mut file).ok()?;
     Some(file)
 }
@@ -371,7 +360,7 @@ fn load(path: &str) -> Option<File> {
 /// Copies a file in memory into a new one.
 fn duplicate(file: &File) -> Option<File> {
     let mut source = unsafe { File::from_raw_fd(reopen(file, READ)?) };
-    let mut copy = memory_file()?;
+    let mut copy = scratch::create()?;
     io::copy(&mut source, &mut copy).ok()?;
     Some(copy)
 }

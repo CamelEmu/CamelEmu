@@ -2,10 +2,13 @@
 //! specific storage code of its own.
 
 mod abi;
+#[cfg(target_os = "android")]
+mod android_jni;
 mod native;
 mod overlay;
 #[cfg(target_os = "android")]
 mod saf;
+mod scratch;
 
 use std::ffi::CString;
 use std::fs::File;

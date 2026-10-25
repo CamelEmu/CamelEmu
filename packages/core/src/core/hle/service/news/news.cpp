@@ -720,7 +720,9 @@ Result Module::SaveFileToSavedata(std::string filename, std::span<const u8> buff
     FileSys::Path path(filename);
 
     auto result = news_system_save_data_archive->OpenFile(path, mode);
-    ASSERT_MSG(result.Succeeded(), "could not open file");
+    if (result.Failed()) {
+        return result.Code();
+    }
 
     auto file = std::move(result).Unwrap();
     file->Write(0, buffer.size(), true, false, buffer.data());
