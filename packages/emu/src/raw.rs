@@ -1,4 +1,4 @@
-//! The types of the C ABI declared in `packages/camel_emu/include/azahar_session.h`.
+//! The types of the C ABI declared in `packages/native/include/azahar_session.h`.
 
 use std::ffi::{c_char, c_void};
 
