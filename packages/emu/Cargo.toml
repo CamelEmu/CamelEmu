@@ -3,10 +3,14 @@ name = "emu"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
+emu_http = { path = "crates/http" }
 flutter_rust_bridge = "=2.13.0"
 libc = "0.2"
-memory = { path = "../memory" }
+memory = { path = "crates/memory" }
 serde_json = { version = "1", features = ["preserve_order"] }
 ringbuf = "0.4"
 thiserror = "2"

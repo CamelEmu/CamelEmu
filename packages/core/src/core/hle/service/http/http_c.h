@@ -17,10 +17,11 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
-#include <httplib.h>
+#include "common/http_client.h"
 #include "common/thread.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/http/multipart.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -238,14 +239,14 @@ public:
         std::string value;
         bool is_binary = false;
 
-        httplib::MultipartFormData ToMultipartForm() const {
-            httplib::MultipartFormData form;
+        Multipart::Item ToMultipartForm() const {
+            Multipart::Item form;
             form.name = name;
             form.content = value;
             if (is_binary) {
                 form.content_type = "application/octet-stream";
-                // TODO(DaniElectra): httplib doesn't support setting Content-Transfer-Encoding,
-                // while the 3DS sets Content-Transfer-Encoding: binary if a binary value is set
+                // TODO(DaniElectra): Content-Transfer-Encoding can't be set here, while the 3DS
+                // sets Content-Transfer-Encoding: binary if a binary value is set
             }
 
             return form;
@@ -290,20 +291,30 @@ public:
     std::atomic<u64> total_download_size_bytes;
     std::size_t current_copied_data;
     bool uses_default_client_cert{};
-    httplib::Response response;
+    struct ResponseData {
+        int status = 0;
+        std::string reason;
+        Common::Http::Headers headers;
+        std::string body;
+
+        std::optional<std::string> Header(std::string_view name) const {
+            return Common::Http::FindHeader(headers, name);
+        }
+    };
+    ResponseData response;
     Common::Event finish_post_data;
 
     void ParseAsciiPostData();
     std::string ParseMultipartFormData();
     void MakeRequest();
-    void MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
-                           std::vector<Context::RequestHeader>& pending_headers);
-    void MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
-                        std::vector<Context::RequestHeader>& pending_headers);
-    bool ContentProvider(size_t offset, size_t length, httplib::DataSink& sink);
-    bool ChunkedContentProvider(size_t offset, httplib::DataSink& sink);
-    std::size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
-                                  httplib::Stream& strm, httplib::Headers& httplib_headers);
+
+private:
+    /// Fills the body to send on the first call, then hands it out piece by piece.
+    std::int32_t ProvideBody(std::uint8_t* buf, std::size_t len, std::int32_t* eof);
+
+    std::string send_buffer;
+    std::size_t send_offset = 0;
+    bool send_buffer_ready = false;
 };
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
