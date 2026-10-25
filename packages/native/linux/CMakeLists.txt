@@ -79,7 +79,6 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE
   MICROPROFILE_ENABLED=0
   NDEBUG
   _FILE_OFFSET_BITS=64
-  CPPHTTPLIB_OPENSSL_SUPPORT
 )
 
 target_include_directories(${PLUGIN_NAME} PRIVATE

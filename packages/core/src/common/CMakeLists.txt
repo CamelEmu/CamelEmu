@@ -90,6 +90,7 @@ add_library(citra_common STATIC
     hacks/hack_list.cpp
     hacks/hack_manager.h
     hacks/hack_manager.cpp
+    http_client.h
     literals.h
     logging/backend.cpp
     logging/backend.h
