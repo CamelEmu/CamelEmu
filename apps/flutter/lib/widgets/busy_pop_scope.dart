@@ -32,11 +32,7 @@ class BusyBackButton extends ConsumerWidget {
         ),
       );
     }
-    return IconButton(
-      icon: const BackButtonIcon(),
-      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-      onPressed: () => Navigator.maybePop(context),
-    );
+    return const BackButton();
   }
 }
 
