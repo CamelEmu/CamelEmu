@@ -107,7 +107,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC Threads::Threads)
 # The Rust crate owns the game session and the audio output. It is linked into the executable as
 # a static library and its symbols are exported, so the Dart side finds them in the process.
 set(EMU_DIR "${AZAHAR_ROOT}/packages/emu")
-set(EMU_LIB "${EMU_DIR}/target/release/libsession.a")
+set(EMU_LIB "${EMU_DIR}/target/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
 set(LIBRESSL_INCLUDE_DIR "${AZAHAR_CORE}/externals/libressl/include")
 set(LIBRESSL_STUB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl-stub")
@@ -119,7 +119,7 @@ add_custom_target(emu_lib
     "OPENSSL_INCLUDE_DIR=${LIBRESSL_INCLUDE_DIR}"
     "OPENSSL_LIB_DIR=${LIBRESSL_STUB_DIR}"
     OPENSSL_STATIC=1
-    "${CARGO_EXECUTABLE}" rustc -p session --release --lib --crate-type staticlib
+    "${CARGO_EXECUTABLE}" rustc -p emu --release --lib --crate-type staticlib
   WORKING_DIRECTORY "${EMU_DIR}"
   BYPRODUCTS "${EMU_LIB}"
   COMMENT "Building emu (${EMU_DIR})"

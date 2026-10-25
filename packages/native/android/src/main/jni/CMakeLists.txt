@@ -74,7 +74,7 @@ endif()
 string(REPLACE "-" "_" EMU_TARGET_ENV "${EMU_TARGET}")
 string(TOUPPER "${EMU_TARGET_ENV}" EMU_TARGET_UPPER)
 set(EMU_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${EMU_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
-set(EMU_LIB "${EMU_DIR}/target/${EMU_TARGET}/release/libsession.a")
+set(EMU_LIB "${EMU_DIR}/target/${EMU_TARGET}/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
 set(LIBRESSL_STUB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl-stub")
 add_custom_target(emu_lib
@@ -89,7 +89,7 @@ add_custom_target(emu_lib
         "OPENSSL_INCLUDE_DIR=${AZAHAR_REPO_ROOT}/packages/core/externals/libressl/include"
         "OPENSSL_LIB_DIR=${LIBRESSL_STUB_DIR}"
         OPENSSL_STATIC=1
-        "${CARGO_EXECUTABLE}" rustc -p session --release --lib --crate-type staticlib
+        "${CARGO_EXECUTABLE}" rustc -p emu --release --lib --crate-type staticlib
         --target ${EMU_TARGET}
     WORKING_DIRECTORY "${EMU_DIR}"
     BYPRODUCTS "${EMU_LIB}"

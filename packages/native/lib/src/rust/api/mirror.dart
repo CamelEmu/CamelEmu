@@ -3,12 +3,63 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'api/audio.dart';
-import 'frb_generated.dart';
+import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-part 'session.freezed.dart';
+part 'mirror.freezed.dart';
+
+/// Engine that plays the audio of a session.
+enum AudioEngine {
+  /// The OpenAL sink of the core.
+  openAl,
+
+  /// Oboe, driven by this crate. Only available on Android.
+  oboe,
+}
+
+@freezed
+sealed class AzaharError with _$AzaharError implements FrbException {
+  const AzaharError._();
+
+  /// A session is still alive, so a second one cannot be started.
+  const factory AzaharError.sessionActive() = AzaharError_SessionActive;
+
+  /// The operation needs a session but none is active.
+  const factory AzaharError.noSession() = AzaharError_NoSession;
+
+  /// The game path contains an interior NUL byte.
+  const factory AzaharError.invalidPath() = AzaharError_InvalidPath;
+
+  /// The C++ core refused to create the session.
+  const factory AzaharError.createFailed() = AzaharError_CreateFailed;
+
+  /// The operation is not valid in the current session state.
+  const factory AzaharError.invalidState() = AzaharError_InvalidState;
+
+  /// The core returned a non-zero status code.
+  const factory AzaharError.core(int field0) = AzaharError_Core;
+
+  /// The requested 3DS address range is not mapped.
+  const factory AzaharError.invalidAddress({
+    required int address,
+    required int len,
+  }) = AzaharError_InvalidAddress;
+
+  /// The core library could not be loaded or initialized.
+  const factory AzaharError.libraryLoad(String field0) =
+      AzaharError_LibraryLoad;
+
+  /// The audio output could not be opened.
+  const factory AzaharError.audio(String field0) = AzaharError_Audio;
+
+  /// A folder of a user directory could not be created.
+  const factory AzaharError.storage(String field0) = AzaharError_Storage;
+
+  /// Some of the files the game changed could not be written to the storage.
+  const factory AzaharError.storageCommit(List<String> field0) =
+      AzaharError_StorageCommit;
+}
 
 @freezed
 sealed class SessionEvent with _$SessionEvent {

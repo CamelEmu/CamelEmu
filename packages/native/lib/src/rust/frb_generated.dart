@@ -3,21 +3,21 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/audio.dart';
+import 'api/mirror.dart';
 import 'api/session.dart';
-import 'api/storage.dart';
 
 import 'dart:async';
 import 'dart:convert';
 
-import 'error.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-import 'session.dart';
+import 'third_party/session/api/audio.dart';
+import 'third_party/session/api/session.dart';
+import 'third_party/session/api/storage.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -63,7 +63,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   Future<void> executeRustInitializers() async {
-    await api.crateApiSessionInitApp();
+    await api.sessionApiSessionInitApp();
   }
 
   @override
@@ -74,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 148061833;
+  int get rustContentHash => 1167866999;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -86,39 +86,39 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<void> crateApiSessionAnswerArticCountry({int? country});
+  Future<void> sessionApiSessionAnswerArticCountry({int? country});
 
-  List<AudioEngine> crateApiAudioAvailableAudioEngines();
+  List<AudioEngine> sessionApiAudioAvailableAudioEngines();
 
-  AudioEngine crateApiAudioDefaultAudioEngine();
+  AudioEngine sessionApiAudioDefaultAudioEngine();
 
-  Future<Uint8List> crateApiSessionDumpFcram();
+  Future<Uint8List> sessionApiSessionDumpFcram();
 
-  Future<BigInt> crateApiSessionFcramSize();
+  Future<BigInt> sessionApiSessionFcramSize();
 
-  Future<void> crateApiSessionInitApp();
+  Future<void> sessionApiSessionInitApp();
 
-  Future<void> crateApiStorageInitializeStorage({required String location});
+  Future<void> sessionApiStorageInitializeStorage({required String location});
 
-  Future<void> crateApiSessionPauseGame();
+  Future<void> sessionApiSessionPauseGame();
 
-  Future<Uint8List> crateApiSessionReadMemory({
+  Future<Uint8List> sessionApiSessionReadMemory({
     required int address,
     required int len,
   });
 
-  Future<int> crateApiSessionReadU32({required int address});
+  Future<int> sessionApiSessionReadU32({required int address});
 
-  Future<void> crateApiSessionResumeGame();
+  Future<void> sessionApiSessionResumeGame();
 
-  Future<void> crateApiSessionSetVolume({required double volume});
+  Future<void> sessionApiSessionSetVolume({required double volume});
 
   Stream<SessionEvent> crateApiSessionStartGame({
     required String gamePath,
     required SessionOptions options,
   });
 
-  Future<void> crateApiSessionStopGame({required bool persist});
+  Future<void> sessionApiSessionStopGame({required bool persist});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -130,7 +130,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<void> crateApiSessionAnswerArticCountry({int? country}) {
+  Future<void> sessionApiSessionAnswerArticCountry({int? country}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -147,21 +147,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionAnswerArticCountryConstMeta,
+        constMeta: kSessionApiSessionAnswerArticCountryConstMeta,
         argValues: [country],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionAnswerArticCountryConstMeta =>
+  TaskConstMeta get kSessionApiSessionAnswerArticCountryConstMeta =>
       const TaskConstMeta(
         debugName: "answer_artic_country",
         argNames: ["country"],
       );
 
   @override
-  List<AudioEngine> crateApiAudioAvailableAudioEngines() {
+  List<AudioEngine> sessionApiAudioAvailableAudioEngines() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -172,18 +172,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_audio_engine,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAudioAvailableAudioEnginesConstMeta,
+        constMeta: kSessionApiAudioAvailableAudioEnginesConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAudioAvailableAudioEnginesConstMeta =>
+  TaskConstMeta get kSessionApiAudioAvailableAudioEnginesConstMeta =>
       const TaskConstMeta(debugName: "available_audio_engines", argNames: []);
 
   @override
-  AudioEngine crateApiAudioDefaultAudioEngine() {
+  AudioEngine sessionApiAudioDefaultAudioEngine() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
@@ -194,18 +194,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_audio_engine,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAudioDefaultAudioEngineConstMeta,
+        constMeta: kSessionApiAudioDefaultAudioEngineConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAudioDefaultAudioEngineConstMeta =>
+  TaskConstMeta get kSessionApiAudioDefaultAudioEngineConstMeta =>
       const TaskConstMeta(debugName: "default_audio_engine", argNames: []);
 
   @override
-  Future<Uint8List> crateApiSessionDumpFcram() {
+  Future<Uint8List> sessionApiSessionDumpFcram() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -221,18 +221,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_prim_u_8_strict,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionDumpFcramConstMeta,
+        constMeta: kSessionApiSessionDumpFcramConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionDumpFcramConstMeta =>
+  TaskConstMeta get kSessionApiSessionDumpFcramConstMeta =>
       const TaskConstMeta(debugName: "dump_fcram", argNames: []);
 
   @override
-  Future<BigInt> crateApiSessionFcramSize() {
+  Future<BigInt> sessionApiSessionFcramSize() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -248,18 +248,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_u_64,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionFcramSizeConstMeta,
+        constMeta: kSessionApiSessionFcramSizeConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionFcramSizeConstMeta =>
+  TaskConstMeta get kSessionApiSessionFcramSizeConstMeta =>
       const TaskConstMeta(debugName: "fcram_size", argNames: []);
 
   @override
-  Future<void> crateApiSessionInitApp() {
+  Future<void> sessionApiSessionInitApp() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -275,18 +275,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiSessionInitAppConstMeta,
+        constMeta: kSessionApiSessionInitAppConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionInitAppConstMeta =>
+  TaskConstMeta get kSessionApiSessionInitAppConstMeta =>
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
-  Future<void> crateApiStorageInitializeStorage({required String location}) {
+  Future<void> sessionApiStorageInitializeStorage({required String location}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -303,21 +303,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiStorageInitializeStorageConstMeta,
+        constMeta: kSessionApiStorageInitializeStorageConstMeta,
         argValues: [location],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiStorageInitializeStorageConstMeta =>
+  TaskConstMeta get kSessionApiStorageInitializeStorageConstMeta =>
       const TaskConstMeta(
         debugName: "initialize_storage",
         argNames: ["location"],
       );
 
   @override
-  Future<void> crateApiSessionPauseGame() {
+  Future<void> sessionApiSessionPauseGame() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -333,18 +333,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionPauseGameConstMeta,
+        constMeta: kSessionApiSessionPauseGameConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionPauseGameConstMeta =>
+  TaskConstMeta get kSessionApiSessionPauseGameConstMeta =>
       const TaskConstMeta(debugName: "pause_game", argNames: []);
 
   @override
-  Future<Uint8List> crateApiSessionReadMemory({
+  Future<Uint8List> sessionApiSessionReadMemory({
     required int address,
     required int len,
   }) {
@@ -365,20 +365,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_prim_u_8_strict,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionReadMemoryConstMeta,
+        constMeta: kSessionApiSessionReadMemoryConstMeta,
         argValues: [address, len],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionReadMemoryConstMeta => const TaskConstMeta(
-    debugName: "read_memory",
-    argNames: ["address", "len"],
-  );
+  TaskConstMeta get kSessionApiSessionReadMemoryConstMeta =>
+      const TaskConstMeta(
+        debugName: "read_memory",
+        argNames: ["address", "len"],
+      );
 
   @override
-  Future<int> crateApiSessionReadU32({required int address}) {
+  Future<int> sessionApiSessionReadU32({required int address}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -395,18 +396,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_u_32,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionReadU32ConstMeta,
+        constMeta: kSessionApiSessionReadU32ConstMeta,
         argValues: [address],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionReadU32ConstMeta =>
+  TaskConstMeta get kSessionApiSessionReadU32ConstMeta =>
       const TaskConstMeta(debugName: "read_u32", argNames: ["address"]);
 
   @override
-  Future<void> crateApiSessionResumeGame() {
+  Future<void> sessionApiSessionResumeGame() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -422,18 +423,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionResumeGameConstMeta,
+        constMeta: kSessionApiSessionResumeGameConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionResumeGameConstMeta =>
+  TaskConstMeta get kSessionApiSessionResumeGameConstMeta =>
       const TaskConstMeta(debugName: "resume_game", argNames: []);
 
   @override
-  Future<void> crateApiSessionSetVolume({required double volume}) {
+  Future<void> sessionApiSessionSetVolume({required double volume}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -450,14 +451,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionSetVolumeConstMeta,
+        constMeta: kSessionApiSessionSetVolumeConstMeta,
         argValues: [volume],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionSetVolumeConstMeta =>
+  TaskConstMeta get kSessionApiSessionSetVolumeConstMeta =>
       const TaskConstMeta(debugName: "set_volume", argNames: ["volume"]);
 
   @override
@@ -500,7 +501,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
-  Future<void> crateApiSessionStopGame({required bool persist}) {
+  Future<void> sessionApiSessionStopGame({required bool persist}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -517,14 +518,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_azahar_error,
         ),
-        constMeta: kCrateApiSessionStopGameConstMeta,
+        constMeta: kSessionApiSessionStopGameConstMeta,
         argValues: [persist],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiSessionStopGameConstMeta =>
+  TaskConstMeta get kSessionApiSessionStopGameConstMeta =>
       const TaskConstMeta(debugName: "stop_game", argNames: ["persist"]);
 
   @protected

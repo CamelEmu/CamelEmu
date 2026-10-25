@@ -477,6 +477,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "emu"
+version = "0.1.0"
+dependencies = [
+ "emu_crypto",
+ "emu_http",
+ "emu_random",
+ "emu_storage",
+ "flutter_rust_bridge",
+ "memory",
+ "session",
+]
+
+[[package]]
 name = "emu_crypto"
 version = "0.1.0"
 dependencies = [

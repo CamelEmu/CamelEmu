@@ -11,7 +11,7 @@ use std::thread::JoinHandle;
 
 use memory::{MemoryError, MemorySource, Result as MemoryResult};
 
-use crate::error::{AzaharError, Result};
+use crate::error::{AzaharError, SessionResult};
 use crate::library::{CoreLibrary, close};
 use crate::api::audio::AudioEngine;
 use crate::raw::{RawCallbacks, RawOptions, RawSession, STATUS_INVALID_ADDRESS, STATUS_OK};
@@ -119,9 +119,9 @@ struct Worker {
 }
 
 impl Worker {
-    fn spawn() -> Result<Self> {
+    fn spawn() -> SessionResult<Self> {
         let (sender, receiver) = channel::<Job>();
-        let (ready_sender, ready) = sync_channel::<Result<()>>(1);
+        let (ready_sender, ready) = sync_channel::<SessionResult<()>>(1);
         let thread = std::thread::Builder::new()
             .name("azahar-core".into())
             .spawn(move || {
@@ -202,7 +202,7 @@ impl SessionHandle {
         game_path: &str,
         options: &SessionOptions,
         context: &CallbackContext,
-    ) -> Result<Self> {
+    ) -> SessionResult<Self> {
         let path = CString::new(game_path).map_err(|_| AzaharError::InvalidPath)?;
         let raw_options = RawOptions {
             primary_width: options.primary_width,
@@ -233,7 +233,7 @@ impl SessionHandle {
         Ok(Self { worker, raw })
     }
 
-    pub fn start(&self) -> Result<()> {
+    pub fn start(&self) -> SessionResult<()> {
         let raw = self.raw;
         check(
             self.worker
@@ -249,7 +249,7 @@ impl SessionHandle {
         });
     }
 
-    pub fn pause(&self) -> Result<()> {
+    pub fn pause(&self) -> SessionResult<()> {
         let raw = self.raw;
         check(
             self.worker
@@ -257,7 +257,7 @@ impl SessionHandle {
         )
     }
 
-    pub fn resume(&self) -> Result<()> {
+    pub fn resume(&self) -> SessionResult<()> {
         let raw = self.raw;
         check(
             self.worker
@@ -317,7 +317,7 @@ impl Drop for SessionHandle {
     }
 }
 
-fn check(status: i32) -> Result<()> {
+fn check(status: i32) -> SessionResult<()> {
     if status == STATUS_OK {
         Ok(())
     } else {

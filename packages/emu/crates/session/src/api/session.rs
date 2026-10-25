@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use flutter_rust_bridge::frb;
 
 use crate::error::AzaharError;
@@ -9,22 +7,6 @@ pub use crate::session::{SessionEvent, SessionOptions, SessionState, ShaderStage
 #[frb(init)]
 pub fn init_app() {
     flutter_rust_bridge::setup_backtrace();
-}
-
-/// Starts a game and streams its events (shader progress, textures, state
-/// changes, errors) to Dart.
-pub fn start_game(
-    game_path: String,
-    options: SessionOptions,
-    events: crate::frb_generated::StreamSink<SessionEvent>,
-) -> Result<(), AzaharError> {
-    registry::start(
-        &game_path,
-        &options,
-        Arc::new(move |event| {
-            let _ = events.add(event);
-        }),
-    )
 }
 
 pub fn pause_game() -> Result<(), AzaharError> {

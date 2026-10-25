@@ -19,7 +19,7 @@ use oboe::{
 use ringbuf::traits::{Consumer, Observer, Producer, Split};
 use ringbuf::{HeapCons, HeapProd, HeapRb};
 
-use crate::error::{AzaharError, Result};
+use crate::error::{AzaharError, SessionResult};
 
 /// Sample rate of the 3DS DSP output.
 pub const SOURCE_SAMPLE_RATE: u32 = 32728;
@@ -52,7 +52,7 @@ pub struct AudioOutput {
 
 impl AudioOutput {
     /// Opens a low latency Oboe stream on the default output device and starts playback.
-    pub fn new() -> Result<Self> {
+    pub fn new() -> SessionResult<Self> {
         let ring = HeapRb::<i16>::new(BUFFER_FRAMES * CHANNELS);
         let (producer, consumer) = ring.split();
         let shared = Arc::new(Shared {

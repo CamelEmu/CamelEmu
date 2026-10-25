@@ -6,19 +6,19 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
-import 'api/audio.dart';
+import 'api/mirror.dart';
 import 'api/session.dart';
-import 'api/storage.dart';
 
 import 'dart:async';
 import 'dart:convert';
 
-import 'error.dart';
 import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
-import 'session.dart';
+import 'third_party/session/api/audio.dart';
+import 'third_party/session/api/session.dart';
+import 'third_party/session/api/storage.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({

@@ -15,9 +15,6 @@ thiserror = "2"
 emu_crypto = { version = "0.1.0", path = "../crypto" }
 emu_storage = { version = "0.1.0", path = "../storage" }
 
-[lib]
-crate-type = ["cdylib", "staticlib", "lib"]
-
 [features]
 default = []
 link_core = []

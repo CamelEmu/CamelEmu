@@ -2,7 +2,7 @@
 
 use std::sync::{Mutex, MutexGuard};
 
-use crate::error::{AzaharError, Result};
+use crate::error::{AzaharError, SessionResult};
 use crate::session::{EventSink, GameSession, SessionOptions};
 
 static LIFECYCLE: Mutex<()> = Mutex::new(());
@@ -23,7 +23,7 @@ fn writes_directly(game_path: &str) -> bool {
 /// Holding the lifecycle lock makes a start wait for a concurrent stop to
 /// finish releasing its resources. The files the game changes are held in
 /// memory from before the core starts until the session is stopped.
-pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> Result<()> {
+pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> SessionResult<()> {
     let _lifecycle = lock(&LIFECYCLE);
     if lock(&ACTIVE).is_some() {
         return Err(AzaharError::SessionActive);
@@ -47,7 +47,7 @@ pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> Re
 /// The changes are written to the storage only after the core has closed
 /// every file, so nothing the game wrote is left out. With `persist` unset
 /// they are dropped instead.
-pub fn stop(persist: bool) -> Result<()> {
+pub fn stop(persist: bool) -> SessionResult<()> {
     let _lifecycle = lock(&LIFECYCLE);
     let session = lock(&ACTIVE).take().ok_or(AzaharError::NoSession)?;
     session.stop();
@@ -61,7 +61,7 @@ pub fn stop(persist: bool) -> Result<()> {
 }
 
 /// Runs `operation` against the active session.
-pub fn with_session<R>(operation: impl FnOnce(&mut GameSession) -> Result<R>) -> Result<R> {
+pub fn with_session<R>(operation: impl FnOnce(&mut GameSession) -> SessionResult<R>) -> SessionResult<R> {
     let mut active = lock(&ACTIVE);
     let session = active.as_mut().ok_or(AzaharError::NoSession)?;
     operation(session)

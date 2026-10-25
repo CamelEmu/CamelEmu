@@ -60,5 +60,6 @@ impl From<emu_storage::StorageError> for AzaharError {
     }
 }
 
-/// Result alias used across the crate.
-pub type Result<T> = std::result::Result<T, AzaharError>;
+/// Result alias used across the crate. It is not named `Result` because the generated bindings glob
+/// import this module and the alias would shadow the standard `Result` there.
+pub type SessionResult<T> = std::result::Result<T, AzaharError>;
