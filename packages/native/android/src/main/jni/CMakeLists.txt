@@ -89,12 +89,32 @@ add_custom_target(azahar_rust_lib
     COMMENT "Building azahar_rust for ${AZAHAR_RUST_TARGET}"
 )
 
+# The json crate of the camel_emu workspace provides the emu_json_* JSON DOM
+# the core links against. It follows azahar_rust: only the library of the
+# application contains it.
+set(EMU_JSON_DIR "${AZAHAR_REPO_ROOT}/packages/camel_emu")
+set(EMU_JSON_LIB "${EMU_JSON_DIR}/target/${AZAHAR_RUST_TARGET}/release/libjson.a")
+add_custom_target(emu_json_lib
+    COMMAND ${CMAKE_COMMAND} -E env
+        "CC_${AZAHAR_RUST_TARGET_ENV}=${AZAHAR_RUST_CLANG}"
+        "CXX_${AZAHAR_RUST_TARGET_ENV}=${AZAHAR_RUST_CLANG}++"
+        "AR_${AZAHAR_RUST_TARGET_ENV}=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
+        "CARGO_TARGET_${AZAHAR_RUST_TARGET_UPPER}_LINKER=${AZAHAR_RUST_CLANG}"
+        "${CARGO_EXECUTABLE}" build --release -p json
+        --target ${AZAHAR_RUST_TARGET}
+    WORKING_DIRECTORY "${EMU_JSON_DIR}"
+    BYPRODUCTS "${EMU_JSON_LIB}"
+    COMMENT "Building emu_json for ${AZAHAR_RUST_TARGET}"
+)
+
 # Only the library of the application contains the crate. It loads the library of the session.
 add_dependencies(citra-android azahar_rust_lib)
+add_dependencies(citra-android emu_json_lib)
 target_sources(citra-android PRIVATE host_storage.cpp)
 target_link_libraries(citra-android PRIVATE
     -Wl,--whole-archive
     "${AZAHAR_RUST_LIB}"
+    "${EMU_JSON_LIB}"
     -Wl,--no-whole-archive
     OpenSLES
 )
