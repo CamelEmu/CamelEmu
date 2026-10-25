@@ -1,4 +1,4 @@
-set(AZAHAR_RUST_DIR "${AZAHAR_REPO_ROOT}/packages/azahar_rust")
+set(EMU_DIR "${AZAHAR_REPO_ROOT}/packages/emu")
 
 # The same sources are built into two libraries. `citra-android` is the one `System.loadLibrary`
 # loads and the application never lets go of. `azahar-session` is loaded and unloaded by the Rust
@@ -38,7 +38,7 @@ function(azahar_android_library target)
         util.h
     )
 
-    target_include_directories(${target} PRIVATE "${AZAHAR_RUST_DIR}/include")
+    target_include_directories(${target} PRIVATE "${AZAHAR_REPO_ROOT}/packages/camel_emu/include")
     target_link_options(${target} PRIVATE -Wl,-z,noexecstack)
     target_link_libraries(${target} PRIVATE audio_core citra_common citra_core input_common network)
     target_link_libraries(${target} PRIVATE android camera2ndk inih jnigraphics log mediandk yuv)
@@ -65,39 +65,46 @@ azahar_android_library(citra-android)
 azahar_android_library(azahar-session)
 
 if ("${ANDROID_ABI}" STREQUAL "arm64-v8a")
-    set(AZAHAR_RUST_TARGET aarch64-linux-android)
+    set(EMU_TARGET aarch64-linux-android)
 elseif ("${ANDROID_ABI}" STREQUAL "x86_64")
-    set(AZAHAR_RUST_TARGET x86_64-linux-android)
+    set(EMU_TARGET x86_64-linux-android)
 else()
-    message(FATAL_ERROR "azahar_rust does not support the ABI ${ANDROID_ABI}")
+    message(FATAL_ERROR "emu does not support the ABI ${ANDROID_ABI}")
 endif()
-string(REPLACE "-" "_" AZAHAR_RUST_TARGET_ENV "${AZAHAR_RUST_TARGET}")
-string(TOUPPER "${AZAHAR_RUST_TARGET_ENV}" AZAHAR_RUST_TARGET_UPPER)
-set(AZAHAR_RUST_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${AZAHAR_RUST_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
-set(AZAHAR_RUST_LIB "${AZAHAR_RUST_DIR}/target/${AZAHAR_RUST_TARGET}/release/libazahar_rust.a")
+string(REPLACE "-" "_" EMU_TARGET_ENV "${EMU_TARGET}")
+string(TOUPPER "${EMU_TARGET_ENV}" EMU_TARGET_UPPER)
+set(EMU_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${EMU_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
+set(EMU_LIB "${EMU_DIR}/target/${EMU_TARGET}/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
-add_custom_target(azahar_rust_lib
+add_custom_target(emu_lib
     COMMAND ${CMAKE_COMMAND} -E env
-        "CC_${AZAHAR_RUST_TARGET_ENV}=${AZAHAR_RUST_CLANG}"
-        "CXX_${AZAHAR_RUST_TARGET_ENV}=${AZAHAR_RUST_CLANG}++"
-        "AR_${AZAHAR_RUST_TARGET_ENV}=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
-        "CARGO_TARGET_${AZAHAR_RUST_TARGET_UPPER}_LINKER=${AZAHAR_RUST_CLANG}"
+        "CC_${EMU_TARGET_ENV}=${EMU_CLANG}"
+        "CXX_${EMU_TARGET_ENV}=${EMU_CLANG}++"
+        "AR_${EMU_TARGET_ENV}=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
+        "CARGO_TARGET_${EMU_TARGET_UPPER}_LINKER=${EMU_CLANG}"
         "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type staticlib
-        --target ${AZAHAR_RUST_TARGET}
-    WORKING_DIRECTORY "${AZAHAR_RUST_DIR}"
-    BYPRODUCTS "${AZAHAR_RUST_LIB}"
-    COMMENT "Building azahar_rust for ${AZAHAR_RUST_TARGET}"
+        --target ${EMU_TARGET}
+    WORKING_DIRECTORY "${EMU_DIR}"
+    BYPRODUCTS "${EMU_LIB}"
+    COMMENT "Building emu for ${EMU_TARGET}"
 )
 
 # Only the library of the application contains the crate. It loads the library of the session.
-add_dependencies(citra-android azahar_rust_lib)
+add_dependencies(citra-android emu_lib)
 target_sources(citra-android PRIVATE host_storage.cpp)
 target_link_libraries(citra-android PRIVATE
     -Wl,--whole-archive
-    "${AZAHAR_RUST_LIB}"
+    "${EMU_LIB}"
     -Wl,--no-whole-archive
     OpenSLES
 )
 target_link_options(citra-android PRIVATE "-Wl,--export-dynamic-symbol=frb_*")
+
+foreach (target azahar-session tests)
+    if (TARGET ${target})
+        add_dependencies(${target} emu_lib)
+        target_link_libraries(${target} PRIVATE "${EMU_LIB}")
+    endif()
+endforeach()
 
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android azahar-session)

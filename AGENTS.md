@@ -47,7 +47,7 @@ Set up the environment before you change any code. Run the real commands and fix
    ```
 
    If GitHub returns HTTP 429, retry with `--jobs 1`.
-3. Install the Rust toolchain (`cargo`). The Linux plugin builds `packages/azahar_rust` with it.
+3. Install the Rust toolchain (`cargo`). The Linux plugin builds `packages/emu` with it.
 4. For the Linux desktop build, install the development packages:
 
    ```sh
