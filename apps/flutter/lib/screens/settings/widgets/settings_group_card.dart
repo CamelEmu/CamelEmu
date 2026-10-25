@@ -3,12 +3,11 @@ import 'package:babstrap_settings_screen/babstrap_settings_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/settings/feature_flags_provider.dart';
 import '../../../theme/extensions/glass_surface_theme.dart';
-import '../../../widgets/app_liquid_glass.dart';
+import '../../../widgets/app_panel.dart';
 
 /// Renders a titled group of [babstrap.SettingsItem]s with the same title/card layout as
-/// [babstrap.SettingsGroup], but paints the card background with [AppLiquidGlass] instead of
+/// [babstrap.SettingsGroup], but paints the card background with [AppPanel] instead of
 /// [babstrap.SettingsGroup]'s own [Container] decoration. [babstrap.SettingsGroup] draws that
 /// background with a `DecoratedBox` sitting between its `ListTile`s and the nearest `Material`
 /// ancestor, which trips `ListTile`'s "background color or ink splashes may be invisible"
@@ -61,14 +60,12 @@ class SettingsGroupCard extends ConsumerWidget {
                 ],
               ),
             ),
-          AppLiquidGlass(
+          AppPanel(
             borderRadius: BorderRadius.circular(15),
-            blurSigma: surfaceTheme.blurSigma,
             fillColor: surfaceTheme.blurSigma > 0
                 ? surfaceTheme.fillColor
                 : Theme.of(context).cardColor,
             borderColor: surfaceTheme.borderColor,
-            backdropBlur: !ref.watch(performanceImprovementsProvider),
             child: ExcludeFocus(
               excluding: !enabled,
               child: IgnorePointer(

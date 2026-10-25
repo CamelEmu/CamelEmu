@@ -24,6 +24,7 @@ final featureFlagsOptionsProvider = Provider<OptionCategory>((ref) {
               title: featureFlag.title,
               description: featureFlag.description,
               icon: featureFlag.icon ?? Icons.flag_outlined,
+              enabled: featureFlag.editable,
               value: CallbackOptionValue<bool>(
                 onRead: featureFlag.read,
                 onWrite: (context, ref, value) => ref

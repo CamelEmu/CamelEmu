@@ -3,7 +3,7 @@ import '../../repositories/loadable.dart';
 import '../../repositories/writable.dart';
 
 /// Holds whether each feature flag is on in memory, keyed by flag id, so they can be read
-/// synchronously once [load] has completed. A flag that was never written is off.
+/// synchronously once [load] has completed. A flag that was never written has the given default.
 class FeatureFlagsRepository implements Loadable, Writable<FeatureFlagSetting> {
   FeatureFlagsRepository(this._db);
 
@@ -11,7 +11,8 @@ class FeatureFlagsRepository implements Loadable, Writable<FeatureFlagSetting> {
 
   final Map<String, bool> _values = {};
 
-  bool valueOf(String id) => _values[id] ?? false;
+  bool valueOf(String id, {bool defaultValue = false}) =>
+      _values[id] ?? defaultValue;
 
   @override
   Future<void> load() async {
