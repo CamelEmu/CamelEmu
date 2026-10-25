@@ -109,7 +109,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC Threads::Threads)
 set(EMU_DIR "${AZAHAR_ROOT}/packages/emu")
 set(EMU_LIB "${EMU_DIR}/target/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
-set(LIBRESSL_INCLUDE_DIR "${AZAHAR_CORE}/externals/libressl/include")
+set(LIBRESSL_INCLUDE_DIR "${EMU_DIR}/crates/http/libressl/include")
 set(LIBRESSL_STUB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl-stub")
 add_custom_target(emu_lib
   COMMAND "${CMAKE_COMMAND}" -E make_directory "${LIBRESSL_STUB_DIR}"

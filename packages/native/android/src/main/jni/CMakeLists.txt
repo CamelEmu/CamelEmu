@@ -86,7 +86,7 @@ add_custom_target(emu_lib
         "CXX_${EMU_TARGET_ENV}=${EMU_CLANG}++"
         "AR_${EMU_TARGET_ENV}=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
         "CARGO_TARGET_${EMU_TARGET_UPPER}_LINKER=${EMU_CLANG}"
-        "OPENSSL_INCLUDE_DIR=${AZAHAR_REPO_ROOT}/packages/core/externals/libressl/include"
+        "OPENSSL_INCLUDE_DIR=${EMU_DIR}/crates/http/libressl/include"
         "OPENSSL_LIB_DIR=${LIBRESSL_STUB_DIR}"
         OPENSSL_STATIC=1
         "${CARGO_EXECUTABLE}" rustc -p emu --release --lib --crate-type staticlib

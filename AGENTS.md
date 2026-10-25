@@ -47,7 +47,7 @@ Set up the environment before you change any code. Run the real commands and fix
    ```
 
    If GitHub returns HTTP 429, retry with `--jobs 1`.
-3. Install the Rust toolchain (`cargo`). The Linux and Android plugins build the `emu` crate of the `packages/emu` workspace (`cargo rustc -p emu`) as the one static library that every other crate is linked into. Regenerate the flutter_rust_bridge bindings with `flutter_rust_bridge_codegen generate` in `packages/native`; its entry is `emu`.
+3. Install the Rust toolchain (`cargo`). The Linux and Android plugins build the `emu` crate of the `packages/emu` workspace (`cargo rustc -p emu`) as the one static library that every other crate is linked into. Regenerate the flutter_rust_bridge bindings with `flutter_rust_bridge_codegen generate` in `packages/native`; its entry is `emu`. The core build (`packages/core`) also builds that crate with `cargo` when `ENABLE_WEB_SERVICE` is on, so `cargo` is required unless it is turned off. The TLS client of `emu_http` links the LibreSSL submodule at `packages/emu/crates/http/libressl`, which `packages/core/CMakeModules/BuildEmu.cmake` builds.
 4. For the Linux desktop build, install the development packages:
 
    ```sh

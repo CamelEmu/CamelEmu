@@ -105,8 +105,6 @@ CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" 
 CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
 option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
-
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
 # Compile options
@@ -440,6 +438,7 @@ endif()
 
 enable_testing()
 add_subdirectory(externals)
+include(BuildEmu)
 
 # Boost (bundled)
 if (NOT USE_SYSTEM_BOOST)
