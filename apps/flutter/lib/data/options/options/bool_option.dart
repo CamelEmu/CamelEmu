@@ -12,6 +12,7 @@ abstract class BoolOption
     TranslationText? description,
     required IconData icon,
     required OptionValue<bool> value,
+    @Default(true) bool enabled,
   }) = _BoolOption;
 
   @override

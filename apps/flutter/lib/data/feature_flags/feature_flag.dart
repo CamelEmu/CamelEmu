@@ -15,9 +15,18 @@ abstract class FeatureFlag {
     required this.title,
     this.description,
     this.icon,
+    this.defaultValue = false,
+    this.editable = true,
   });
 
   final String id;
+
+  /// Whether the flag is on until the user switches it.
+  final bool defaultValue;
+
+  /// Whether the user can switch the flag. A flag that cannot be switched is always at its
+  /// [defaultValue].
+  final bool editable;
 
   final TranslationText title;
 

@@ -97,9 +97,6 @@
 [submodule "src/flutter/packages/glass_bottom_navigation"]
 	path = apps/flutter/packages/glass_bottom_navigation
 	url = git@github.com:CamelEmu/glass_bottom_navigation.git
-[submodule "packages/externals/flutter_liquid_glass"]
-	path = packages/externals/flutter_liquid_glass
-	url = git@github.com:CamelEmu/flutter_liquid_glass.git
 [submodule "apps/flutter/packages/flutter-neumorphic"]
 	path = apps/flutter/packages/flutter-neumorphic
 	url = https://github.com/CamelEmu/Flutter-Neumorphic.git

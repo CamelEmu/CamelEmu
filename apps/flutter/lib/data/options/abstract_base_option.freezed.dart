@@ -291,7 +291,7 @@ as bool,
 /// @nodoc
 mixin _$BoolOption {
 
- TranslationText get title; TranslationText? get description; IconData get icon; OptionValue<bool> get value;
+ TranslationText get title; TranslationText? get description; IconData get icon; OptionValue<bool> get value; bool get enabled;
 /// Create a copy of BoolOption
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,20 +303,20 @@ $BoolOptionCopyWith<BoolOption> get copyWith => _$BoolOptionCopyWithImpl<BoolOpt
 @override
 bool operator ==(Object other) {
   final _this = this as BoolOption;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BoolOption&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.value, _this.value) || other.value == _this.value));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BoolOption&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled));
 }
 
 
 @override
 int get hashCode {
   final _this = this as BoolOption;
-  return Object.hash(runtimeType,_this.title,_this.description,_this.icon,_this.value);
+  return Object.hash(runtimeType,_this.title,_this.description,_this.icon,_this.value,_this.enabled);
 }
 
 @override
 String toString() {
   final _this = this as BoolOption;
-  return 'BoolOption(title: ${_this.title}, description: ${_this.description}, icon: ${_this.icon}, value: ${_this.value})';
+  return 'BoolOption(title: ${_this.title}, description: ${_this.description}, icon: ${_this.icon}, value: ${_this.value}, enabled: ${_this.enabled})';
 }
 
 
@@ -327,7 +327,7 @@ abstract mixin class $BoolOptionCopyWith<$Res>  {
   factory $BoolOptionCopyWith(BoolOption value, $Res Function(BoolOption) _then) = _$BoolOptionCopyWithImpl;
 @useResult
 $Res call({
- TranslationText title, TranslationText? description, IconData icon, OptionValue<bool> value
+ TranslationText title, TranslationText? description, IconData icon, OptionValue<bool> value, bool enabled
 });
 
 
@@ -344,13 +344,14 @@ class _$BoolOptionCopyWithImpl<$Res>
 
 /// Create a copy of BoolOption
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? description = freezed,Object? icon = null,Object? value = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? description = freezed,Object? icon = null,Object? value = null,Object? enabled = null,}) {
   return _then(BoolOption(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as TranslationText,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TranslationText?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as OptionValue<bool>,
+as OptionValue<bool>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -435,10 +436,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value,  bool enabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BoolOption() when $default != null:
-return $default(_that.title,_that.description,_that.icon,_that.value);case _:
+return $default(_that.title,_that.description,_that.icon,_that.value,_that.enabled);case _:
   return orElse();
 
 }
@@ -456,10 +457,10 @@ return $default(_that.title,_that.description,_that.icon,_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value,  bool enabled)  $default,) {final _that = this;
 switch (_that) {
 case _BoolOption():
-return $default(_that.title,_that.description,_that.icon,_that.value);case _:
+return $default(_that.title,_that.description,_that.icon,_that.value,_that.enabled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -476,10 +477,10 @@ return $default(_that.title,_that.description,_that.icon,_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TranslationText title,  TranslationText? description,  IconData icon,  OptionValue<bool> value,  bool enabled)?  $default,) {final _that = this;
 switch (_that) {
 case _BoolOption() when $default != null:
-return $default(_that.title,_that.description,_that.icon,_that.value);case _:
+return $default(_that.title,_that.description,_that.icon,_that.value,_that.enabled);case _:
   return null;
 
 }
@@ -491,13 +492,14 @@ return $default(_that.title,_that.description,_that.icon,_that.value);case _:
 
 
 class _BoolOption extends BoolOption {
-  const _BoolOption({required this.title, this.description, required this.icon, required this.value}): super._();
+  const _BoolOption({required this.title, this.description, required this.icon, required this.value, this.enabled = true}): super._();
   
 
 @override final  TranslationText title;
 @override final  TranslationText? description;
 @override final  IconData icon;
 @override final  OptionValue<bool> value;
+@override@JsonKey() final  bool enabled;
 
 /// Create a copy of BoolOption
 /// with the given fields replaced by the non-null parameter values.
@@ -509,18 +511,18 @@ _$BoolOptionCopyWith<_BoolOption> get copyWith => __$BoolOptionCopyWithImpl<_Boo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BoolOption&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.value, value) || other.value == value));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BoolOption&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.value, value) || other.value == value)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,title,description,icon,value);
+    return Object.hash(runtimeType,title,description,icon,value,enabled);
 }
 
 @override
 String toString() {
-    return 'BoolOption(title: $title, description: $description, icon: $icon, value: $value)';
+    return 'BoolOption(title: $title, description: $description, icon: $icon, value: $value, enabled: $enabled)';
 }
 
 
@@ -531,7 +533,7 @@ abstract mixin class _$BoolOptionCopyWith<$Res> implements $BoolOptionCopyWith<$
   factory _$BoolOptionCopyWith(_BoolOption value, $Res Function(_BoolOption) _then) = __$BoolOptionCopyWithImpl;
 @override @useResult
 $Res call({
- TranslationText title, TranslationText? description, IconData icon, OptionValue<bool> value
+ TranslationText title, TranslationText? description, IconData icon, OptionValue<bool> value, bool enabled
 });
 
 
@@ -548,13 +550,14 @@ class __$BoolOptionCopyWithImpl<$Res>
 
 /// Create a copy of BoolOption
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? description = freezed,Object? icon = null,Object? value = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? description = freezed,Object? icon = null,Object? value = null,Object? enabled = null,}) {
   return _then(_BoolOption(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as TranslationText,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TranslationText?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as OptionValue<bool>,
+as OptionValue<bool>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
