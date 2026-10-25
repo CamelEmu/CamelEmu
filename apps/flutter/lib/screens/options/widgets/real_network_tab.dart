@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/settings/wifi_access_points_provider.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import 'wifi_signal_icon.dart';
 
 class RealNetworkTab extends ConsumerWidget {
@@ -20,7 +21,7 @@ class RealNetworkTab extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () => ref.read(realAccessPointsProvider.notifier).refresh(),
       child: accessPoints.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppCircularProgress()),
         error: (error, stackTrace) => ListView(
           children: [
             Center(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/settings/emulator_weight_provider.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../settings/widgets/settings_group_card.dart';
 import 'widget_settings_item.dart';
 
@@ -44,7 +45,7 @@ class EmulatorLoadSection extends ConsumerWidget {
                   duration: const Duration(milliseconds: 250),
                   builder: (context, value, _) => ClipRRect(
                     borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
+                    child: AppLinearProgress(
                       value: value,
                       minHeight: 12,
                       color: color,

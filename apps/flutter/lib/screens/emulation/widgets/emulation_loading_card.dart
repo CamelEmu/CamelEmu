@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import 'emulation_game_icon.dart';
 import 'game_title.dart';
 
@@ -47,11 +48,7 @@ class EmulationLoadingCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              EmulationGameIcon(
-                iconPath: game?.iconPath,
-                size: 64,
-                radius: 8,
-              ),
+              EmulationGameIcon(iconPath: game?.iconPath, size: 64, radius: 8),
               const SizedBox(width: 20),
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -63,7 +60,7 @@ class EmulationLoadingCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: 192,
-                    child: LinearProgressIndicator(
+                    child: AppLinearProgress(
                       value: isCounting ? current.progress / current.max : null,
                       borderRadius: BorderRadius.circular(8),
                     ),

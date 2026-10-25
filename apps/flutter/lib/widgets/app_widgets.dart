@@ -67,6 +67,16 @@ class AppWidgetSet {
     ValueChanged<double>? onChangeEnd,
   }) => null;
 
+  Widget? circularProgress({double? size, double? strokeWidth}) => null;
+
+  Widget? linearProgress({
+    double? value,
+    double? minHeight,
+    Color? color,
+    Color? backgroundColor,
+    BorderRadius? borderRadius,
+  }) => null;
+
   Widget? navigationBar({
     required List<AppNavDestination> destinations,
     required int selectedIndex,
@@ -270,6 +280,62 @@ class AppSlider extends StatelessWidget {
       label: label,
       onChanged: onChanged,
       onChangeEnd: onChangeEnd,
+    );
+  }
+}
+
+class AppCircularProgress extends StatelessWidget {
+  const AppCircularProgress({super.key, this.size, this.strokeWidth});
+
+  final double? size;
+  final double? strokeWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final custom = AppWidgets.of(
+      context,
+    ).circularProgress(size: size, strokeWidth: strokeWidth);
+    if (custom != null) return custom;
+    final indicator = strokeWidth == null
+        ? const CircularProgressIndicator()
+        : CircularProgressIndicator(strokeWidth: strokeWidth!);
+    if (size == null) return indicator;
+    return SizedBox.square(dimension: size, child: indicator);
+  }
+}
+
+class AppLinearProgress extends StatelessWidget {
+  const AppLinearProgress({
+    super.key,
+    this.value,
+    this.minHeight,
+    this.color,
+    this.backgroundColor,
+    this.borderRadius,
+  });
+
+  final double? value;
+  final double? minHeight;
+  final Color? color;
+  final Color? backgroundColor;
+  final BorderRadius? borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final custom = AppWidgets.of(context).linearProgress(
+      value: value,
+      minHeight: minHeight,
+      color: color,
+      backgroundColor: backgroundColor,
+      borderRadius: borderRadius,
+    );
+    if (custom != null) return custom;
+    return LinearProgressIndicator(
+      value: value,
+      minHeight: minHeight,
+      color: color,
+      backgroundColor: backgroundColor,
+      borderRadius: borderRadius,
     );
   }
 }

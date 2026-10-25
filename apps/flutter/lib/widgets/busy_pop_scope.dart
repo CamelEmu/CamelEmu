@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/busy_provider.dart';
+import 'app_widgets.dart';
 
 /// Keeps the route from being popped by the system back gesture or button while
 /// [isBusyProvider] is true, so leaving a page cannot interrupt an operation that must finish.
@@ -26,10 +27,7 @@ class BusyBackButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(isBusyProvider)) {
       return const Center(
-        child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(strokeWidth: 2.5),
-        ),
+        child: AppCircularProgress(size: 24, strokeWidth: 2.5),
       );
     }
     return const BackButton();

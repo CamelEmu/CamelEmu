@@ -57,7 +57,7 @@ class _GpuDriverManagerPageState extends ConsumerState<GpuDriverManagerPage> {
         future: _loaded,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: AppCircularProgress());
           }
           final (drivers, selected) = snapshot.data!;
           return RadioGroup<String>(
