@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $gpuDriverManagerRoute,
   $systemFilesRoute,
   $appShellRouteData,
+  $optionsHistoryRoute,
   $optionsGeneralSettingsRoute,
   $optionsMediaSettingsRoute,
   $optionsEmulatedNetworkSettingsRoute,
@@ -238,6 +239,33 @@ bool _$boolConverter(String value) {
     default:
       throw UnsupportedError('Cannot convert "$value" into a bool.');
   }
+}
+
+RouteBase get $optionsHistoryRoute => GoRouteData.$route(
+  path: '/options/history',
+  hasOverriddenOnExit: false,
+  factory: $OptionsHistoryRoute._fromState,
+);
+
+mixin $OptionsHistoryRoute on GoRouteData {
+  static OptionsHistoryRoute _fromState(GoRouterState state) =>
+      const OptionsHistoryRoute();
+
+  @override
+  String get location => GoRouteData.$location('/options/history');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
 }
 
 RouteBase get $optionsGeneralSettingsRoute => GoRouteData.$route(
