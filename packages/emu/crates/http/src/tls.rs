@@ -1,98 +1,52 @@
 //! TLS configuration for [`crate::emu_http_open`]: optional client certificate authentication and
 //! optional server certificate verification, handed over as DER like the HTTP service of the
 //! console does.
+//!
+//! The handshake goes through the same LibreSSL that the C++ core links, on a context with nothing
+//! set but what the caller asked for, because the servers of the console only accept what the
+//! console negotiated with the defaults of that library.
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
-use std::sync::Arc;
 
-use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
-use rustls::crypto::{CryptoProvider, ring};
-use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName, UnixTime};
-use rustls::{ClientConfig, DigitallySignedStruct, Error, RootCertStore, SignatureScheme};
+use openssl::error::ErrorStack;
+use openssl::pkey::PKey;
+use openssl::ssl::{SslContext, SslContextBuilder, SslMethod, SslVerifyMode};
+use openssl::x509::X509;
 
 pub struct EmuTlsContext {
-    pub(crate) config: ClientConfig,
+    pub(crate) context: SslContext,
 }
 
-/// Accepts every server certificate. The handshake signatures are still checked, so only the trust
-/// in the certificate chain is skipped.
-#[derive(Debug)]
-struct AcceptAnyServer(Arc<CryptoProvider>);
-
-impl ServerCertVerifier for AcceptAnyServer {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &CertificateDer<'_>,
-        _intermediates: &[CertificateDer<'_>],
-        _server_name: &ServerName<'_>,
-        _ocsp_response: &[u8],
-        _now: UnixTime,
-    ) -> Result<ServerCertVerified, Error> {
-        Ok(ServerCertVerified::assertion())
-    }
-
-    fn verify_tls12_signature(
-        &self,
-        message: &[u8],
-        cert: &CertificateDer<'_>,
-        dss: &DigitallySignedStruct,
-    ) -> Result<HandshakeSignatureValid, Error> {
-        rustls::crypto::verify_tls12_signature(
-            message,
-            cert,
-            dss,
-            &self.0.signature_verification_algorithms,
-        )
-    }
-
-    fn verify_tls13_signature(
-        &self,
-        message: &[u8],
-        cert: &CertificateDer<'_>,
-        dss: &DigitallySignedStruct,
-    ) -> Result<HandshakeSignatureValid, Error> {
-        rustls::crypto::verify_tls13_signature(
-            message,
-            cert,
-            dss,
-            &self.0.signature_verification_algorithms,
-        )
-    }
-
-    fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
-        self.0.signature_verification_algorithms.supported_schemes()
-    }
+/// The context of an endpoint that was opened without one: the defaults of the library, with the
+/// server verified against its default trust store.
+pub(crate) fn default_context() -> Result<SslContext, ErrorStack> {
+    build(true, None)
 }
 
-fn build(
-    verify_server: bool,
-    client_auth: Option<(Vec<u8>, Vec<u8>)>,
-) -> Result<ClientConfig, Error> {
-    let provider = Arc::new(ring::default_provider());
-    let builder = ClientConfig::builder_with_provider(provider.clone())
-        .with_safe_default_protocol_versions()?;
-    let builder = if verify_server {
-        let roots = RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-        builder.with_root_certificates(roots)
+/// `d2i_*` parse one DER element and ignore what follows it, such as the padding that the client
+/// certificate of the console keeps after it is decrypted, and so do the parsers used here.
+fn build(verify_server: bool, client_auth: Option<(&[u8], &[u8])>) -> Result<SslContext, ErrorStack> {
+    let mut context = SslContextBuilder::new(SslMethod::tls_client())?;
+    if verify_server {
+        context.set_default_verify_paths()?;
+        context.set_verify(SslVerifyMode::PEER);
     } else {
-        builder
-            .dangerous()
-            .with_custom_certificate_verifier(Arc::new(AcceptAnyServer(provider)))
-    };
-    match client_auth {
-        Some((cert, key)) => {
-            let key = PrivateKeyDer::try_from(key).map_err(|error| Error::General(error.to_string()))?;
-            builder.with_client_auth_cert(vec![CertificateDer::from(cert)], key)
-        }
-        None => Ok(builder.with_no_client_auth()),
+        context.set_verify(SslVerifyMode::NONE);
     }
+    if let Some((cert, key)) = client_auth {
+        let cert = X509::from_der(cert)?;
+        let key = PKey::private_key_from_der(key)?;
+        context.set_certificate(&cert)?;
+        context.set_private_key(&key)?;
+    }
+    Ok(context.build())
 }
 
 /// Creates a TLS context. `cert_der` and `key_der` are the DER encoded client certificate and its
 /// private key; pass NULL for both to connect without client authentication. A non-zero
-/// `verify_server` verifies the server against the bundled Mozilla roots, zero accepts any server.
-/// Returns NULL when the certificate or the key is rejected.
+/// `verify_server` verifies the server against the default trust store of the TLS library, zero
+/// accepts any server. Returns NULL when the certificate or the key is rejected.
 ///
 /// # Safety
 /// `cert_der` and `key_der` must be NULL or readable for `cert_len` and `key_len` bytes.
@@ -108,16 +62,15 @@ pub unsafe extern "C" fn emu_tls_context_new(
         let client_auth = if cert_der.is_null() || key_der.is_null() {
             None
         } else {
-            let (cert, key) = unsafe {
+            Some(unsafe {
                 (
                     std::slice::from_raw_parts(cert_der, cert_len),
                     std::slice::from_raw_parts(key_der, key_len),
                 )
-            };
-            Some((cert.to_vec(), key.to_vec()))
+            })
         };
         match build(verify_server != 0, client_auth) {
-            Ok(config) => Box::into_raw(Box::new(EmuTlsContext { config })),
+            Ok(context) => Box::into_raw(Box::new(EmuTlsContext { context })),
             Err(_) => ptr::null_mut(),
         }
     }))
@@ -127,7 +80,7 @@ pub unsafe extern "C" fn emu_tls_context_new(
 /// # Safety
 /// `tls` must be NULL or a context returned by [`emu_tls_context_new`] that has not been freed. A
 /// context may be freed once the endpoints opened with it are closed, or earlier, as an endpoint
-/// keeps its own copy of the configuration.
+/// keeps its own reference to the configuration.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn emu_tls_context_free(tls: *mut EmuTlsContext) {
     let _ = catch_unwind(AssertUnwindSafe(|| {

@@ -76,12 +76,19 @@ string(TOUPPER "${EMU_TARGET_ENV}" EMU_TARGET_UPPER)
 set(EMU_CLANG "${ANDROID_TOOLCHAIN_ROOT}/bin/${EMU_TARGET}${ANDROID_PLATFORM_LEVEL}-clang")
 set(EMU_LIB "${EMU_DIR}/target/${EMU_TARGET}/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
+set(LIBRESSL_STUB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl-stub")
 add_custom_target(emu_lib
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LIBRESSL_STUB_DIR}"
+    COMMAND "${CMAKE_AR}" qc "${LIBRESSL_STUB_DIR}/libssl.a"
+    COMMAND "${CMAKE_AR}" qc "${LIBRESSL_STUB_DIR}/libcrypto.a"
     COMMAND ${CMAKE_COMMAND} -E env
         "CC_${EMU_TARGET_ENV}=${EMU_CLANG}"
         "CXX_${EMU_TARGET_ENV}=${EMU_CLANG}++"
         "AR_${EMU_TARGET_ENV}=${ANDROID_TOOLCHAIN_ROOT}/bin/llvm-ar"
         "CARGO_TARGET_${EMU_TARGET_UPPER}_LINKER=${EMU_CLANG}"
+        "OPENSSL_INCLUDE_DIR=${AZAHAR_REPO_ROOT}/packages/core/externals/libressl/include"
+        "OPENSSL_LIB_DIR=${LIBRESSL_STUB_DIR}"
+        OPENSSL_STATIC=1
         "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type staticlib
         --target ${EMU_TARGET}
     WORKING_DIRECTORY "${EMU_DIR}"
@@ -96,6 +103,8 @@ target_link_libraries(citra-android PRIVATE
     -Wl,--whole-archive
     "${EMU_LIB}"
     -Wl,--no-whole-archive
+    ssl
+    crypto
     OpenSLES
 )
 target_link_options(citra-android PRIVATE "-Wl,--export-dynamic-symbol=frb_*")
@@ -103,7 +112,7 @@ target_link_options(citra-android PRIVATE "-Wl,--export-dynamic-symbol=frb_*")
 foreach (target azahar-session tests)
     if (TARGET ${target})
         add_dependencies(${target} emu_lib)
-        target_link_libraries(${target} PRIVATE "${EMU_LIB}")
+        target_link_libraries(${target} PRIVATE "${EMU_LIB}" ssl crypto)
     endif()
 endforeach()
 

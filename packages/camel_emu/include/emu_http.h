@@ -21,7 +21,8 @@ typedef struct EmuTlsContext EmuTlsContext;
  * Creates a TLS configuration. `cert_der` and `key_der` are the DER encoded
  * client certificate and its private key; pass NULL for both to connect
  * without client authentication. A non-zero `verify_server` verifies the
- * server against the bundled Mozilla roots, zero accepts any server.
+ * server against the default trust store of the TLS library, zero accepts any
+ * server. The handshake uses the TLS library of the core with its defaults.
  * Returns NULL when the certificate or the key is rejected.
  */
 EmuTlsContext* emu_tls_context_new(int32_t verify_server, const uint8_t* cert_der, size_t cert_len,
@@ -29,7 +30,7 @@ EmuTlsContext* emu_tls_context_new(int32_t verify_server, const uint8_t* cert_de
 
 /**
  * Releases a TLS configuration. NULL is accepted. Endpoints opened with it
- * keep their own copy, so it may be released right after emu_http_open.
+ * keep their own reference, so it may be released right after emu_http_open.
  */
 void emu_tls_context_free(EmuTlsContext* tls);
 
@@ -37,8 +38,9 @@ void emu_tls_context_free(EmuTlsContext* tls);
  * Opens an endpoint. `host` is the base URL including the scheme, for example
  * "https://api.citra-emu.org"; requests append their path to it.
  * `timeout_seconds` bounds connecting and each whole request, and 0 disables
- * it. `tls` is used for https hosts, and NULL selects the standard system
- * roots. Returns NULL when `host` is not an http or https URL.
+ * it. `tls` is used for https hosts, and NULL verifies the server against the
+ * default trust store of the TLS library. Returns NULL when `host` is not an
+ * http or https URL.
  */
 EmuHttp* emu_http_open(const char* host, uint32_t timeout_seconds, EmuTlsContext* tls);
 

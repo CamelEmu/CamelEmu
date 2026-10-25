@@ -1,33 +1,52 @@
-//! Standard HTTP transfer (RFC 7231) backed by reqwest, exposed to C++ only through the C ABI
-//! declared in `packages/camel_emu/include/emu_http.h`.
+//! Standard HTTP transfer (RFC 7231) over hyper, exposed to C++ only through the C ABI declared in
+//! `packages/camel_emu/include/emu_http.h`.
 //!
 //! Nothing specific to a caller crosses this boundary: request bodies, multipart encoding and the
 //! mapping of a response onto a caller's result type stay in the C++ shim of that caller. The unsafe
 //! surface is this module, which owns every handle and every response buffer the C side holds.
 
+mod tls;
+
 use std::error::Error;
 use std::ffi::{CStr, CString, c_void};
-use std::io::{self, Read};
+use std::future::Future;
 use std::os::raw::c_char;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::ptr;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::{Context, Poll};
 use std::time::Duration;
+use std::{io, ptr};
 
-use reqwest::blocking::{Body, Client};
-use reqwest::redirect::Policy;
-use reqwest::{Method, Url};
-
-const MAX_REDIRECTS: usize = 10;
-
-mod tls;
+use bytes::Bytes;
+use http::uri::{PathAndQuery, Scheme};
+use http::{HeaderName, HeaderValue, Method, StatusCode, Uri, header};
+use http_body::{Body, Frame, SizeHint};
+use http_body_util::combinators::UnsyncBoxBody;
+use http_body_util::{BodyExt, Empty, Full};
+use hyper_openssl::SslStream;
+use hyper_openssl::client::legacy::MaybeHttpsStream;
+use hyper_util::client::legacy::Client;
+use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use openssl::ssl::{Ssl, SslContext};
+use tokio::net::TcpStream;
+use tokio::runtime::{Builder, Runtime};
+use tower_service::Service;
 
 pub use tls::{EmuTlsContext, emu_tls_context_free, emu_tls_context_new};
 
-/// Two clients differ only in their redirect policy, which reqwest fixes at construction.
+const MAX_REDIRECTS: usize = 10;
+const CHUNK_SIZE: usize = 16 * 1024;
+
+type BoxedError = Box<dyn Error + Send + Sync>;
+type RequestBody = UnsyncBoxBody<Bytes, io::Error>;
+
 pub struct EmuHttp {
     base: String,
-    plain: Client,
-    following: Client,
+    timeout: Option<Duration>,
+    runtime: Runtime,
+    client: Client<Connector, RequestBody>,
 }
 
 #[repr(C)]
@@ -99,20 +118,41 @@ fn error_chain(error: &dyn Error) -> String {
     message
 }
 
-fn build_client(
-    timeout: Option<Duration>,
-    redirect: Policy,
-    tls: Option<&EmuTlsContext>,
-) -> Result<Client, reqwest::Error> {
-    // The blocking client defaults to a 30 second limit on the whole request.
-    let mut builder = Client::builder().use_rustls_tls().redirect(redirect).timeout(timeout);
-    if let Some(timeout) = timeout {
-        builder = builder.connect_timeout(timeout);
+/// Opens a TCP connection and, for https, performs the TLS handshake on a context that carries
+/// nothing but the settings the caller asked for.
+#[derive(Clone)]
+struct Connector {
+    http: HttpConnector,
+    context: Arc<SslContext>,
+}
+
+impl Service<Uri> for Connector {
+    type Response = MaybeHttpsStream<TokioIo<TcpStream>>;
+    type Error = BoxedError;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.http.poll_ready(cx).map_err(Into::into)
     }
-    if let Some(tls) = tls {
-        builder = builder.use_preconfigured_tls(tls.config.clone());
+
+    fn call(&mut self, uri: Uri) -> Self::Future {
+        let secure = uri.scheme() == Some(&Scheme::HTTPS);
+        let connect = self.http.call(uri.clone());
+        let context = self.context.clone();
+        Box::pin(async move {
+            let connection = connect.await?;
+            if !secure {
+                return Ok(MaybeHttpsStream::Http(connection));
+            }
+            let host = uri.host().ok_or("the URL has no host")?;
+            let mut ssl = Ssl::new(&context)?;
+            ssl.set_hostname(host)?;
+            ssl.param_mut().set_host(host)?;
+            let mut stream = SslStream::new(ssl, connection)?;
+            Pin::new(&mut stream).connect().await?;
+            Ok(MaybeHttpsStream::Https(stream))
+        })
     }
-    builder.build()
 }
 
 /// # Safety
@@ -128,27 +168,44 @@ pub unsafe extern "C" fn emu_http_open(
         if host.is_null() {
             return ptr::null_mut();
         }
-        let tls = unsafe { tls.as_ref() };
         let Ok(host) = unsafe { CStr::from_ptr(host) }.to_str() else {
             return ptr::null_mut();
         };
-        let Ok(url) = Url::parse(host) else {
+        let Ok(uri) = host.parse::<Uri>() else {
             return ptr::null_mut();
         };
-        if !matches!(url.scheme(), "http" | "https") {
+        if !matches!(uri.scheme_str(), Some("http" | "https")) || uri.authority().is_none() {
             return ptr::null_mut();
         }
-        let timeout = (timeout_seconds > 0).then(|| Duration::from_secs(timeout_seconds.into()));
-        let (Ok(plain), Ok(following)) = (
-            build_client(timeout, Policy::none(), tls),
-            build_client(timeout, Policy::limited(MAX_REDIRECTS), tls),
-        ) else {
+        let context = match unsafe { tls.as_ref() } {
+            Some(tls) => tls.context.clone(),
+            None => match tls::default_context() {
+                Ok(context) => context,
+                Err(_) => return ptr::null_mut(),
+            },
+        };
+        let Ok(runtime) = Builder::new_current_thread().enable_all().build() else {
             return ptr::null_mut();
+        };
+        let timeout = (timeout_seconds > 0).then(|| Duration::from_secs(timeout_seconds.into()));
+        let mut http = HttpConnector::new();
+        http.enforce_http(false);
+        http.set_connect_timeout(timeout);
+        let connector = Connector {
+            http,
+            context: Arc::new(context),
+        };
+        let client = {
+            let _entered = runtime.enter();
+            Client::builder(TokioExecutor::new())
+                .http1_title_case_headers(true)
+                .build(connector)
         };
         Box::into_raw(Box::new(EmuHttp {
             base: host.trim_end_matches('/').to_owned(),
-            plain,
-            following,
+            timeout,
+            runtime,
+            client,
         }))
     })
 }
@@ -164,29 +221,177 @@ pub unsafe extern "C" fn emu_http_close(http: *mut EmuHttp) {
     });
 }
 
+/// Hands out the body of a request piece by piece from the caller. `length` is the total size when
+/// the caller knows it, and the body is sent chunked otherwise.
 struct CallbackBody {
     provide: ProvideBody,
     user: *mut c_void,
+    length: Option<u64>,
     done: bool,
 }
 
-// The callback runs on a reqwest worker thread while `emu_http_request` blocks the caller, so the
-// caller's `user` pointer is never touched concurrently.
+/// The callback runs on the thread that called `emu_http_request`, which is blocked inside the
+/// runtime until the request ends, so the caller's `user` pointer is never touched concurrently.
 unsafe impl Send for CallbackBody {}
 
-impl Read for CallbackBody {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if self.done || buf.is_empty() {
-            return Ok(0);
+impl Body for CallbackBody {
+    type Data = Bytes;
+    type Error = io::Error;
+
+    fn poll_frame(
+        mut self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Option<Result<Frame<Bytes>, io::Error>>> {
+        loop {
+            if self.done {
+                return Poll::Ready(None);
+            }
+            let mut buffer = vec![0u8; CHUNK_SIZE];
+            let mut eof = 0;
+            let written =
+                unsafe { (self.provide)(self.user, buffer.as_mut_ptr(), buffer.len(), &mut eof) };
+            let Ok(written) = usize::try_from(written) else {
+                return Poll::Ready(Some(Err(io::Error::other(
+                    "provide_body reported a failure",
+                ))));
+            };
+            self.done = eof != 0;
+            buffer.truncate(written.min(CHUNK_SIZE));
+            if !buffer.is_empty() {
+                return Poll::Ready(Some(Ok(Frame::data(Bytes::from(buffer)))));
+            }
         }
-        let mut eof = 0;
-        let written = unsafe { (self.provide)(self.user, buf.as_mut_ptr(), buf.len(), &mut eof) };
-        let written = usize::try_from(written)
-            .map_err(|_| io::Error::other("provide_body reported a failure"))?
-            .min(buf.len());
-        self.done = eof != 0;
-        Ok(written)
     }
+
+    fn is_end_stream(&self) -> bool {
+        self.done
+    }
+
+    fn size_hint(&self) -> SizeHint {
+        self.length.map_or_else(SizeHint::default, SizeHint::with_exact)
+    }
+}
+
+enum BodySource {
+    Empty,
+    Bytes(Bytes),
+    Callback(CallbackBody),
+}
+
+impl BodySource {
+    fn into_body(self) -> RequestBody {
+        match self {
+            BodySource::Empty => Empty::<Bytes>::new().map_err(|never| match never {}).boxed_unsync(),
+            BodySource::Bytes(bytes) => Full::new(bytes).map_err(|never| match never {}).boxed_unsync(),
+            BodySource::Callback(body) => body.boxed_unsync(),
+        }
+    }
+
+    fn replayable(&self) -> Option<BodySource> {
+        match self {
+            BodySource::Empty => Some(BodySource::Empty),
+            BodySource::Bytes(bytes) => Some(BodySource::Bytes(bytes.clone())),
+            BodySource::Callback(_) => None,
+        }
+    }
+}
+
+struct Prepared {
+    method: Method,
+    uri: Uri,
+    headers: Vec<(HeaderName, HeaderValue)>,
+    body: BodySource,
+    follow_redirects: bool,
+}
+
+struct Received {
+    status: StatusCode,
+    headers: Vec<(HeaderName, HeaderValue)>,
+    body: Bytes,
+}
+
+/// Resolves the `Location` of a redirect against the URL it answered.
+fn resolve(current: &Uri, location: &str) -> Option<Uri> {
+    let target: Uri = location.parse().ok()?;
+    if target.scheme().is_some() {
+        return Some(target);
+    }
+    let path = if location.starts_with('/') {
+        location.to_owned()
+    } else {
+        let directory = current.path().rsplit_once('/').map_or("", |(directory, _)| directory);
+        format!("{directory}/{location}")
+    };
+    let mut parts = current.clone().into_parts();
+    parts.path_and_query = Some(path.parse::<PathAndQuery>().ok()?);
+    Uri::from_parts(parts).ok()
+}
+
+async fn execute(client: &Client<Connector, RequestBody>, prepared: Prepared) -> Result<Received, String> {
+    let Prepared {
+        mut method,
+        mut uri,
+        mut headers,
+        body,
+        follow_redirects,
+    } = prepared;
+    let mut body = Some(body);
+
+    for hop in 0.. {
+        let source = body.take().unwrap_or(BodySource::Empty);
+        let next = source.replayable();
+        let mut request = http::Request::builder()
+            .method(method.clone())
+            .uri(uri.clone())
+            .body(source.into_body())
+            .map_err(|error| error.to_string())?;
+        for (name, value) in &headers {
+            request.headers_mut().append(name.clone(), value.clone());
+        }
+        let response = client.request(request).await.map_err(|error| error_chain(&error))?;
+
+        let status = response.status();
+        let location = response
+            .headers()
+            .get(header::LOCATION)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|location| resolve(&uri, location));
+        if let (true, true, Some(location)) = (follow_redirects, hop < MAX_REDIRECTS, location) {
+            match status.as_u16() {
+                301..=303 => {
+                    if method != Method::GET && method != Method::HEAD {
+                        method = Method::GET;
+                    }
+                    headers.retain(|(name, _)| {
+                        ![header::CONTENT_TYPE, header::CONTENT_LENGTH, header::TRANSFER_ENCODING]
+                            .contains(name)
+                    });
+                    body = Some(BodySource::Empty);
+                    uri = location;
+                    continue;
+                }
+                307 | 308 if next.is_some() => {
+                    body = next;
+                    uri = location;
+                    continue;
+                }
+                _ => {}
+            }
+        }
+
+        let (parts, incoming) = response.into_parts();
+        let collected = incoming.collect().await.map_err(|error| error_chain(&error))?;
+        return Ok(Received {
+            status: parts.status,
+            headers: parts
+                .headers
+                .iter()
+                .map(|(name, value)| (name.clone(), value.clone()))
+                .collect(),
+            body: collected.to_bytes(),
+        });
+    }
+    unreachable!()
 }
 
 /// # Safety
@@ -200,70 +405,77 @@ unsafe fn c_str<'a>(text: *const c_char) -> Option<&'a str> {
 
 /// # Safety
 /// `request` must satisfy the contract of [`emu_http_request`].
-unsafe fn perform(http: &EmuHttp, request: &EmuHttpRequest) -> Result<EmuHttpResponse, String> {
+unsafe fn prepare(http: &EmuHttp, request: &EmuHttpRequest) -> Result<Prepared, String> {
     let method = unsafe { c_str(request.method) }.ok_or("missing request method")?;
     let method = Method::from_bytes(method.as_bytes()).map_err(|error| error.to_string())?;
     let path = unsafe { c_str(request.path) }.ok_or("missing request path")?;
-    let client = if request.follow_redirects != 0 {
-        &http.following
-    } else {
-        &http.plain
-    };
+    let uri = format!("{}{}", http.base, path)
+        .parse::<Uri>()
+        .map_err(|error| error.to_string())?;
 
-    let mut builder = client.request(method, format!("{}{}", http.base, path));
+    let mut headers = Vec::new();
     if request.header_count > 0 && !request.headers.is_null() {
-        let headers = unsafe { std::slice::from_raw_parts(request.headers, request.header_count) };
-        for header in headers {
-            let name = unsafe { c_str(header.name) }.ok_or("invalid request header name")?;
-            let value = unsafe { c_str(header.value) }.ok_or("invalid request header value")?;
-            builder = builder.header(name, value);
+        let raw = unsafe { std::slice::from_raw_parts(request.headers, request.header_count) };
+        for pair in raw {
+            let name = unsafe { c_str(pair.name) }.ok_or("invalid request header name")?;
+            let value = unsafe { c_str(pair.value) }.ok_or("invalid request header value")?;
+            headers.push((
+                HeaderName::from_bytes(name.as_bytes()).map_err(|error| error.to_string())?,
+                HeaderValue::from_str(value).map_err(|error| error.to_string())?,
+            ));
         }
     }
-    if let Some(provide) = request.provide_body {
-        let reader = CallbackBody {
+
+    let body = if let Some(provide) = request.provide_body {
+        BodySource::Callback(CallbackBody {
             provide,
             user: request.user,
+            length: (request.body_len > 0).then_some(request.body_len as u64),
             done: false,
-        };
-        builder = builder.body(match request.body_len {
-            0 => Body::new(reader),
-            len => Body::sized(reader, len as u64),
-        });
+        })
     } else if !request.body.is_null() && request.body_len > 0 {
-        let body = unsafe { std::slice::from_raw_parts(request.body, request.body_len) };
-        builder = builder.body(body.to_vec());
-    }
+        let bytes = unsafe { std::slice::from_raw_parts(request.body, request.body_len) };
+        BodySource::Bytes(Bytes::copy_from_slice(bytes))
+    } else {
+        BodySource::Empty
+    };
 
-    let response = builder.send().map_err(|error| error_chain(&error))?;
-    let status = response.status();
-    let reason = CString::new(status.canonical_reason().unwrap_or("")).unwrap_or_default();
-    let headers: Vec<EmuHttpHeader> = response
-        .headers()
+    Ok(Prepared {
+        method,
+        uri,
+        headers,
+        body,
+        follow_redirects: request.follow_redirects != 0,
+    })
+}
+
+fn into_response(received: Received) -> EmuHttpResponse {
+    let reason = CString::new(received.status.canonical_reason().unwrap_or("")).unwrap_or_default();
+    let headers: Vec<EmuHttpHeader> = received
+        .headers
         .iter()
         .map(|(name, value)| EmuHttpHeader {
             name: CString::new(name.as_str()).unwrap_or_default().into_raw(),
             value: CString::new(value.as_bytes()).unwrap_or_default().into_raw(),
         })
         .collect();
-    let body = response.bytes().map_err(|error| error_chain(&error))?;
-
     let header_count = headers.len();
     let headers = Box::into_raw(headers.into_boxed_slice()) as *mut EmuHttpHeader;
-    let body_len = body.len();
+    let body_len = received.body.len();
     let body = if body_len == 0 {
         ptr::null()
     } else {
-        Box::into_raw(body.to_vec().into_boxed_slice()) as *const u8
+        Box::into_raw(received.body.to_vec().into_boxed_slice()) as *const u8
     };
-    Ok(EmuHttpResponse {
-        status: i32::from(status.as_u16()),
+    EmuHttpResponse {
+        status: i32::from(received.status.as_u16()),
         headers,
         header_count,
         body,
         body_len,
         reason: reason.into_raw(),
         error: ptr::null(),
-    })
+    }
 }
 
 /// # Safety
@@ -280,7 +492,23 @@ pub unsafe extern "C" fn emu_http_request(
             return failure("null argument");
         }
         let (http, request) = unsafe { (&*http, &*request) };
-        unsafe { perform(http, request) }.unwrap_or_else(|message| failure(&message))
+        let prepared = match unsafe { prepare(http, request) } {
+            Ok(prepared) => prepared,
+            Err(message) => return failure(&message),
+        };
+        let outcome = http.runtime.block_on(async {
+            let transfer = execute(&http.client, prepared);
+            match http.timeout {
+                Some(limit) => tokio::time::timeout(limit, transfer)
+                    .await
+                    .unwrap_or_else(|_| Err("the request timed out".to_owned())),
+                None => transfer.await,
+            }
+        });
+        match outcome {
+            Ok(received) => into_response(received),
+            Err(message) => failure(&message),
+        }
     })
 }
 
