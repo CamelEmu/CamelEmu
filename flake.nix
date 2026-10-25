@@ -25,6 +25,14 @@
         };
 
         androidHome = "${android.androidsdk}/libexec/android-sdk";
+
+        gccWithClang = pkgs.runCommand "gcc-with-clang" { } ''
+          mkdir -p $out/bin
+          for tool in gcc:${pkgs.gcc}/bin/gcc g++:${pkgs.gcc}/bin/g++ clang:${pkgs.clang}/bin/clang gcc-ar:${pkgs.gcc.cc}/bin/gcc-ar gcc-ranlib:${pkgs.gcc.cc}/bin/gcc-ranlib gcc-nm:${pkgs.gcc.cc}/bin/gcc-nm; do
+            printf '#!${pkgs.runtimeShell}\nexec %s "$@"\n' "''${tool#*:}" > $out/bin/''${tool%%:*}
+            chmod +x $out/bin/''${tool%%:*}
+          done
+        '';
       in
       {
         default = pkgs.mkShell {
@@ -41,8 +49,17 @@
             gtk3
             libevdev
             alsa-lib
+            libepoxy
+            fontconfig
+            sysprof
+            systemd
           ];
 
+          shellHook = ''
+            export NIX_LDFLAGS="$NIX_LDFLAGS -rpath-link ${pkgs.libepoxy}/lib -rpath-link ${pkgs.fontconfig.lib}/lib"
+          '';
+
+          GCC_BIN_DIR = "${gccWithClang}/bin";
           CMAKE_GENERATOR = "Ninja";
           JAVA_HOME = "${pkgs.jdk17}";
           ANDROID_HOME = androidHome;

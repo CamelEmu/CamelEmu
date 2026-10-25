@@ -1,11 +1,12 @@
 [package]
-name = "azahar_rust"
+name = "emu"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
 libc = "0.2"
+serde_json = { version = "1", features = ["preserve_order"] }
 ringbuf = "0.4"
 thiserror = "2"
 
