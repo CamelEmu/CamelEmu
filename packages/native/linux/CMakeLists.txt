@@ -124,8 +124,6 @@ add_custom_target(azahar_rust_lib
 add_dependencies(${PLUGIN_NAME} azahar_rust_lib)
 target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_RUST_DIR}/include")
 
-# The json crate of the camel_emu workspace provides the emu_json_* JSON DOM
-# the core links against.
 set(EMU_JSON_DIR "${AZAHAR_ROOT}/packages/camel_emu")
 set(EMU_JSON_LIB "${EMU_JSON_DIR}/target/release/libjson.a")
 add_custom_target(emu_json_lib

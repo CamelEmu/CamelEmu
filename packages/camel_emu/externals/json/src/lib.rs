@@ -457,9 +457,6 @@ pub unsafe extern "C" fn emu_json_set(
     value: *mut EmuJson,
 ) -> libc::c_int {
     guard(0, || {
-        // The value is consumed even on failure, so move it out of its
-        // handle before any early return below. A borrowed value cannot be
-        // moved: it still belongs to its parent and is only released.
         let Some(inner) = (unsafe { take_owned_value(value) }) else {
             return 0;
         };
@@ -487,7 +484,6 @@ pub unsafe extern "C" fn emu_json_set(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn emu_json_push(array: *mut EmuJson, value: *mut EmuJson) -> libc::c_int {
     guard(0, || {
-        // Same consumption rule as emu_json_set.
         let Some(inner) = (unsafe { take_owned_value(value) }) else {
             return 0;
         };

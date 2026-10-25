@@ -17,8 +17,6 @@ bool VerifyLogin(const std::string& host, const std::string& username, const std
     if (reply.empty()) {
         return false;
     }
-    // emu_json_free is a no-op on the borrowed handle from emu_json_get, so
-    // one deleter serves both handles.
     using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
     const JsonHandle json(emu_json_parse(reply.data(), reply.size()), &emu_json_free);
     if (!json) {
