@@ -1,0 +1,17 @@
+name: Set up the Nix development shell
+description: Installs Nix and the Flutter SDK that the development shell of the repository puts on PATH.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+    - name: Install the Flutter SDK
+      shell: bash
+      run: |
+        flutter_version="$(jq -r .flutter .fvmrc)"
+        nix develop --command fvm install "$flutter_version"
+        nix develop --command fvm use "$flutter_version" --force --skip-pub-get

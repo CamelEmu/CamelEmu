@@ -10,34 +10,30 @@ on:
 jobs:
   flutter-setup:
     runs-on: ubuntu-latest
-    outputs:
-      flutter-version: ${{ steps.fvm.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch the Dart package submodules
-        run: |
-          git -c url."https://github.com/".insteadOf="git@github.com:" submodule update --init \
-            apps/flutter/packages/babstrap_settings_screen \
-            apps/flutter/packages/glass_bottom_navigation \
-            packages/externals/flutter_liquid_glass
-      - name: Read Flutter version
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
+          submodules: recursive
+      - name: Set up the development shell
+        uses: ./.github/actions/nix-develop
       - name: Resolve packages
         working-directory: apps/flutter
-        run: flutter pub get
+        run: nix develop ../.. --command flutter pub get
       - name: Generate code
         working-directory: apps/flutter
-        run: dart run build_runner build -d
+        run: nix develop ../.. --command dart run build_runner build -d
       - name: Analyze
         working-directory: apps/flutter
-        run: flutter analyze
+        run: nix develop ../.. --command flutter analyze
+      - name: Report
+        run: |
+          {
+            echo "## Flutter analysis"
+            echo
+            echo "| Flutter | Result |"
+            echo "| --- | --- |"
+            echo "| \`$(jq -r .flutter .fvmrc)\` | passed |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   android-apk:
     needs: flutter-setup
@@ -53,8 +49,6 @@ jobs:
           submodules: recursive
       - name: Free disk space
         uses: ./.github/actions/free-disk-space
-        with:
-          keep-android: "true"
       - name: Restore build cache
         uses: actions/cache/restore@v4
         with:
@@ -66,23 +60,12 @@ jobs:
           key: ${{ runner.os }}-flutter-android-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ${{ runner.os }}-flutter-android-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ needs.flutter-setup.outputs.flutter-version }}
-          cache: true
-      - name: Set up Rust
-        run: rustup target add aarch64-linux-android x86_64-linux-android
-      - name: Install ccache
+      - name: Set up the development shell
+        uses: ./.github/actions/nix-develop
+      - name: Add the Rust targets
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ccache
+          nix develop --command rustup default stable
+          nix develop --command rustup target add aarch64-linux-android x86_64-linux-android
       - name: Add swap space
         run: |
           sudo fallocate -l 8G /swapfile-ci
@@ -99,7 +82,7 @@ jobs:
             echo "kotlin.daemon.jvmargs=-Xmx1G"
           } > ~/.gradle/gradle.properties
       - name: Build APK
-        run: ./.ci/flutter-android.sh
+        run: nix develop --command ./.ci/flutter-android.sh
       - name: Report
         run: |
           apk_path=$(find apps/flutter/build/app/outputs/flutter-apk -maxdepth 1 -name "*.apk" | head -n1)
@@ -151,19 +134,10 @@ jobs:
           key: ${{ runner.os }}-flutter-linux-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ${{ runner.os }}-flutter-linux-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ needs.flutter-setup.outputs.flutter-version }}
-          cache: true
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ccache ninja-build clang pkg-config \
-            libgtk-3-dev libevdev-dev libasound2-dev liblzma-dev
+      - name: Set up the development shell
+        uses: ./.github/actions/nix-develop
       - name: Build Linux app
-        run: ./.ci/flutter-linux.sh
+        run: nix develop --command ./.ci/flutter-linux.sh
       - name: Report
         run: |
           bundle_dir=apps/flutter/build/linux/x64/release/bundle
