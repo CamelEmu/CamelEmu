@@ -65,7 +65,7 @@ VULKAN_SDK/
 .zed/
 
 # Environment
-.envrc
+.direnv/
 .dart_tool/
 melos_*.iml
 

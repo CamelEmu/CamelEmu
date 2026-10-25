@@ -56,6 +56,10 @@
           ];
 
           shellHook = ''
+            repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+            if [ -d "$repo_root/.fvm/flutter_sdk/bin" ]; then
+              export PATH="$repo_root/.fvm/flutter_sdk/bin:$PATH"
+            fi
             export NIX_LDFLAGS="$NIX_LDFLAGS -rpath-link ${pkgs.libepoxy}/lib -rpath-link ${pkgs.fontconfig.lib}/lib"
           '';
 
