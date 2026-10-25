@@ -177,6 +177,7 @@ abstract final class NeumorphismTheme {
           fill: base,
           foreground: colorScheme.onSurfaceVariant,
           radius: BorderRadius.circular(999),
+          plainInBackButton: true,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -204,6 +205,7 @@ abstract final class NeumorphismTheme {
     required Color fill,
     required Color foreground,
     BorderRadius? radius,
+    bool plainInBackButton = false,
   }) {
     final shape = radius ?? BorderRadius.circular(16);
     return ButtonStyle(
@@ -220,6 +222,10 @@ abstract final class NeumorphismTheme {
             : foreground,
       ),
       backgroundBuilder: (context, states, child) {
+        if (plainInBackButton &&
+            context.findAncestorWidgetOfExactType<BackButton>() != null) {
+          return child!;
+        }
         final disabled = states.contains(WidgetState.disabled);
         final pressed = states.contains(WidgetState.pressed);
         return Neumorphic(
