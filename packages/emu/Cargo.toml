@@ -15,6 +15,7 @@ memory = { path = "crates/memory" }
 serde_json = { version = "1", features = ["preserve_order"] }
 ringbuf = "0.4"
 thiserror = "2"
+emu_crypto = { version = "0.1.0", path = "crates/crypto" }
 
 [lib]
 crate-type = ["cdylib", "staticlib", "lib"]

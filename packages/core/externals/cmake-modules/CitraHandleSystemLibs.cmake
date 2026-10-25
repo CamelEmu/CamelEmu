@@ -7,7 +7,6 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
 option(USE_SYSTEM_LIBUSB "Use the system libusb (instead of the bundled libusb)" OFF)
-option(USE_SYSTEM_CPP_JWT "Use the system cpp-jwt (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SOUNDTOUCH "Use the system SoundTouch (instead of the bundled one)" OFF)
 option(USE_SYSTEM_JSON "Use the system JSON (nlohmann-json3) package (instead of the bundled one)" OFF)
 option(USE_SYSTEM_DYNARMIC "Use the system dynarmic (instead of the bundled one)" OFF)
@@ -31,7 +30,6 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SDL2 "Disable system SDL2" OFF "USE_SYSTEM
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_BOOST "Disable system Boost" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_OPENSSL "Disable system OpenSSL" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_LIBUSB "Disable system LibUSB" OFF "USE_SYSTEM_LIBS" OFF)
-CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_CPP_JWT "Disable system cpp-jwt" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SOUNDTOUCH "Disable system SoundTouch" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_JSON "Disable system JSON" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_DYNARMIC "Disable system Dynarmic" OFF "USE_SYSTEM_LIBS" OFF)
@@ -55,7 +53,6 @@ set(LIB_VAR_LIST
     BOOST
     OPENSSL
     LIBUSB
-    CPP_JWT
     SOUNDTOUCH
     JSON
     DYNARMIC

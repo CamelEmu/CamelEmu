@@ -10,6 +10,7 @@ pub mod api;
 pub mod audio;
 pub mod error;
 mod ffi;
+pub use emu_crypto::*;
 pub use emu_http::*;
 pub use emu_random::*;
 mod frb_generated;
