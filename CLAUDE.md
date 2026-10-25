@@ -6,4 +6,6 @@
 - Do not append an `echo` that announces the end of a command, such as `; echo finished` or `; echo done`. A background task already reports its completion, and a foreground command returns when it ends.
 - Do not open a pull request on a repository owned by an external team or account, such as the upstream of a fork, unless explicitly instructed to. Open pull requests only on repositories the user owns.
 - Do not post a comment on a pull request, such as when closing one or after changing one, unless explicitly instructed to.
+- Do not ask the user questions, including with the AskUserQuestion tool. Make a reasonable decision, proceed, and state the assumption made.
+- Run build and analysis commands (`flutter`, `cargo`, `cmake`, `ninja`) inside the development shell of the repository, with `nix develop`, instead of looking for tools on the host or in the Nix store.
 - Do not copy packages out of the pub local store (`~/.pub-cache`) into the repository, and do not modify the files inside it. When a dependency needs a change, make it in the dependency's own repository, added as a submodule.

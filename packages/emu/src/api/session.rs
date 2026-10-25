@@ -59,11 +59,11 @@ pub fn set_volume(volume: f32) -> Result<(), AzaharError> {
 
 /// Reads `len` bytes of 3DS memory starting at the virtual address `address`.
 pub fn read_memory(address: u32, len: u32) -> Result<Vec<u8>, AzaharError> {
-    registry::with_session(|session| session.memory().read_block(address, len as usize))
+    registry::with_session(|session| Ok(session.memory().read_block(address, len as usize)?))
 }
 
 pub fn read_u32(address: u32) -> Result<u32, AzaharError> {
-    registry::with_session(|session| session.memory().read_u32(address))
+    registry::with_session(|session| Ok(session.memory().read_u32(address)?))
 }
 
 pub fn fcram_size() -> Result<u64, AzaharError> {
@@ -71,5 +71,5 @@ pub fn fcram_size() -> Result<u64, AzaharError> {
 }
 
 pub fn dump_fcram() -> Result<Vec<u8>, AzaharError> {
-    registry::with_session(|session| session.memory().dump_fcram())
+    registry::with_session(|session| Ok(session.memory().dump_fcram()?))
 }
