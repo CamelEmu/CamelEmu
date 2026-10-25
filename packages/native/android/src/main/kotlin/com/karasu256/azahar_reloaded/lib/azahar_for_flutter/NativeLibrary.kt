@@ -927,6 +927,10 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun getCacheDirectory(): String = CitraApplication.appContext.cacheDir.absolutePath
+
+    @Keep
+    @JvmStatic
     fun isDirectory(path: String): Boolean =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.isDirectory(path)
