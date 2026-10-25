@@ -40,6 +40,7 @@
             rustup
             cmake
             ninja
+            ccache
             pkg-config
             fvm
             jdk17
