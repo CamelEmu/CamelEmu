@@ -1427,6 +1427,7 @@ static void DestroySessionUnguarded(AzaharSession* session) {
     stop_run = true;
     pause_emulation = false;
     advance_frame_requested = false;
+    Core::System::GetInstance().frame_limiter.SetFrameAdvancing(false);
     {
         std::lock_guard lock{session->country_mutex};
     }
