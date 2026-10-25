@@ -5,6 +5,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../data/settings/gpu_driver_provider.dart';
 import '../../i18n/translations.g.dart';
+import '../../widgets/app_widgets.dart';
 
 class GpuDriverManagerPage extends ConsumerStatefulWidget {
   const GpuDriverManagerPage({super.key});
@@ -73,7 +74,7 @@ class _GpuDriverManagerPageState extends ConsumerState<GpuDriverManagerPage> {
             },
             child: ListView(
               children: [
-                ListTile(
+                AppListTile(
                   title: Text(t.gpuDriverManager.installDriver),
                   subtitle: Text(t.gpuDriverManager.installDriverDescription),
                   trailing: const Icon(Icons.file_open_outlined),

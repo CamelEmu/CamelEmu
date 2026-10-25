@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../widgets/app_widgets.dart';
+
 /// One action of the in-game menu: a [ListTile] normally, or just a tooltipped icon button when
 /// [iconsOnly] is set.
 class EmulationMenuItem extends StatelessWidget {
@@ -22,14 +24,14 @@ class EmulationMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     if (iconsOnly) {
       return Align(
-        child: IconButton(
+        child: AppIconButton(
           icon: Icon(icon),
           tooltip: title,
           onPressed: enabled ? onTap : null,
         ),
       );
     }
-    return ListTile(
+    return AppListTile(
       enabled: enabled,
       leading: Icon(icon),
       title: Text(title),

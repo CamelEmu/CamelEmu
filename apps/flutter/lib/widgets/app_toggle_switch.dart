@@ -4,6 +4,7 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart'
 
 import '../theme/extensions/app_toggle_switch_theme.dart';
 import 'app_neumorphic.dart';
+import 'app_widgets.dart';
 
 /// A pill-shaped toggle switch. Its colors and size come entirely from [AppToggleSwitchTheme],
 /// so this single widget renders both the Azahar and Legacy looks.
@@ -19,6 +20,10 @@ class AppToggleSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final custom = AppWidgets.of(
+      context,
+    ).toggleSwitch(value: value, onChanged: onChanged);
+    if (custom != null) return custom;
     final theme = Theme.of(context).extension<AppToggleSwitchTheme>()!;
     if (AppNeumorphic.of(context) != null) {
       final scheme = Theme.of(context).colorScheme;

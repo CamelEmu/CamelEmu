@@ -840,7 +840,8 @@
     "themes": {
       "azahar": "Azahar",
       "legacy": "Legacy",
-      "neumorphic": "Neumorphism"
+      "neumorphic": "Neumorphism",
+      "shadcn": "Shadcn"
     },
     "accessibility": {
       "title": "Accessibility",

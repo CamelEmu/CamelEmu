@@ -838,7 +838,8 @@
     "themes": {
       "azahar": "Azahar",
       "legacy": "旧テーマ",
-      "neumorphic": "ニューモフィズム"
+      "neumorphic": "ニューモフィズム",
+      "shadcn": "Shadcn"
     },
     "accessibility": {
       "title": "アクセシビリティ",

@@ -7,6 +7,7 @@ import '../../../data/platform_provider.dart';
 import '../../../data/profiles/profile.dart';
 import '../../../i18n/translations.g.dart';
 import '../../../routing/app_routes.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/long_press_menu_sheet.dart';
 import '../../games/game_process_provider.dart';
 
@@ -52,7 +53,7 @@ class ProfileRadioList extends ConsumerWidget {
                   ? null
                   : () => _delete(context, ref, profile.cuid, isGameRunning),
             ),
-          ListTile(
+          AppListTile(
             enabled: !isBusy,
             leading: const Icon(Icons.add),
             title: Text(t.profiles.add),
@@ -190,7 +191,7 @@ class ProfileRadioTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final action in actions)
-              ListTile(
+              AppListTile(
                 leading: Icon(action.icon),
                 title: Text(action.label),
                 onTap: () {

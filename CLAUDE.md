@@ -18,3 +18,4 @@
 - Do not chain commands that serve different concerns into one Bash call with `&&`, `;` or a loop, such as an edit with `sed` followed by a build, or a `git checkout` followed by a build. Run each concern as its own call.
 - Create a new crate with `cargo new`, and do not write a new `Cargo.toml` by hand from guesswork.
 - Add a dependency with `cargo add`, and do not write a crate version into `Cargo.toml` from guesswork.
+- Do not add a test on your own initiative. Add a regression test only for a problem the user has reported, and not for a change that nobody has reported a problem with.

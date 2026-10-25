@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../setup_step.dart';
 
 class SetupStepView extends StatelessWidget {
@@ -54,12 +55,12 @@ class SetupStepView extends StatelessWidget {
                   for (final action in step.actions)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: FilledButton.icon(
+                      child: AppFilledButton(
                         onPressed: action.isCompleted
                             ? null
                             : () => onAction(action),
                         icon: Icon(action.icon, size: 18),
-                        label: Text(action.label),
+                        child: Text(action.label),
                       ),
                     ),
                 ],

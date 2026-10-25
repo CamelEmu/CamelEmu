@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/settings/country.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class ArticCountryMismatchDialog {
   const ArticCountryMismatchDialog._();
@@ -40,11 +41,11 @@ class ArticCountryMismatchDialog {
             ),
           ),
           actions: [
-            TextButton(
+            AppTextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(t.emulation.articCountryKeep),
             ),
-            TextButton(
+            AppTextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(t.emulation.articCountryOverride),
             ),

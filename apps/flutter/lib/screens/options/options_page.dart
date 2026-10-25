@@ -5,6 +5,7 @@ import '../../data/options/options_search_provider.dart';
 import '../../data/settings/settings_load_provider.dart';
 import '../../i18n/translations.g.dart';
 import '../../widgets/app_search_bar.dart';
+import '../../widgets/app_widgets.dart';
 import '../../routing/app_routes.dart';
 import '../../widgets/gamepad/gamepad_focus_region.dart';
 import 'widgets/options_home_content.dart';
@@ -70,7 +71,7 @@ class _OptionsPageState extends ConsumerState<OptionsPage> {
                       onFocusChanged: _handleFocusChanged,
                     ),
                   ),
-                  IconButton(
+                  AppIconButton(
                     icon: const Icon(Icons.history),
                     tooltip: context.t.options.history,
                     onPressed: () => const OptionsHistoryRoute().push(context),

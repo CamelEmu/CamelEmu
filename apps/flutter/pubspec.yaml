@@ -38,6 +38,8 @@ dependencies:
   path_provider: ^2.1.6
   permission_handler: ^13.0.2
   sensors_plus: ^7.1.0
+  shadcn_flutter: ^0.0.55
+  shadcn_flutter_material: ^0.0.54
   slang: ^4.19.2
   slang_flutter: ^4.19.0
   sqlite3: ^3.7.0

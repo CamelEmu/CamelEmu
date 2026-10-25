@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../i18n/translations.g.dart';
+import 'app_widgets.dart';
 
 /// A dialog's "Cancel" action button, translated via slang instead of Flutter's own
 /// [MaterialLocalizations] (which isn't wired up as a second, separately-configured localization
@@ -13,7 +14,7 @@ class DialogCancelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
+    return AppTextButton(
       onPressed: onPressed ?? () => Navigator.of(context).pop(),
       child: Text(context.t.common.cancel),
     );

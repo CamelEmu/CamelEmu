@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/options/abstract_base_option.dart';
 import '../../../../data/options/option_values_revision_provider.dart';
 import '../../../../i18n/translations.g.dart';
+import '../../../../widgets/app_widgets.dart';
 import 'option_commit.dart';
 
 /// The tile of a [PercentOption]: a settings row that shows the fraction as a percentage with a
@@ -75,7 +76,7 @@ class _PercentOptionTileState extends ConsumerState<PercentOptionTile> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Slider(
+            child: AppSlider(
               value: value.clamp(option.min, option.max),
               min: option.min,
               max: option.max,

@@ -4,6 +4,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../data/settings/wifi_access_points_provider.dart';
 import '../../i18n/translations.g.dart';
+import '../../widgets/app_widgets.dart';
 import 'widgets/real_network_tab.dart';
 import 'widgets/virtual_network_tab.dart';
 
@@ -38,7 +39,7 @@ class _EmulatedNetworkPageState extends ConsumerState<EmulatedNetworkPage>
         title: Text(n.emulatedNetwork),
         actions: [
           if (isRealTab)
-            IconButton(
+            AppIconButton(
               icon: const Icon(Icons.copy),
               tooltip: n.copySelected,
               onPressed: selected.isEmpty
@@ -46,7 +47,7 @@ class _EmulatedNetworkPageState extends ConsumerState<EmulatedNetworkPage>
                   : () => _copySelected(selected),
             )
           else
-            IconButton(
+            AppIconButton(
               icon: const Icon(Icons.paste),
               tooltip: n.pasteAccessPoints,
               onPressed: copied.isEmpty ? null : () => _paste(copied),

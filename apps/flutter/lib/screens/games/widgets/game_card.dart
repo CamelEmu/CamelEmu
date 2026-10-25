@@ -7,6 +7,7 @@ import '../../../i18n/translations.g.dart';
 import '../../../theme/extensions/game_card_theme.dart';
 import '../../../theme/extensions/glass_surface_theme.dart';
 import '../../../widgets/app_panel.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/gamepad/gamepad_intents.dart';
 import 'game_icon.dart';
 import 'game_regions_translator.dart';
@@ -42,80 +43,112 @@ class GameCard extends ConsumerWidget {
     final title = ref.watch(gameTitleProvider(game.path));
     final surfaceTheme = Theme.of(context).extension<GlassSurfaceTheme>()!;
     final cardTheme = Theme.of(context).extension<GameCardTheme>()!;
-    final panel = AppPanel(
-      borderRadius: surfaceTheme.borderRadius,
-      fillColor: isValidExtension
-          ? surfaceTheme.fillColor
-          : cardTheme.invalidExtensionColor,
-      borderColor: surfaceTheme.borderColor,
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: onTap,
-              onLongPress: onInfo,
-              borderRadius: surfaceTheme.borderRadius,
-              child: Container(
-                padding: EdgeInsets.all(innerPadding),
-                child: Row(
-                  children: [
-                    Container(
-                      width: cardTheme.iconBoxSize,
-                      height: cardTheme.iconBoxSize,
-                      decoration: BoxDecoration(
-                        color: cardTheme.iconBoxFillColor,
-                        borderRadius: cardTheme.iconBoxRadius,
-                        border: Border.all(color: cardTheme.iconBoxBorderColor),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: GameIcon(
-                        iconPath: game.iconPath,
-                        cacheSize: cardTheme.iconBoxSize,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (title.isNotEmpty)
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: cardTheme.titleStyle,
-                            ),
-                          if (game.company.isNotEmpty)
-                            Text(
-                              game.company,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: cardTheme.subtitleStyle,
-                            ),
-                          Text(
-                            translateGameRegions(context.t, game.regions),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: cardTheme.subtitleStyle,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          if (showInfoButton)
-            IconButton(
-              tooltip: context.t.games.properties,
-              icon: const Icon(Icons.more_vert),
-              onPressed: onInfo,
-            ),
-        ],
+    final iconBox = Container(
+      width: cardTheme.iconBoxSize,
+      height: cardTheme.iconBoxSize,
+      decoration: BoxDecoration(
+        color: cardTheme.iconBoxFillColor,
+        borderRadius: cardTheme.iconBoxRadius,
+        border: Border.all(color: cardTheme.iconBoxBorderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: GameIcon(
+        iconPath: game.iconPath,
+        cacheSize: cardTheme.iconBoxSize,
       ),
     );
+    final infoButton = AppIconButton(
+      tooltip: context.t.games.properties,
+      icon: const Icon(Icons.more_vert),
+      onPressed: onInfo,
+    );
+    final customPanel = AppWidgets.of(context).card(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AppListTile(
+                leading: iconBox,
+                title: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  [
+                    if (game.company.isNotEmpty) game.company,
+                    translateGameRegions(context.t, game.regions),
+                  ].join(' / '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: onTap,
+                onLongPress: onInfo,
+              ),
+            ),
+            if (showInfoButton) infoButton,
+          ],
+        ),
+      ],
+    );
+    final panel =
+        customPanel ??
+        AppPanel(
+          borderRadius: surfaceTheme.borderRadius,
+          fillColor: isValidExtension
+              ? surfaceTheme.fillColor
+              : cardTheme.invalidExtensionColor,
+          borderColor: surfaceTheme.borderColor,
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: onTap,
+                  onLongPress: onInfo,
+                  borderRadius: surfaceTheme.borderRadius,
+                  child: Container(
+                    padding: EdgeInsets.all(innerPadding),
+                    child: Row(
+                      children: [
+                        iconBox,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (title.isNotEmpty)
+                                Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: cardTheme.titleStyle,
+                                ),
+                              if (game.company.isNotEmpty)
+                                Text(
+                                  game.company,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: cardTheme.subtitleStyle,
+                                ),
+                              Text(
+                                translateGameRegions(context.t, game.regions),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: cardTheme.subtitleStyle,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (showInfoButton) infoButton,
+            ],
+          ),
+        );
     final info = onInfo;
     final card = Padding(
       padding: EdgeInsets.all(outerPadding),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class EmulationFailureDialog {
   const EmulationFailureDialog._();
@@ -16,7 +17,7 @@ class EmulationFailureDialog {
           title: Text(t.emulation.failureTitle),
           content: Text(message),
           actions: [
-            TextButton(
+            AppTextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(MaterialLocalizations.of(context).okButtonLabel),
             ),

@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../i18n/translations.g.dart';
+import '../../widgets/app_widgets.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -103,7 +104,7 @@ class AboutPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(
+                AppIconButton(
                   icon: SvgPicture.asset(
                     'assets/icons/discord.svg',
                     width: 24,
@@ -114,14 +115,14 @@ class AboutPage extends StatelessWidget {
                     mode: LaunchMode.externalApplication,
                   ),
                 ),
-                IconButton(
+                AppIconButton(
                   icon: const Icon(Icons.language),
                   onPressed: () => launchUrl(
                     Uri.parse(_websiteLink),
                     mode: LaunchMode.externalApplication,
                   ),
                 ),
-                IconButton(
+                AppIconButton(
                   icon: SvgPicture.asset(
                     'assets/icons/github.svg',
                     width: 24,

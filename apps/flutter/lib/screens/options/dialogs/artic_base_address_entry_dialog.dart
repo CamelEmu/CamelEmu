@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 class ArticBaseAddressEntryResult {
@@ -125,7 +126,7 @@ class _ArticBaseAddressEntryDialogState
           ),
           actions: [
             const DialogCancelButton(),
-            TextButton(
+            AppTextButton(
               onPressed: canConfirm
                   ? () => Navigator.of(context).pop(
                       ArticBaseAddressEntryResult(

@@ -13,6 +13,7 @@ import '../../theme/theme_settings_provider.dart';
 import '../../theme/theme_style.dart';
 import '../../widgets/app_nav_bar.dart';
 import '../../widgets/app_nav_destination.dart';
+import '../../widgets/app_widgets.dart';
 import '../../widgets/background_blobs.dart';
 import '../../widgets/gamepad/gamepad_focus_region.dart';
 import '../../widgets/gamepad_notification_bar.dart';
@@ -43,6 +44,8 @@ class _AppShellState extends ConsumerState<AppShell> {
   final ValueNotifier<double> _headerHidden = ValueNotifier(0);
   final GlobalKey _pageHostKey = GlobalKey();
   final PinnedHeaderRegistry _pinned = PinnedHeaderRegistry();
+  final GlobalKey _customNavBarKey = GlobalKey();
+  double _customNavBarHeight = 0;
   double _hiddenDistance = 0;
   int? _lastBranchIndex;
   late final ShellNavigationController _shellNavigation;
@@ -63,7 +66,28 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   static const double _standardNavBarHeight = 80;
 
-  Widget _standardNavigationBar(BuildContext context) {
+  Widget? _customNavigationBar(BuildContext context) {
+    final custom = AppWidgets.of(context).navigationBar(
+      destinations: AppNavDestination.of(context),
+      selectedIndex: widget.navigationShell.currentIndex,
+      onSelected: (index) => widget.navigationShell.goBranch(
+        index,
+        initialLocation: widget.navigationShell.currentIndex == index,
+      ),
+    );
+    if (custom == null) return null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final box = _customNavBarKey.currentContext?.findRenderObject();
+      if (!mounted || box is! RenderBox || !box.hasSize) return;
+      if (box.size.height != _customNavBarHeight) {
+        setState(() => _customNavBarHeight = box.size.height);
+      }
+    });
+    return KeyedSubtree(key: _customNavBarKey, child: custom);
+  }
+
+  Widget _standardNavigationBar(BuildContext context, Widget? custom) {
+    if (custom != null) return custom;
     final destinations = AppNavDestination.of(context);
     return MediaQuery.removePadding(
       context: context,
@@ -148,14 +172,20 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
     final standardNavBar = ref.watch(
       themeSettingsProvider.select(
-        (settings) => settings.themeStyle == ThemeStyle.neumorphic,
+        (settings) =>
+            settings.themeStyle == ThemeStyle.neumorphic ||
+            settings.themeStyle == ThemeStyle.shadcn,
       ),
     );
-    final reservedHeight = standardNavBar
+    final customNavBar = standardNavBar ? _customNavigationBar(context) : null;
+    final systemInset = MediaQuery.paddingOf(context).bottom;
+    final reservedHeight = customNavBar != null
+        ? (_customNavBarHeight - systemInset).clamp(0.0, double.infinity)
+        : standardNavBar
         ? _standardNavBarHeight
         : navBarTheme.contentHeight + navBarTheme.bottomMargin;
     _hiddenDistance = standardNavBar
-        ? _standardNavBarHeight + MediaQuery.paddingOf(context).bottom + 32
+        ? reservedHeight + systemInset
         : reservedHeight + 32;
     final branchIndex = widget.navigationShell.currentIndex;
     if (_lastBranchIndex != branchIndex) {
@@ -201,7 +231,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                       ),
                       child: GamepadFocusRegion(
                         child: standardNavBar
-                            ? _standardNavigationBar(context)
+                            ? _standardNavigationBar(context, customNavBar)
                             : navBarTheme.stretchToFullWidth
                             ? AppNavBar(
                                 navigationShell: widget.navigationShell,

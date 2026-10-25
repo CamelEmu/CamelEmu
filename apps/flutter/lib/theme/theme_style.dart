@@ -1,2 +1,2 @@
 /// The selectable theme families for the app.
-enum ThemeStyle { azahar, legacy, neumorphic }
+enum ThemeStyle { azahar, legacy, neumorphic, shadcn }

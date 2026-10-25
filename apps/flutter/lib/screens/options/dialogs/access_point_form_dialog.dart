@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 /// Adds a new virtual access point, or edits [initial] when provided.
@@ -99,7 +100,7 @@ class _AccessPointFormDialogState extends State<AccessPointFormDialog> {
       ),
       actions: [
         const DialogCancelButton(),
-        TextButton(
+        AppTextButton(
           onPressed: _submit,
           child: Text(isEditing ? t.common.save : n.addAccessPoint),
         ),

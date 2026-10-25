@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 
 /// Edits a single line of text, popping the entered text.
@@ -53,7 +54,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
       content: TextField(controller: _controller, maxLength: widget.maxLength),
       actions: [
         const DialogCancelButton(),
-        TextButton(
+        AppTextButton(
           onPressed: () => Navigator.of(context).pop(_controller.text),
           child: Text(MaterialLocalizations.of(context).okButtonLabel),
         ),

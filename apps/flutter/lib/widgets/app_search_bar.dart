@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/extensions/app_search_bar_theme.dart';
 import 'app_neumorphic.dart';
+import 'app_widgets.dart';
 
 /// The games list search bar. Its blur, fill, and shape come entirely from [AppSearchBarTheme],
 /// so this single widget renders both the Azahar and Legacy looks.
@@ -72,7 +73,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
           ),
         ),
         if (widget.controller.text.isNotEmpty)
-          IconButton(
+          AppIconButton(
             icon: Icon(Icons.clear, color: theme.iconColor),
             onPressed: widget.onClear,
           ),

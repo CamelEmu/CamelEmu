@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class SetupWarningDialog extends StatelessWidget {
   const SetupWarningDialog({
@@ -39,18 +40,18 @@ class SetupWarningDialog extends StatelessWidget {
       content: Text(description),
       actions: [
         if (helpUrl != null)
-          TextButton(
+          AppTextButton(
             onPressed: () => launchUrl(
               Uri.parse(helpUrl!),
               mode: LaunchMode.externalApplication,
             ),
             child: Text(t.setup.warningHelp),
           ),
-        TextButton(
+        AppTextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(t.setup.warningCancel),
         ),
-        TextButton(
+        AppTextButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(t.setup.warningSkip),
         ),

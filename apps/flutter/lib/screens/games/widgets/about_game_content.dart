@@ -3,6 +3,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../app_services.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../setup/dialogs/message_dialog.dart';
 import 'create_shortcut_dialog.dart';
 import 'delete_shader_cache_dialog.dart';
@@ -112,7 +113,7 @@ class _AboutGameContentState extends State<AboutGameContent> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: FilledButton(
+                  child: AppFilledButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                       widget.onPlay();
@@ -131,7 +132,8 @@ class _AboutGameContentState extends State<AboutGameContent> {
                   ),
                 ],
                 const SizedBox(width: 8),
-                IconButton.filledTonal(
+                AppIconButton(
+                  tonal: true,
                   tooltip: t.games.shortcut,
                   onPressed: () => CreateShortcutDialog.show(context, game),
                   icon: const Icon(Icons.add_to_home_screen),
@@ -143,7 +145,8 @@ class _AboutGameContentState extends State<AboutGameContent> {
         const SizedBox(height: 16),
         Row(
           children: [
-            FilledButton.tonal(
+            AppFilledButton(
+              tonal: true,
               onPressed: () => MessageDialog.show(
                 context,
                 title: t.games.cheats,
@@ -152,14 +155,19 @@ class _AboutGameContentState extends State<AboutGameContent> {
               child: Text(t.games.cheats),
             ),
             const SizedBox(width: 8),
-            FilledButton.tonal(onPressed: null, child: Text(t.games.compress)),
+            AppFilledButton(
+              tonal: true,
+              onPressed: null,
+              child: Text(t.games.compress),
+            ),
           ],
         ),
         if (game.isInstalled) ...[
           const SizedBox(height: 16),
           Row(
             children: [
-              FilledButton.tonal(
+              AppFilledButton(
+                tonal: true,
                 onPressed: () => DeleteShaderCacheDialog.show(context, game),
                 child: Text(t.games.deleteShaderCache),
               ),

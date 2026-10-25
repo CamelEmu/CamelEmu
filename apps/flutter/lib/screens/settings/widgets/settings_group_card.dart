@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../theme/extensions/glass_surface_theme.dart';
 import '../../../widgets/app_panel.dart';
+import '../../../widgets/app_widgets.dart';
+import '../../options/widgets/widget_settings_item.dart';
 
 /// Renders a titled group of [babstrap.SettingsItem]s with the same title/card layout as
 /// [babstrap.SettingsGroup], but paints the card background with [AppPanel] instead of
@@ -36,6 +38,9 @@ class SettingsGroupCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final surfaceTheme = Theme.of(context).extension<GlassSurfaceTheme>()!;
+    final customCard = AppWidgets.of(
+      context,
+    ).card(children: [for (final item in items) _tile(context, item)]);
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -60,26 +65,40 @@ class SettingsGroupCard extends ConsumerWidget {
                 ],
               ),
             ),
-          AppPanel(
-            borderRadius: BorderRadius.circular(15),
-            fillColor: surfaceTheme.blurSigma > 0
-                ? surfaceTheme.fillColor
-                : Theme.of(context).cardColor,
-            borderColor: surfaceTheme.borderColor,
-            child: ExcludeFocus(
-              excluding: !enabled,
-              child: IgnorePointer(
-                ignoring: !enabled,
-                child: babstrap.SettingsGroup(
-                  backgroundColor: Colors.transparent,
-                  margin: EdgeInsets.zero,
-                  items: items,
-                ),
-              ),
+          ExcludeFocus(
+            excluding: !enabled,
+            child: IgnorePointer(
+              ignoring: !enabled,
+              child:
+                  customCard ??
+                  AppPanel(
+                    borderRadius: BorderRadius.circular(15),
+                    fillColor: surfaceTheme.blurSigma > 0
+                        ? surfaceTheme.fillColor
+                        : Theme.of(context).cardColor,
+                    borderColor: surfaceTheme.borderColor,
+                    child: babstrap.SettingsGroup(
+                      backgroundColor: Colors.transparent,
+                      margin: EdgeInsets.zero,
+                      items: items,
+                    ),
+                  ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _tile(BuildContext context, babstrap.SettingsItem item) {
+    if (item is WidgetSettingsItem) return item.build(context);
+    final subtitle = item.subtitle;
+    return AppListTile(
+      leading: Icon(item.icons),
+      title: Text(item.title),
+      subtitle: subtitle == null ? null : Text(subtitle),
+      trailing: item.trailing ?? const Icon(Icons.navigate_next),
+      onTap: item.onTap,
     );
   }
 }

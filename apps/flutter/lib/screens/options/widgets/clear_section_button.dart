@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/confirmation_dialog.dart';
 
 /// The delete button at the right end of the History and Pinned headings: a trash icon beside a
@@ -37,16 +38,16 @@ class ClearSectionButton extends StatelessWidget {
           }
         : null;
     if (iconOnly) {
-      return IconButton(
+      return AppIconButton(
         onPressed: onPressed,
         icon: const Icon(Icons.delete_outline),
         tooltip: label,
       );
     }
-    return TextButton.icon(
+    return AppTextButton(
       onPressed: onPressed,
       icon: const Icon(Icons.delete_outline),
-      label: Text(label),
+      child: Text(label),
     );
   }
 }

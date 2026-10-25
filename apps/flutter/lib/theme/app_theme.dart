@@ -18,7 +18,7 @@ abstract final class AppTheme {
     ColorScheme? dynamicScheme,
   }) {
     return switch (style) {
-      ThemeStyle.azahar => AzaharTheme.light(
+      ThemeStyle.azahar || ThemeStyle.shadcn => AzaharTheme.light(
         staticThemeColor: staticThemeColor == 0 ? null : staticThemeColor - 1,
         materialYou: materialYou,
         dynamicScheme: dynamicScheme,
@@ -44,7 +44,7 @@ abstract final class AppTheme {
     ColorScheme? dynamicScheme,
   }) {
     return switch (style) {
-      ThemeStyle.azahar => AzaharTheme.dark(
+      ThemeStyle.azahar || ThemeStyle.shadcn => AzaharTheme.dark(
         staticThemeColor: staticThemeColor == 0 ? null : staticThemeColor - 1,
         blackBackgrounds: blackBackgrounds,
         materialYou: materialYou,

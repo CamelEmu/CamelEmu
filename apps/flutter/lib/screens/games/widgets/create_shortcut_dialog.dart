@@ -4,6 +4,7 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../app_services.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../../widgets/dialog_cancel_button.dart';
 import 'game_icon.dart';
 
@@ -115,7 +116,7 @@ class _CreateShortcutDialogState extends State<CreateShortcutDialog> {
       ),
       actions: [
         const DialogCancelButton(),
-        TextButton(
+        AppTextButton(
           onPressed: _confirm,
           child: Text(localizations.okButtonLabel),
         ),

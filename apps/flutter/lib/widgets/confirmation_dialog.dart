@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_widgets.dart';
 import 'dialog_cancel_button.dart';
 
 /// A generic "are you sure?" prompt: a title, a message, [DialogCancelButton], and a single
@@ -21,7 +22,7 @@ class ConfirmationDialog {
         content: Text(message),
         actions: [
           const DialogCancelButton(),
-          TextButton(
+          AppTextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(confirmLabel),
           ),

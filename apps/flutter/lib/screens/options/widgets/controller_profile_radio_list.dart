@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/gamepad/actions/key_bindings_providers.dart';
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 import '../../settings/dialogs/text_input_dialog.dart';
 
 /// The controller profiles as radio tiles, oldest first, with the one in use selected, ending with
@@ -33,13 +34,13 @@ class ControllerProfileRadioList extends ConsumerWidget {
               ),
               secondary: profile.isBuiltIn
                   ? null
-                  : IconButton(
+                  : AppIconButton(
                       tooltip: t.profiles.delete,
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => notifier.delete(profile.cuid),
                     ),
             ),
-          ListTile(
+          AppListTile(
             leading: const Icon(Icons.add),
             title: Text(t.settings.gamepad.addControllerProfile),
             onTap: () => _add(context, ref),
