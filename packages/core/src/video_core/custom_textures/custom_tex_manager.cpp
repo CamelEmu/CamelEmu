@@ -189,8 +189,6 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
         return;
     }
 
-    // emu_json_free is a no-op on borrowed handles, so one deleter serves
-    // every handle in this function.
     using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
     const JsonHandle json(emu_json_new_object(), &emu_json_free);
     emu_json_set(json.get(), "author", emu_json_new_string("citra"));
@@ -337,8 +335,6 @@ bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
         return false;
     }
 
-    // emu_json_free is a no-op on borrowed handles, so one deleter serves
-    // every handle in this function.
     using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
     const JsonHandle json(emu_json_parse(config.data(), read_size), &emu_json_free);
     if (!json) {

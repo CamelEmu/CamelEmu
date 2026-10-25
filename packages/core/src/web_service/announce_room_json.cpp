@@ -15,8 +15,6 @@ namespace AnnounceMultiplayerRoom {
 
 namespace {
 
-// emu_json_free is a no-op on borrowed handles, so one deleter serves both
-// the owning handles built here and the borrowed ones from emu_json_get.
 using JsonHandle = std::unique_ptr<EmuJson, decltype(&emu_json_free)>;
 
 JsonHandle Borrowed(EmuJson* handle) {
@@ -100,8 +98,6 @@ bool MemberFromJson(EmuJson* json, Room::Member& member) {
         return false;
     }
     member.game_id = game_id;
-    // The username and the avatar URL authenticate the member; when either
-    // is missing the member counts as unauthenticated and both are dropped.
     std::string username;
     std::string avatar_url;
     if (GetString(json, "username", username) && GetString(json, "avatarUrl", avatar_url)) {

@@ -89,9 +89,6 @@ add_custom_target(azahar_rust_lib
     COMMENT "Building azahar_rust for ${AZAHAR_RUST_TARGET}"
 )
 
-# The json crate of the camel_emu workspace provides the emu_json_* JSON DOM
-# the core links against. It follows azahar_rust: only the library of the
-# application contains it.
 set(EMU_JSON_DIR "${AZAHAR_REPO_ROOT}/packages/camel_emu")
 set(EMU_JSON_LIB "${EMU_JSON_DIR}/target/${AZAHAR_RUST_TARGET}/release/libjson.a")
 add_custom_target(emu_json_lib
