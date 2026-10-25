@@ -1,0 +1,13 @@
+[package]
+name = "json"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+libc = "0.2"
+# preserve_order keeps object keys in insertion order, which the emu_json
+# ABI guarantees so output stays as stable as the ordered_json it replaces.
+serde_json = { version = "1", features = ["preserve_order"] }
