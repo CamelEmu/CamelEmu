@@ -112,34 +112,22 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC Threads::Threads)
 
 # The Rust crate owns the game session and the audio output. It is linked into the executable as
 # a static library and its symbols are exported, so the Dart side finds them in the process.
-set(AZAHAR_RUST_DIR "${AZAHAR_ROOT}/packages/azahar_rust")
-set(AZAHAR_RUST_LIB "${AZAHAR_RUST_DIR}/target/release/libazahar_rust.a")
+set(EMU_DIR "${AZAHAR_ROOT}/packages/emu")
+set(EMU_LIB "${EMU_DIR}/target/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
-add_custom_target(azahar_rust_lib
+add_custom_target(emu_lib
   COMMAND "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type staticlib
-  WORKING_DIRECTORY "${AZAHAR_RUST_DIR}"
-  BYPRODUCTS "${AZAHAR_RUST_LIB}"
-  COMMENT "Building azahar_rust (${AZAHAR_RUST_DIR})"
+  WORKING_DIRECTORY "${EMU_DIR}"
+  BYPRODUCTS "${EMU_LIB}"
+  COMMENT "Building emu (${EMU_DIR})"
 )
-add_dependencies(${PLUGIN_NAME} azahar_rust_lib)
-target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_RUST_DIR}/include")
-
-set(EMU_JSON_DIR "${AZAHAR_ROOT}/packages/camel_emu")
-set(EMU_JSON_LIB "${EMU_JSON_DIR}/target/release/libjson.a")
-add_custom_target(emu_json_lib
-  COMMAND "${CARGO_EXECUTABLE}" build --release -p json
-  WORKING_DIRECTORY "${EMU_JSON_DIR}"
-  BYPRODUCTS "${EMU_JSON_LIB}"
-  COMMENT "Building emu_json (${EMU_JSON_DIR})"
-)
-add_dependencies(${PLUGIN_NAME} emu_json_lib)
-target_include_directories(${PLUGIN_NAME} PRIVATE "${EMU_JSON_DIR}/include")
+add_dependencies(${PLUGIN_NAME} emu_lib)
+target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_ROOT}/packages/camel_emu/include")
 
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 target_link_libraries(${PLUGIN_NAME} PUBLIC
   -Wl,--whole-archive
-  "${AZAHAR_RUST_LIB}"
-  "${EMU_JSON_LIB}"
+  "${EMU_LIB}"
   -Wl,--no-whole-archive
   PkgConfig::ALSA
   ${CMAKE_DL_LIBS}

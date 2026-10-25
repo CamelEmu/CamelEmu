@@ -7,7 +7,7 @@ import '../rust/frb_generated.dart';
 /// Name of the shared library that contains the crate where it is linked into the native library.
 const _nativeLibraryName = 'libcitra-android.so';
 
-/// Loads the `azahar_rust` crate.
+/// Loads the `emu` crate.
 ///
 /// Where the crate is linked statically into the executable, its symbols are looked up in the
 /// running process. Otherwise they are looked up in the native library of the plugin. It must

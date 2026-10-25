@@ -33,7 +33,7 @@ class EmulationBackendListener {
   final void Function(String message) onFailed;
 }
 
-/// Starts, pauses, resumes and stops one game in a session owned by the `azahar_rust` crate.
+/// Starts, pauses, resumes and stops one game in a session owned by the `emu` crate.
 ///
 /// The session releases the whole emulated console when it is stopped, so another game can be
 /// started in the same process afterwards.
