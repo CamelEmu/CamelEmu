@@ -38,7 +38,7 @@ function(azahar_android_library target)
         util.h
     )
 
-    target_include_directories(${target} PRIVATE "${AZAHAR_REPO_ROOT}/packages/camel_emu/include")
+    target_include_directories(${target} PRIVATE "${AZAHAR_REPO_ROOT}/packages/native/include")
     target_link_options(${target} PRIVATE -Wl,-z,noexecstack)
     target_link_libraries(${target} PRIVATE audio_core citra_common citra_core input_common network)
     target_link_libraries(${target} PRIVATE android camera2ndk inih jnigraphics log mediandk yuv)
