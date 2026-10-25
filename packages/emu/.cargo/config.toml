@@ -1,4 +1,4 @@
 [env]
-OPENSSL_INCLUDE_DIR = { value = "../core/externals/libressl/include", relative = true }
+OPENSSL_INCLUDE_DIR = { value = "crates/http/libressl/include", relative = true }
 OPENSSL_LIB_DIR = { value = "../../build/libressl", relative = true }
 OPENSSL_STATIC = "1"

@@ -245,65 +245,6 @@ if (ENABLE_CUBEB)
     endif()
 endif()
 
-# DiscordRPC
-if (USE_DISCORD_PRESENCE)
-    # rapidjson used by discord-rpc is old and doesn't correctly detect endianness for some platforms.
-    include(TestBigEndian)
-    test_big_endian(RAPIDJSON_BIG_ENDIAN)
-    if(RAPIDJSON_BIG_ENDIAN)
-        add_compile_definitions(RAPIDJSON_ENDIAN=1)
-    else()
-        add_compile_definitions(RAPIDJSON_ENDIAN=0)
-    endif()
-
-    # Apply a dummy CLANG_FORMAT_SUFFIX to disable discord-rpc's unnecessary automatic clang-format.
-    set(CLANG_FORMAT_SUFFIX "dummy")
-
-    add_subdirectory(discord-rpc EXCLUDE_FROM_ALL)
-    target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
-endif()
-
-# JSON
-add_library(json-headers INTERFACE)
-if (USE_SYSTEM_JSON)
-    find_package(nlohmann_json REQUIRED)
-    target_link_libraries(json-headers INTERFACE nlohmann_json::nlohmann_json)
-    get_target_property(NLOHMANN_PREFIX nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
-    # The nlohmann-json3 package expects "#include <nlohmann/json.hpp>"
-    # Citra uses "#include <json.hpp>" so we have to add this manually
-    target_include_directories(json-headers SYSTEM INTERFACE "${NLOHMANN_PREFIX}/nlohmann")
-else()
-    target_include_directories(json-headers SYSTEM INTERFACE ./json)
-endif()
-
-# OpenSSL
-if (USE_SYSTEM_OPENSSL)
-    find_package(OpenSSL 1.1)
-    if (OPENSSL_FOUND)
-        set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
-    endif()
-endif()
-
-if (NOT OPENSSL_FOUND)
-    # LibreSSL
-    set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
-    set(OPENSSLDIR "/etc/ssl/")
-    add_subdirectory(libressl EXCLUDE_FROM_ALL)
-    target_include_directories(ssl SYSTEM INTERFACE ./libressl/include)
-    target_compile_definitions(ssl PRIVATE -DHAVE_INET_NTOP)
-    get_directory_property(OPENSSL_LIBRARIES
-        DIRECTORY libressl
-        DEFINITION OPENSSL_LIBS)
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/libressl")
-    file(CREATE_LINK "${CMAKE_CURRENT_BINARY_DIR}/libressl/ssl/libssl.a"
-         "${CMAKE_BINARY_DIR}/libressl/libssl.a" SYMBOLIC)
-    file(CREATE_LINK "${CMAKE_CURRENT_BINARY_DIR}/libressl/crypto/libcrypto.a"
-         "${CMAKE_BINARY_DIR}/libressl/libcrypto.a" SYMBOLIC)
-endif()
-
-add_library(openssl-libs INTERFACE)
-target_link_libraries(openssl-libs INTERFACE ${OPENSSL_LIBRARIES})
-
 if (UNIX AND NOT APPLE)
     add_subdirectory(gamemode)
 endif()
