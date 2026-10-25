@@ -27,6 +27,8 @@ final featureFlagsProvider = Provider<List<FeatureFlag>>(
       description: (t) =>
           t.settings.featureFlags.performanceImprovementsDescription,
       icon: Icons.speed,
+      defaultValue: true,
+      editable: false,
       provider: performanceImprovementsProvider,
     ),
   ],
