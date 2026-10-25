@@ -126,7 +126,7 @@ add_custom_target(emu_lib
 )
 add_dependencies(emu_lib azahar_core_libs)
 add_dependencies(${PLUGIN_NAME} emu_lib)
-target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_ROOT}/packages/camel_emu/include")
+target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_ROOT}/packages/native/include")
 
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 target_link_libraries(${PLUGIN_NAME} PUBLIC

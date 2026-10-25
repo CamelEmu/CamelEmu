@@ -11,7 +11,7 @@
 ## 1. ゴールと境界
 
 標準 JSON(RFC 8259)DOM だけを担当する Rust クレート `json` を新設し、C ABI `emu_json_*`
-(`packages/camel_emu/include/emu_json.h`)として公開する。
+(`packages/native/include/emu_json.h`)として公開する。
 
 境界に持ち込まないもの:
 

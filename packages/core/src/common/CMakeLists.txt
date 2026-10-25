@@ -191,7 +191,7 @@ create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
 target_link_libraries(citra_common PRIVATE cryptopp zstd)
-target_include_directories(citra_common PUBLIC "${AZAHAR_REPO_ROOT}/packages/camel_emu/include")
+target_include_directories(citra_common PUBLIC "${AZAHAR_REPO_ROOT}/packages/native/include")
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)

@@ -1,5 +1,5 @@
 //! Standard HTTP transfer (RFC 7231) over hyper, exposed to C++ only through the C ABI declared in
-//! `packages/camel_emu/include/emu_http.h`.
+//! `packages/native/include/emu_http.h`.
 //!
 //! Nothing specific to a caller crosses this boundary: request bodies, multipart encoding and the
 //! mapping of a response onto a caller's result type stay in the C++ shim of that caller. The unsafe
