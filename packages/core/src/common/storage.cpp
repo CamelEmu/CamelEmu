@@ -9,14 +9,14 @@
 namespace Common::Storage {
 
 namespace {
-std::atomic<const AzaharStorageApi*> g_api{nullptr};
+std::atomic<const EmuStorageApi*> g_api{nullptr};
 
 /**
  * Logs instead of crashing, since a missing table only happens when a frontend forgot to
  * register it and every file operation then fails visibly in the log.
  */
-const AzaharStorageApi* Table() {
-    const AzaharStorageApi* api = g_api.load(std::memory_order_acquire);
+const EmuStorageApi* Table() {
+    const EmuStorageApi* api = g_api.load(std::memory_order_acquire);
     if (api == nullptr) {
         LOG_CRITICAL(Common_Filesystem, "No storage is registered");
     }
@@ -24,11 +24,11 @@ const AzaharStorageApi* Table() {
 }
 } // Anonymous namespace
 
-void Register(const AzaharStorageApi* api) {
+void Register(const EmuStorageApi* api) {
     g_api.store(api, std::memory_order_release);
 }
 
-const AzaharStorageApi* Api() {
+const EmuStorageApi* Api() {
     return g_api.load(std::memory_order_acquire);
 }
 

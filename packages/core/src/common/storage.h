@@ -6,7 +6,7 @@
 
 #include <functional>
 #include <string>
-#include <azahar_storage.h>
+#include <emu_storage.h>
 #include "common/common_types.h"
 
 /**
@@ -16,9 +16,9 @@
  */
 namespace Common::Storage {
 
-void Register(const AzaharStorageApi* api);
+void Register(const EmuStorageApi* api);
 
-const AzaharStorageApi* Api();
+const EmuStorageApi* Api();
 
 bool Exists(const std::string& path);
 bool IsDirectory(const std::string& path);
