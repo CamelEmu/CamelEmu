@@ -9,6 +9,8 @@ use std::sync::Arc;
 use std::sync::mpsc::{Sender, SyncSender, channel, sync_channel};
 use std::thread::JoinHandle;
 
+use memory::{MemoryError, MemorySource, Result as MemoryResult};
+
 use crate::error::{AzaharError, Result};
 use crate::library::{CoreLibrary, close};
 use crate::api::audio::AudioEngine;
@@ -263,13 +265,16 @@ impl SessionHandle {
         )
     }
 
-    pub fn fcram_size(&self) -> usize {
+}
+
+impl MemorySource for SessionHandle {
+    fn fcram_size(&self) -> usize {
         let raw = self.raw;
         self.worker
             .call(move |library| unsafe { (library.api.fcram_size)(raw as *const RawSession) })
     }
 
-    pub fn read_memory(&self, address: u32, len: usize) -> Result<Vec<u8>> {
+    fn read_memory(&self, address: u32, len: usize) -> MemoryResult<Vec<u8>> {
         let raw = self.raw;
         self.worker.call(move |library| {
             let mut buffer = vec![0u8; len];
@@ -282,23 +287,23 @@ impl SessionHandle {
                 )
             };
             if status == STATUS_INVALID_ADDRESS {
-                return Err(AzaharError::InvalidAddress {
+                return Err(MemoryError::InvalidAddress {
                     address,
                     len: len as u32,
                 });
             }
-            check(status).map(|()| buffer)
+            memory_status(status).map(|()| buffer)
         })
     }
 
-    pub fn read_fcram(&self, offset: usize, len: usize) -> Result<Vec<u8>> {
+    fn read_fcram(&self, offset: usize, len: usize) -> MemoryResult<Vec<u8>> {
         let raw = self.raw;
         self.worker.call(move |library| {
             let mut buffer = vec![0u8; len];
             let status = unsafe {
                 (library.api.read_fcram)(raw as *mut RawSession, offset, buffer.as_mut_ptr(), len)
             };
-            check(status).map(|()| buffer)
+            memory_status(status).map(|()| buffer)
         })
     }
 }
@@ -317,5 +322,13 @@ fn check(status: i32) -> Result<()> {
         Ok(())
     } else {
         Err(AzaharError::Core(status))
+    }
+}
+
+fn memory_status(status: i32) -> MemoryResult<()> {
+    if status == STATUS_OK {
+        Ok(())
+    } else {
+        Err(MemoryError::Core(status))
     }
 }
