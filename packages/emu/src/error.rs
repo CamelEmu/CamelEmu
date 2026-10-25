@@ -50,5 +50,15 @@ impl From<memory::MemoryError> for AzaharError {
     }
 }
 
+impl From<emu_storage::StorageError> for AzaharError {
+    fn from(error: emu_storage::StorageError) -> Self {
+        match error {
+            emu_storage::StorageError::InvalidPath => Self::InvalidPath,
+            emu_storage::StorageError::Create(path) => Self::Storage(path),
+            emu_storage::StorageError::Commit(paths) => Self::StorageCommit(paths),
+        }
+    }
+}
+
 /// Result alias used across the crate.
 pub type Result<T> = std::result::Result<T, AzaharError>;

@@ -18,8 +18,20 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
 use overlay::Overlay;
+use thiserror::Error;
 
-use crate::error::{AzaharError, Result};
+/// Errors of the storage operations the session surfaces.
+#[derive(Debug, Error)]
+pub enum StorageError {
+    #[error("the path is invalid")]
+    InvalidPath,
+    #[error("the folder {0} could not be created")]
+    Create(String),
+    #[error("the changed files could not be saved: {}", .0.join(", "))]
+    Commit(Vec<String>),
+}
+
+pub type Result<T> = std::result::Result<T, StorageError>;
 
 /// Folders the core expects in a user directory before it first runs, since it does not create
 /// the folders of its settings and logs by itself.
@@ -394,7 +406,7 @@ pub fn commit_overlay() -> Result<()> {
     if failed.is_empty() {
         Ok(())
     } else {
-        Err(AzaharError::StorageCommit(failed))
+        Err(StorageError::Commit(failed))
     }
 }
 
@@ -405,7 +417,7 @@ pub fn end_overlay() {
 }
 
 fn set_root(location: &str) -> Result<()> {
-    let root = Root::parse(location).ok_or(AzaharError::InvalidPath)?;
+    let root = Root::parse(location).ok_or(StorageError::InvalidPath)?;
     *STATE.write().unwrap_or_else(|error| error.into_inner()) = Some(State::new(root));
     Ok(())
 }
@@ -413,19 +425,19 @@ fn set_root(location: &str) -> Result<()> {
 /// Creates the folders the core expects in the user directory at `location`, which does not have
 /// to be the current one, since a profile is prepared before it is switched to.
 pub fn initialize(location: &str) -> Result<()> {
-    let root = Root::parse(location).ok_or(AzaharError::InvalidPath)?;
+    let root = Root::parse(location).ok_or(StorageError::InvalidPath)?;
     let base = match &root {
         Root::Native(_) => root.user_path(),
         Root::Tree(uri) => format!("{}/", uri.trim_end_matches('/')),
     };
     if let Root::Native(path) = &root {
         std::fs::create_dir_all(path)
-            .map_err(|error| AzaharError::Storage(format!("{}: {error}", path.display())))?;
+            .map_err(|error| StorageError::Create(format!("{}: {error}", path.display())))?;
     }
     for name in USER_DIRECTORIES {
         let path = format!("{base}{name}");
         if !backend(&path, &root).create_dir(&path) {
-            return Err(AzaharError::Storage(path));
+            return Err(StorageError::Create(path));
         }
     }
     Ok(())

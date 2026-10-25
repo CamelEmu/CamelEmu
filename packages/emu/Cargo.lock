@@ -483,6 +483,7 @@ dependencies = [
  "emu_crypto",
  "emu_http",
  "emu_random",
+ "emu_storage",
  "flutter_rust_bridge",
  "jni",
  "libc",
@@ -526,6 +527,15 @@ name = "emu_random"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.4.3",
+]
+
+[[package]]
+name = "emu_storage"
+version = "0.1.0"
+dependencies = [
+ "jni",
+ "libc",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1023,9 +1033,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.189"
+version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
 name = "libm"
