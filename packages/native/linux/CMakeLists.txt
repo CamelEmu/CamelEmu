@@ -101,11 +101,6 @@ file(GLOB_RECURSE AZAHAR_CORE_LIBS
   "${AZAHAR_BUILD}/externals/*.a"
 )
 
-target_link_libraries(${PLUGIN_NAME} PUBLIC
-  -Wl,--start-group
-  ${AZAHAR_CORE_LIBS}
-  -Wl,--end-group
-)
 find_package(Threads REQUIRED)
 target_link_libraries(${PLUGIN_NAME} PUBLIC Threads::Threads)
 
@@ -114,20 +109,33 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC Threads::Threads)
 set(EMU_DIR "${AZAHAR_ROOT}/packages/emu")
 set(EMU_LIB "${EMU_DIR}/target/release/libemu.a")
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
+set(LIBRESSL_INCLUDE_DIR "${AZAHAR_CORE}/externals/libressl/include")
+set(LIBRESSL_STUB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libressl-stub")
 add_custom_target(emu_lib
-  COMMAND "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type staticlib
+  COMMAND "${CMAKE_COMMAND}" -E make_directory "${LIBRESSL_STUB_DIR}"
+  COMMAND "${CMAKE_AR}" qc "${LIBRESSL_STUB_DIR}/libssl.a"
+  COMMAND "${CMAKE_AR}" qc "${LIBRESSL_STUB_DIR}/libcrypto.a"
+  COMMAND "${CMAKE_COMMAND}" -E env
+    "OPENSSL_INCLUDE_DIR=${LIBRESSL_INCLUDE_DIR}"
+    "OPENSSL_LIB_DIR=${LIBRESSL_STUB_DIR}"
+    OPENSSL_STATIC=1
+    "${CARGO_EXECUTABLE}" rustc --release --lib --crate-type staticlib
   WORKING_DIRECTORY "${EMU_DIR}"
   BYPRODUCTS "${EMU_LIB}"
   COMMENT "Building emu (${EMU_DIR})"
 )
+add_dependencies(emu_lib azahar_core_libs)
 add_dependencies(${PLUGIN_NAME} emu_lib)
 target_include_directories(${PLUGIN_NAME} PRIVATE "${AZAHAR_ROOT}/packages/camel_emu/include")
 
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 target_link_libraries(${PLUGIN_NAME} PUBLIC
+  -Wl,--start-group
+  ${AZAHAR_CORE_LIBS}
   -Wl,--whole-archive
   "${EMU_LIB}"
   -Wl,--no-whole-archive
+  -Wl,--end-group
   PkgConfig::ALSA
   ${CMAKE_DL_LIBS}
   m

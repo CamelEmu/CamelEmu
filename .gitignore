@@ -69,5 +69,8 @@ VULKAN_SDK/
 .dart_tool/
 melos_*.iml
 
+# direnv cache
+.direnv/
+
 # FVM Version Cache
 .fvm/
