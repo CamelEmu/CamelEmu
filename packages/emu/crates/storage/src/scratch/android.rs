@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use jni::objects::JString;
 
-use crate::storage::android_jni::call;
+use crate::android_jni::call;
 
 static CACHE_DIRECTORY: OnceLock<String> = OnceLock::new();
 static COUNTER: AtomicU64 = AtomicU64::new(0);

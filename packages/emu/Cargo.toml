@@ -16,6 +16,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 ringbuf = "0.4"
 thiserror = "2"
 emu_crypto = { version = "0.1.0", path = "crates/crypto" }
+emu_storage = { version = "0.1.0", path = "crates/storage" }
 
 [lib]
 crate-type = ["cdylib", "staticlib", "lib"]
