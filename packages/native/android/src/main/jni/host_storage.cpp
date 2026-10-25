@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <azahar_storage.h>
+#include <emu_storage.h>
 #include "common/storage.h"
 
 namespace {
@@ -13,7 +13,7 @@ namespace {
  * receives the table through `AzaharHostState` instead.
  */
 const bool g_registered = [] {
-    Common::Storage::Register(azahar_storage_api());
+    Common::Storage::Register(emu_storage_api());
     return true;
 }();
 

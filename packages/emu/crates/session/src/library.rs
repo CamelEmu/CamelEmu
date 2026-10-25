@@ -51,29 +51,29 @@ mod platform {
     use std::ffi::c_char;
 
     unsafe extern "C" {
-        fn azahar_session_create(
+        fn emu_session_create(
             game_path: *const c_char,
             options: *const RawOptions,
             callbacks: *const RawCallbacks,
         ) -> *mut RawSession;
-        fn azahar_session_start(session: *mut RawSession) -> i32;
-        fn azahar_session_pause(session: *mut RawSession) -> i32;
-        fn azahar_session_resume(session: *mut RawSession) -> i32;
-        fn azahar_session_fcram_size(session: *const RawSession) -> usize;
-        fn azahar_session_read_memory(
+        fn emu_session_start(session: *mut RawSession) -> i32;
+        fn emu_session_pause(session: *mut RawSession) -> i32;
+        fn emu_session_resume(session: *mut RawSession) -> i32;
+        fn emu_session_fcram_size(session: *const RawSession) -> usize;
+        fn emu_session_read_memory(
             session: *mut RawSession,
             address: u32,
             out: *mut u8,
             len: usize,
         ) -> i32;
-        fn azahar_session_read_fcram(
+        fn emu_session_read_fcram(
             session: *mut RawSession,
             offset: usize,
             out: *mut u8,
             len: usize,
         ) -> i32;
-        fn azahar_session_destroy(session: *mut RawSession);
-        fn azahar_session_answer_artic_country(session: *mut RawSession, country: i32);
+        fn emu_session_destroy(session: *mut RawSession);
+        fn emu_session_answer_artic_country(session: *mut RawSession, country: i32);
     }
 
     /// The core is part of the executable, so there is nothing to unload.
@@ -89,15 +89,15 @@ mod platform {
 
     pub fn open() -> Result<(CoreApi, Unload), OpenFailure> {
         let api = CoreApi {
-            create: azahar_session_create,
-            start: azahar_session_start,
-            pause: azahar_session_pause,
-            resume: azahar_session_resume,
-            fcram_size: azahar_session_fcram_size,
-            read_memory: azahar_session_read_memory,
-            read_fcram: azahar_session_read_fcram,
-            destroy: azahar_session_destroy,
-            answer_artic_country: azahar_session_answer_artic_country,
+            create: emu_session_create,
+            start: emu_session_start,
+            pause: emu_session_pause,
+            resume: emu_session_resume,
+            fcram_size: emu_session_fcram_size,
+            read_memory: emu_session_read_memory,
+            read_fcram: emu_session_read_fcram,
+            destroy: emu_session_destroy,
+            answer_artic_country: emu_session_answer_artic_country,
         };
         Ok((api, Unload))
     }
@@ -200,7 +200,7 @@ mod platform {
     }
 
     unsafe fn init_failure(handle: *mut c_void, status: i32) -> AzaharError {
-        let reason = unsafe { dlsym(handle, c"azahar_session_lib_last_error".as_ptr()) };
+        let reason = unsafe { dlsym(handle, c"emu_session_lib_last_error".as_ptr()) };
         if reason.is_null() {
             return AzaharError::LibraryLoad(format!(
                 "the library failed to initialize with status {status}"
@@ -215,20 +215,20 @@ mod platform {
 
     unsafe fn load(handle: *mut c_void) -> Result<(CoreApi, Unload), AzaharError> {
         unsafe {
-            let init: InitFn = transmute(symbol(handle, c"azahar_session_lib_init")?);
-            let shutdown: ShutdownFn = transmute(symbol(handle, c"azahar_session_lib_shutdown")?);
+            let init: InitFn = transmute(symbol(handle, c"emu_session_lib_init")?);
+            let shutdown: ShutdownFn = transmute(symbol(handle, c"emu_session_lib_shutdown")?);
             let api = CoreApi {
-                create: transmute(symbol(handle, c"azahar_session_create")?),
-                start: transmute(symbol(handle, c"azahar_session_start")?),
-                pause: transmute(symbol(handle, c"azahar_session_pause")?),
-                resume: transmute(symbol(handle, c"azahar_session_resume")?),
-                fcram_size: transmute(symbol(handle, c"azahar_session_fcram_size")?),
-                read_memory: transmute(symbol(handle, c"azahar_session_read_memory")?),
-                read_fcram: transmute(symbol(handle, c"azahar_session_read_fcram")?),
-                destroy: transmute(symbol(handle, c"azahar_session_destroy")?),
+                create: transmute(symbol(handle, c"emu_session_create")?),
+                start: transmute(symbol(handle, c"emu_session_start")?),
+                pause: transmute(symbol(handle, c"emu_session_pause")?),
+                resume: transmute(symbol(handle, c"emu_session_resume")?),
+                fcram_size: transmute(symbol(handle, c"emu_session_fcram_size")?),
+                read_memory: transmute(symbol(handle, c"emu_session_read_memory")?),
+                read_fcram: transmute(symbol(handle, c"emu_session_read_fcram")?),
+                destroy: transmute(symbol(handle, c"emu_session_destroy")?),
                 answer_artic_country: transmute(symbol(
                     handle,
-                    c"azahar_session_answer_artic_country",
+                    c"emu_session_answer_artic_country",
                 )?),
             };
 

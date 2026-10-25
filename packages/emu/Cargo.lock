@@ -477,24 +477,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "emu"
-version = "0.1.0"
-dependencies = [
- "emu_crypto",
- "emu_http",
- "emu_random",
- "emu_storage",
- "flutter_rust_bridge",
- "jni",
- "libc",
- "memory",
- "oboe",
- "ringbuf",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "emu_crypto"
 version = "0.1.0"
 dependencies = [
@@ -1777,6 +1759,24 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "session"
+version = "0.1.0"
+dependencies = [
+ "emu_crypto",
+ "emu_http",
+ "emu_random",
+ "emu_storage",
+ "flutter_rust_bridge",
+ "jni",
+ "libc",
+ "memory",
+ "oboe",
+ "ringbuf",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

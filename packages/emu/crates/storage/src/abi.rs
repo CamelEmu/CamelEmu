@@ -5,7 +5,7 @@ use super::{OpenMode, relocate, route, set_root, with_state};
 type EntryCallback = unsafe extern "C" fn(*mut c_void, *const c_char);
 
 #[repr(C)]
-pub struct AzaharStorageApi {
+pub struct EmuStorageApi {
     exists: unsafe extern "C" fn(*const c_char) -> i32,
     is_directory: unsafe extern "C" fn(*const c_char) -> i32,
     size: unsafe extern "C" fn(*const c_char) -> u64,
@@ -20,7 +20,7 @@ pub struct AzaharStorageApi {
     set_root: unsafe extern "C" fn(*const c_char) -> i32,
 }
 
-static API: AzaharStorageApi = AzaharStorageApi {
+static API: EmuStorageApi = EmuStorageApi {
     exists,
     is_directory,
     size,
@@ -36,7 +36,7 @@ static API: AzaharStorageApi = AzaharStorageApi {
 };
 
 #[unsafe(no_mangle)]
-pub extern "C" fn azahar_storage_api() -> *const AzaharStorageApi {
+pub extern "C" fn emu_storage_api() -> *const EmuStorageApi {
     &API
 }
 

@@ -29,7 +29,7 @@
 #include "audio_core/dsp_interface.h"
 #include "audio_core/external_sink.h"
 #include "audio_core/sink_details.h"
-#include "azahar_session.h"
+#include "emu_session.h"
 #include "common/arch.h"
 #if CITRA_ARCH(arm64)
 #include "common/aarch64/cpu_detect.h"
@@ -153,7 +153,7 @@ static bool HandleCoreError(Core::System::ResultStatus result, const std::string
 }
 
 static std::mutex g_session_callbacks_mutex;
-static std::optional<AzaharSessionCallbacks> g_session_callbacks;
+static std::optional<EmuSessionCallbacks> g_session_callbacks;
 
 /**
  * Hands the audio to the session when it takes the frames, and plays it through OpenAL otherwise.
@@ -180,15 +180,15 @@ static int32_t ToSessionShaderStage(VideoCore::LoadCallbackStage stage) {
     switch (stage) {
     case VideoCore::LoadCallbackStage::Prepare:
     case VideoCore::LoadCallbackStage::Preload:
-        return AZAHAR_SHADER_STAGE_PREPARE;
+        return EMU_SHADER_STAGE_PREPARE;
     case VideoCore::LoadCallbackStage::Decompile:
-        return AZAHAR_SHADER_STAGE_DECOMPILE;
+        return EMU_SHADER_STAGE_DECOMPILE;
     case VideoCore::LoadCallbackStage::Build:
-        return AZAHAR_SHADER_STAGE_BUILD;
+        return EMU_SHADER_STAGE_BUILD;
     case VideoCore::LoadCallbackStage::Complete:
-        return AZAHAR_SHADER_STAGE_COMPLETE;
+        return EMU_SHADER_STAGE_COMPLETE;
     }
-    return AZAHAR_SHADER_STAGE_PREPARE;
+    return EMU_SHADER_STAGE_PREPARE;
 }
 
 static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progress, int max) {
@@ -1151,15 +1151,15 @@ void Java_com_karasu256_azahar_1reloaded_lib_azahar_1for_1flutter_NativeLibrary_
 } // extern "C"
 
 /**
- * One emulation session driven through the C ABI declared in azahar_session.h.
+ * One emulation session driven through the C ABI declared in emu_session.h.
  *
  * The session owns the emulation thread, the callbacks and the screen textures it asked the
  * application for. Destroying it stops the emulation, joins the thread and releases everything,
  * so another session can be created in the same process afterwards.
  */
-struct AzaharSession {
-    AzaharSessionCallbacks callbacks{};
-    AzaharSessionOptions options{};
+struct EmuSession {
+    EmuSessionCallbacks callbacks{};
+    EmuSessionOptions options{};
     std::string path;
     std::thread emulation_thread;
     AudioCore::SinkType previous_output_type{AudioCore::SinkType::Auto};
@@ -1172,13 +1172,13 @@ struct AzaharSession {
 namespace {
 
 std::mutex g_active_session_mutex;
-AzaharSession* g_active_session{};
+EmuSession* g_active_session{};
 
 std::size_t CurrentFcramSize() {
     return Settings::values.is_new_3ds.GetValue() ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE;
 }
 
-void ReportSessionError(const AzaharSessionCallbacks& callbacks, const std::string& message) {
+void ReportSessionError(const EmuSessionCallbacks& callbacks, const std::string& message) {
     LOG_CRITICAL(Frontend, "{}", message);
     if (callbacks.on_error) {
         callbacks.on_error(callbacks.user, message.c_str());
@@ -1194,7 +1194,7 @@ void ReportSessionError(const AzaharSessionCallbacks& callbacks, const std::stri
  *
  * @return false when the texture could not be created or no surface became available in time.
  */
-bool CreateSessionTexture(const AzaharSession& session, int width, int height, bool secondary) {
+bool CreateSessionTexture(const EmuSession& session, int width, int height, bool secondary) {
     JNIEnv* env = IDCache::GetEnvForThread();
     const jlong texture_id = env->CallStaticLongMethod(
         IDCache::GetNativeLibraryClass(), IDCache::GetCreateSessionTexture(),
@@ -1253,9 +1253,9 @@ void ReleaseSessionTextures() {
 
 extern "C" {
 
-static AzaharSession* CreateSessionUnguarded(const char* game_path,
-                                             const AzaharSessionOptions* options,
-                                             const AzaharSessionCallbacks* callbacks) {
+static EmuSession* CreateSessionUnguarded(const char* game_path,
+                                             const EmuSessionOptions* options,
+                                             const EmuSessionCallbacks* callbacks) {
     if (game_path == nullptr || options == nullptr || callbacks == nullptr) {
         return nullptr;
     }
@@ -1263,7 +1263,7 @@ static AzaharSession* CreateSessionUnguarded(const char* game_path,
     if (g_active_session != nullptr) {
         return nullptr;
     }
-    auto* session = new AzaharSession();
+    auto* session = new EmuSession();
     session->callbacks = *callbacks;
     session->options = *options;
     session->path = game_path;
@@ -1272,23 +1272,23 @@ static AzaharSession* CreateSessionUnguarded(const char* game_path,
     return session;
 }
 
-static int32_t StartSessionUnguarded(AzaharSession* session) {
+static int32_t StartSessionUnguarded(EmuSession* session) {
     if (session == nullptr) {
-        return AZAHAR_STATUS_INVALID_ARGUMENT;
+        return EMU_STATUS_INVALID_ARGUMENT;
     }
 
     if (!CreateSessionTexture(*session, session->options.primary_width,
                               session->options.primary_height, false) ||
         s_surf == nullptr) {
         ReportSessionError(session->callbacks, "Failed to create the top screen texture");
-        return AZAHAR_STATUS_LOAD_FAILED;
+        return EMU_STATUS_LOAD_FAILED;
     }
     if (session->options.dual_screen != 0 &&
         (!CreateSessionTexture(*session, session->options.secondary_width,
                                session->options.secondary_height, true) ||
          s_surf_secondary == nullptr)) {
         ReportSessionError(session->callbacks, "Failed to create the bottom screen texture");
-        return AZAHAR_STATUS_LOAD_FAILED;
+        return EMU_STATUS_LOAD_FAILED;
     }
 
     {
@@ -1340,24 +1340,24 @@ static int32_t StartSessionUnguarded(AzaharSession* session) {
                                    std::to_string(static_cast<int>(result)));
         }
     });
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
-int32_t azahar_session_pause(AzaharSession* session) {
+int32_t emu_session_pause(EmuSession* session) {
     if (session == nullptr) {
-        return AZAHAR_STATUS_INVALID_ARGUMENT;
+        return EMU_STATUS_INVALID_ARGUMENT;
     }
     pause_emulation = true;
     Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
     if (auto* handler = InputManager::NDKMotionHandler()) {
         handler->DisableSensors();
     }
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
-int32_t azahar_session_resume(AzaharSession* session) {
+int32_t emu_session_resume(EmuSession* session) {
     if (session == nullptr) {
-        return AZAHAR_STATUS_INVALID_ARGUMENT;
+        return EMU_STATUS_INVALID_ARGUMENT;
     }
     pause_emulation = false;
     Core::System::GetInstance().frame_limiter.SetFrameAdvancing(false);
@@ -1365,61 +1365,61 @@ int32_t azahar_session_resume(AzaharSession* session) {
     if (auto* handler = InputManager::NDKMotionHandler()) {
         handler->EnableSensors();
     }
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
-size_t azahar_session_fcram_size(const AzaharSession* session) {
+size_t emu_session_fcram_size(const EmuSession* session) {
     if (session == nullptr || stop_run || !Core::System::GetInstance().IsPoweredOn()) {
         return 0;
     }
     return CurrentFcramSize();
 }
 
-int32_t azahar_session_read_memory(AzaharSession* session, uint32_t address, uint8_t* out,
+int32_t emu_session_read_memory(EmuSession* session, uint32_t address, uint8_t* out,
                                    size_t len) {
     if (session == nullptr || out == nullptr) {
-        return AZAHAR_STATUS_INVALID_ARGUMENT;
+        return EMU_STATUS_INVALID_ARGUMENT;
     }
     Core::System& system = Core::System::GetInstance();
     if (len == 0 || stop_run || !system.IsPoweredOn()) {
-        return AZAHAR_STATUS_INVALID_ADDRESS;
+        return EMU_STATUS_INVALID_ADDRESS;
     }
     const auto process = system.Kernel().GetCurrentProcess();
     if (!process) {
-        return AZAHAR_STATUS_INVALID_ADDRESS;
+        return EMU_STATUS_INVALID_ADDRESS;
     }
     constexpr uint64_t page_size = 0x1000;
     const uint64_t end = static_cast<uint64_t>(address) + len;
     if (end > 0x100000000ULL) {
-        return AZAHAR_STATUS_INVALID_ADDRESS;
+        return EMU_STATUS_INVALID_ADDRESS;
     }
     Memory::MemorySystem& memory = system.Memory();
     for (uint64_t page = address & ~(page_size - 1); page < end; page += page_size) {
         if (!memory.IsValidVirtualAddress(*process, static_cast<VAddr>(page))) {
-            return AZAHAR_STATUS_INVALID_ADDRESS;
+            return EMU_STATUS_INVALID_ADDRESS;
         }
     }
     memory.ReadBlock(*process, address, out, len);
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
-int32_t azahar_session_read_fcram(AzaharSession* session, size_t offset, uint8_t* out, size_t len) {
+int32_t emu_session_read_fcram(EmuSession* session, size_t offset, uint8_t* out, size_t len) {
     if (session == nullptr || out == nullptr) {
-        return AZAHAR_STATUS_INVALID_ARGUMENT;
+        return EMU_STATUS_INVALID_ARGUMENT;
     }
     Core::System& system = Core::System::GetInstance();
     if (stop_run || !system.IsPoweredOn()) {
-        return AZAHAR_STATUS_INVALID_ADDRESS;
+        return EMU_STATUS_INVALID_ADDRESS;
     }
     const std::size_t size = CurrentFcramSize();
     if (offset > size || len > size - offset) {
-        return AZAHAR_STATUS_INVALID_ADDRESS;
+        return EMU_STATUS_INVALID_ADDRESS;
     }
     std::memcpy(out, system.Memory().GetFCRAMPointer(0) + offset, len);
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
-static void DestroySessionUnguarded(AzaharSession* session) {
+static void DestroySessionUnguarded(EmuSession* session) {
     if (session == nullptr) {
         return;
     }
@@ -1538,7 +1538,7 @@ struct AzaharHostState {
     const char* custom_driver_dir;
     const char* custom_driver_name;
     const char* file_redirect_dir;
-    const AzaharStorageApi* storage;
+    const EmuStorageApi* storage;
 };
 
 static jobject g_application_context{};
@@ -1617,9 +1617,9 @@ void azahar_host_unbind_natives() {
 static std::string g_session_library_error;
 
 /**
- * Why the last call of [azahar_session_lib_init] failed, or an empty string.
+ * Why the last call of [emu_session_lib_init] failed, or an empty string.
  */
-const char* azahar_session_lib_last_error() {
+const char* emu_session_lib_last_error() {
     return g_session_library_error.c_str();
 }
 
@@ -1631,7 +1631,7 @@ static int32_t InitSessionLibraryUnguarded(void* java_vm, void* app_class_loader
         if (!IDCache::InitializeForSession(static_cast<JavaVM*>(java_vm),
                                            static_cast<jobject>(app_class_loader))) {
             g_session_library_error = "the cache of Java classes could not be initialized";
-            return AZAHAR_STATUS_LOAD_FAILED;
+            return EMU_STATUS_LOAD_FAILED;
         }
         JNIEnv* env = IDCache::GetEnvForThread();
         if (host_state != nullptr) {
@@ -1659,13 +1659,13 @@ static int32_t InitSessionLibraryUnguarded(void* java_vm, void* app_class_loader
     } catch (const std::exception& exception) {
         g_session_library_error =
             std::string{"initializing "} + step + " threw " + exception.what();
-        return AZAHAR_STATUS_LOAD_FAILED;
+        return EMU_STATUS_LOAD_FAILED;
     } catch (...) {
         g_session_library_error =
             std::string{"initializing "} + step + " threw an unknown exception";
-        return AZAHAR_STATUS_LOAD_FAILED;
+        return EMU_STATUS_LOAD_FAILED;
     }
-    return AZAHAR_STATUS_OK;
+    return EMU_STATUS_OK;
 }
 
 /**
@@ -1718,19 +1718,19 @@ void GuardedVoid(const char* where, Function&& function) {
 
 extern "C" {
 
-AzaharSession* azahar_session_create(const char* game_path, const AzaharSessionOptions* options,
-                                     const AzaharSessionCallbacks* callbacks) {
-    return Guarded<AzaharSession*>("azahar_session_create", nullptr, [&] {
+EmuSession* emu_session_create(const char* game_path, const EmuSessionOptions* options,
+                                     const EmuSessionCallbacks* callbacks) {
+    return Guarded<EmuSession*>("emu_session_create", nullptr, [&] {
         return CreateSessionUnguarded(game_path, options, callbacks);
     });
 }
 
-int32_t azahar_session_start(AzaharSession* session) {
-    return Guarded<int32_t>("azahar_session_start", AZAHAR_STATUS_LOAD_FAILED,
+int32_t emu_session_start(EmuSession* session) {
+    return Guarded<int32_t>("emu_session_start", EMU_STATUS_LOAD_FAILED,
                             [&] { return StartSessionUnguarded(session); });
 }
 
-void azahar_session_answer_artic_country(AzaharSession* session, int32_t country) {
+void emu_session_answer_artic_country(EmuSession* session, int32_t country) {
     if (session == nullptr) {
         return;
     }
@@ -1741,23 +1741,23 @@ void azahar_session_answer_artic_country(AzaharSession* session, int32_t country
     session->country_cv.notify_all();
 }
 
-void azahar_session_destroy(AzaharSession* session) {
-    GuardedVoid("azahar_session_destroy", [&] { DestroySessionUnguarded(session); });
+void emu_session_destroy(EmuSession* session) {
+    GuardedVoid("emu_session_destroy", [&] { DestroySessionUnguarded(session); });
 }
 
 void azahar_host_bind_natives(void* session_library) {
     GuardedVoid("azahar_host_bind_natives", [&] { BindNativesUnguarded(session_library); });
 }
 
-int32_t azahar_session_lib_init(void* java_vm, void* app_class_loader,
+int32_t emu_session_lib_init(void* java_vm, void* app_class_loader,
                                 const AzaharHostState* host_state) {
-    return Guarded<int32_t>("azahar_session_lib_init", AZAHAR_STATUS_LOAD_FAILED, [&] {
+    return Guarded<int32_t>("emu_session_lib_init", EMU_STATUS_LOAD_FAILED, [&] {
         return InitSessionLibraryUnguarded(java_vm, app_class_loader, host_state);
     });
 }
 
-void azahar_session_lib_shutdown() {
-    GuardedVoid("azahar_session_lib_shutdown", [] { ShutdownSessionLibraryUnguarded(); });
+void emu_session_lib_shutdown() {
+    GuardedVoid("emu_session_lib_shutdown", [] { ShutdownSessionLibraryUnguarded(); });
 }
 
 } // extern "C"
