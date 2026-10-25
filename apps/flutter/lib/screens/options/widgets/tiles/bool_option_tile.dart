@@ -27,13 +27,26 @@ class BoolOptionTile extends ConsumerWidget {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onLongPress: onLongPress,
-      child: ToggleSettingsItem(
-        icon: option.icon,
-        title: option.title(t),
-        subtitle: option.description?.call(t),
-        value: option.value.read(ref),
-        onChanged: (value) =>
-            ref.commitOptionValue(context, option.value, value, onAccessed),
+      child: ExcludeFocus(
+        excluding: !option.enabled,
+        child: IgnorePointer(
+          ignoring: !option.enabled,
+          child: Opacity(
+            opacity: option.enabled ? 1 : 0.5,
+            child: ToggleSettingsItem(
+              icon: option.icon,
+              title: option.title(t),
+              subtitle: option.description?.call(t),
+              value: option.value.read(ref),
+              onChanged: (value) => ref.commitOptionValue(
+                context,
+                option.value,
+                value,
+                onAccessed,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

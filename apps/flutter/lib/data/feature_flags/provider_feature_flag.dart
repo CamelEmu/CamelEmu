@@ -11,6 +11,8 @@ class ProviderFeatureFlag extends FeatureFlag {
     required super.title,
     super.description,
     super.icon,
+    super.defaultValue,
+    super.editable,
     required this.provider,
   });
 

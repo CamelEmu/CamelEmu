@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../data/games/game_title_provider.dart';
-import '../../../data/settings/feature_flags_provider.dart';
 import '../../../i18n/translations.g.dart';
 import '../../../theme/extensions/game_card_theme.dart';
 import '../../../theme/extensions/glass_surface_theme.dart';
-import '../../../widgets/app_liquid_glass.dart';
+import '../../../widgets/app_panel.dart';
 import '../../../widgets/gamepad/gamepad_intents.dart';
 import 'game_icon.dart';
 import 'game_regions_translator.dart';
@@ -43,16 +42,12 @@ class GameCard extends ConsumerWidget {
     final title = ref.watch(gameTitleProvider(game.path));
     final surfaceTheme = Theme.of(context).extension<GlassSurfaceTheme>()!;
     final cardTheme = Theme.of(context).extension<GameCardTheme>()!;
-    final performanceImprovements = ref.watch(performanceImprovementsProvider);
-    final glass = AppLiquidGlass(
+    final panel = AppPanel(
       borderRadius: surfaceTheme.borderRadius,
-      blurSigma: surfaceTheme.blurSigma,
       fillColor: isValidExtension
           ? surfaceTheme.fillColor
           : cardTheme.invalidExtensionColor,
       borderColor: surfaceTheme.borderColor,
-      backdropBlur: !performanceImprovements,
-      shadow: performanceImprovements ? const [] : surfaceTheme.shadow,
       child: Row(
         children: [
           Expanded(
@@ -75,9 +70,7 @@ class GameCard extends ConsumerWidget {
                       clipBehavior: Clip.antiAlias,
                       child: GameIcon(
                         iconPath: game.iconPath,
-                        cacheSize: performanceImprovements
-                            ? cardTheme.iconBoxSize
-                            : null,
+                        cacheSize: cardTheme.iconBoxSize,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -126,7 +119,7 @@ class GameCard extends ConsumerWidget {
     final info = onInfo;
     final card = Padding(
       padding: EdgeInsets.all(outerPadding),
-      child: performanceImprovements ? RepaintBoundary(child: glass) : glass,
+      child: RepaintBoundary(child: panel),
     );
     if (info == null) return card;
     return Actions(
