@@ -48,7 +48,7 @@ class _LegacyDataPromptPageState extends State<LegacyDataPromptPage> {
           (true, _) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(),
+              const AppCircularProgress(),
               const SizedBox(height: 16),
               Text(t.migrating),
             ],

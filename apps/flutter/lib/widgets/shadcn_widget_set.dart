@@ -152,6 +152,31 @@ class ShadcnWidgetSet extends AppWidgetSet {
   }
 
   @override
+  Widget? circularProgress({double? size, double? strokeWidth}) {
+    return shadcn.CircularProgressIndicator(
+      size: size,
+      strokeWidth: strokeWidth,
+    );
+  }
+
+  @override
+  Widget? linearProgress({
+    double? value,
+    double? minHeight,
+    Color? color,
+    Color? backgroundColor,
+    BorderRadius? borderRadius,
+  }) {
+    return shadcn.LinearProgressIndicator(
+      value: value,
+      minHeight: minHeight,
+      color: color,
+      backgroundColor: backgroundColor,
+      borderRadius: borderRadius,
+    );
+  }
+
+  @override
   Widget? navigationBar({
     required List<AppNavDestination> destinations,
     required int selectedIndex,

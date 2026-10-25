@@ -72,7 +72,7 @@ class _SystemFilesPageState extends ConsumerState<SystemFilesPage> {
           title: Text(t.systemFiles.title),
           content: Row(
             children: [
-              const CircularProgressIndicator(),
+              const AppCircularProgress(),
               const SizedBox(width: 16),
               Expanded(child: Text(t.systemFiles.detecting)),
             ],
@@ -100,7 +100,7 @@ class _SystemFilesPageState extends ConsumerState<SystemFilesPage> {
           title: Text(t.systemFiles.title),
           content: Row(
             children: [
-              const CircularProgressIndicator(),
+              const AppCircularProgress(),
               const SizedBox(width: 16),
               Expanded(child: Text(t.systemFiles.preparing)),
             ],

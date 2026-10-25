@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 
 import '../../../i18n/translations.g.dart';
+import '../../../widgets/app_widgets.dart';
 
 class CopyDirProgressDialog extends StatelessWidget {
   const CopyDirProgressDialog({super.key, required this.progressStream});
@@ -44,9 +45,7 @@ class CopyDirProgressDialog extends StatelessWidget {
               children: [
                 Text(message, maxLines: 4, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: max == 0 ? null : progress / max,
-                ),
+                AppLinearProgress(value: max == 0 ? null : progress / max),
               ],
             );
           },

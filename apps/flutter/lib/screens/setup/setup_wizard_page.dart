@@ -6,6 +6,7 @@ import '../../app_services.dart';
 import '../../data/settings/user_directories_provider.dart';
 import '../../i18n/translations.g.dart';
 import '../../routing/app_routes.dart';
+import '../../widgets/app_widgets.dart';
 import 'dialogs/citra_directory_dialog.dart';
 import 'dialogs/copy_dir_progress_dialog.dart';
 import 'dialogs/message_dialog.dart';
@@ -221,7 +222,7 @@ class _SetupWizardPageState extends State<SetupWizardPage> {
   @override
   Widget build(BuildContext context) {
     if (!_viewModel.isLoaded) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: AppCircularProgress()));
     }
     final steps = _steps(context.t);
     return Scaffold(
