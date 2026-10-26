@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <android/bitmap.h>
-#include <libyuv.h>
+#include <emu_image.h>
 #include "common/logging/log.h"
 #include "core/frontend/camera/blank_camera.h"
 #include "jni/camera/still_image_camera.h"
@@ -72,24 +72,37 @@ void Interface::StartCapture() {
     void* raw_data;
     BITMAP_CALL(lockPixels(env, bitmap, &raw_data));
     std::vector<u8> data(info.height * info.stride);
-    libyuv::ABGRToARGB(reinterpret_cast<u8*>(raw_data), info.stride, data.data(), info.stride,
-                       info.width, info.height);
+    const EmuImageArgb abgr_source{reinterpret_cast<u8*>(raw_data), static_cast<s32>(info.stride),
+                                   static_cast<s32>(info.width), static_cast<s32>(info.height)};
+    const s32 swap_status = emu_image_abgr_to_argb(&abgr_source, data.data(), info.stride);
     BITMAP_CALL(unlockPixels(env, bitmap));
+    if (swap_status != 0) {
+        LOG_ERROR(Frontend, "emu_image_abgr_to_argb failed");
+    }
 
     if (mirror) {
         std::vector<u8> mirrored(data.size());
-        libyuv::ARGBMirror(data.data(), info.stride, mirrored.data(), info.stride, info.width,
-                           info.height);
+        const EmuImageArgb argb_source{data.data(), static_cast<s32>(info.stride),
+                                       static_cast<s32>(info.width), static_cast<s32>(info.height)};
+        if (emu_image_argb_mirror(&argb_source, mirrored.data(), info.stride) != 0) {
+            LOG_ERROR(Frontend, "emu_image_argb_mirror failed");
+        }
         data.swap(mirrored);
     }
 
     image.resize(info.height * info.width);
+    const EmuImageArgb argb_source{data.data(), static_cast<s32>(info.stride),
+                                   static_cast<s32>(info.width), static_cast<s32>(info.height)};
+    s32 convert_status;
     if (format == Service::CAM::OutputFormat::RGB565) {
-        libyuv::ARGBToRGB565(data.data(), info.stride, reinterpret_cast<u8*>(image.data()),
-                             info.width * 2, info.width, invert ? -info.height : info.height);
+        convert_status = emu_image_argb_to_rgb565(&argb_source, reinterpret_cast<u8*>(image.data()),
+                                                  info.width * 2, invert);
     } else {
-        libyuv::ARGBToYUY2(data.data(), info.stride, reinterpret_cast<u8*>(image.data()),
-                           info.width * 2, info.width, invert ? -info.height : info.height);
+        convert_status = emu_image_argb_to_yuy2(&argb_source, reinterpret_cast<u8*>(image.data()),
+                                                info.width * 2, invert);
+    }
+    if (convert_status != 0) {
+        LOG_ERROR(Frontend, "Failed to convert the image to the output format");
     }
     opened = true;
 

@@ -249,13 +249,6 @@ else()
     add_subdirectory(lodepng)
 endif()
 
-# (xperia64): Only use libyuv on Android b/c of build issues on Windows and mandatory JPEG
-if(ANDROID)
-    # libyuv
-    add_subdirectory(libyuv)
-    target_include_directories(yuv INTERFACE ./libyuv/include)
-endif()
-
 # OpenAL Soft
 if (ENABLE_OPENAL)
     if(USE_SYSTEM_OPENAL)
@@ -303,9 +296,6 @@ if (ENABLE_VULKAN)
         set(ALLOW_EXTERNAL_SPIRV_TOOLS ON)
         add_subdirectory(glslang)
     endif()
-
-    # sirit
-    add_subdirectory(sirit EXCLUDE_FROM_ALL)
 
     # VMA
     if(USE_SYSTEM_VMA)

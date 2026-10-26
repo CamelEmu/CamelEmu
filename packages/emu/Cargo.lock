@@ -592,7 +592,10 @@ dependencies = [
  "emu_audio",
  "emu_crypto",
  "emu_http",
+ "emu_image",
  "emu_random",
+ "emu_shader",
+ "emu_spirv",
  "emu_storage",
  "flutter_rust_bridge",
  "memory",
@@ -653,10 +656,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "emu_image"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.1",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "emu_random"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.4.3",
+]
+
+[[package]]
+name = "emu_shader"
+version = "0.1.0"
+dependencies = [
+ "emu_spirv",
+ "sha2 0.11.1",
+ "spirv",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "emu_spirv"
+version = "0.1.0"
+dependencies = [
+ "spirv",
 ]
 
 [[package]]
@@ -2109,6 +2137,15 @@ name = "spin"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e"
+
+[[package]]
+name = "spirv"
+version = "0.4.0+sdk-1.4.341.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9571ea910ebd84c86af4b3ed27f9dbdc6ad06f17c5f96146b2b671e2976744f"
+dependencies = [
+ "bitflags",
+]
 
 [[package]]
 name = "spki"

@@ -8,7 +8,7 @@
 #include <camera/NdkCameraManager.h>
 #include <camera/NdkCameraMetadata.h>
 #include <camera/NdkCaptureRequest.h>
-#include <libyuv.h>
+#include <emu_image.h>
 #include <media/NdkImageReader.h>
 #include "common/scope_exit.h"
 #include "common/thread.h"
@@ -330,8 +330,21 @@ struct YUVImage {
     }
 };
 
-#define YUV(image)                                                                                 \
-    image.y.data(), image.width, image.u.data(), image.width / 2, image.v.data(), image.width / 2
+static EmuImageI420 View(const YUVImage& image) {
+    return {image.y.data(), image.u.data(),   image.v.data(), image.width,
+            image.width / 2, image.width / 2, image.width,    image.height};
+}
+
+static EmuImageI420Mut MutableView(YUVImage& image) {
+    return {image.y.data(), image.u.data(),   image.v.data(), image.width,
+            image.width / 2, image.width / 2, image.width,    image.height};
+}
+
+static void CheckImageStatus(int32_t status, const char* function) {
+    if (status != 0) {
+        LOG_ERROR(Service_CAM, "{} failed", function);
+    }
+}
 
 std::vector<u16> Interface::ReceiveFrame() {
     bool should_reload = false;
@@ -369,9 +382,12 @@ std::vector<u16> Interface::ReceiveFrame() {
     auto [width, height] = session->selected_resolution;
 
     YUVImage converted(width, height);
-    libyuv::Android420ToI420(data[0].get(), row_stride[0], data[1].get(), row_stride[1],
-                             data[2].get(), row_stride[2], session->pixel_stride, YUV(converted),
-                             width, height);
+    const EmuImageAndroid420 android_frame{data[0].get(),       data[1].get(), data[2].get(),
+                                           row_stride[0],       row_stride[1], row_stride[2],
+                                           session->pixel_stride, width,       height};
+    const EmuImageI420Mut converted_view = MutableView(converted);
+    CheckImageStatus(emu_image_android420_to_i420(&android_frame, &converted_view),
+                     "emu_image_android420_to_i420");
 
     // Rotate the image to get it in upright position
     // The g_rotation here is the display rotation which is opposite of the device rotation
@@ -382,8 +398,10 @@ std::vector<u16> Interface::ReceiveFrame() {
         std::swap(width, height);
     }
     YUVImage rotated(width, height);
-    libyuv::I420Rotate(YUV(converted), YUV(rotated), converted.width, converted.height,
-                       static_cast<libyuv::RotationMode>(rotation));
+    const EmuImageI420 converted_source = View(converted);
+    const EmuImageI420Mut rotated_view = MutableView(rotated);
+    CheckImageStatus(emu_image_i420_rotate(&converted_source, &rotated_view, rotation),
+                     "emu_image_i420_rotate");
     converted.Clear();
 
     // Calculate crop coordinates
@@ -402,30 +420,43 @@ std::vector<u16> Interface::ReceiveFrame() {
     const int uv_offset = crop_y / 2 * width / 2 + crop_x / 2;
     YUVImage scaled(resolution.width, resolution.height);
     // Crop and scale
-    libyuv::I420Scale(rotated.y.data() + y_offset, width, rotated.u.data() + uv_offset, width / 2,
-                      rotated.v.data() + uv_offset, width / 2, crop_width, crop_height, YUV(scaled),
-                      resolution.width, resolution.height, libyuv::kFilterBilinear);
+    const EmuImageI420 crop_source{rotated.y.data() + y_offset,
+                                   rotated.u.data() + uv_offset,
+                                   rotated.v.data() + uv_offset,
+                                   width,
+                                   width / 2,
+                                   width / 2,
+                                   crop_width,
+                                   crop_height};
+    const EmuImageI420Mut scaled_view = MutableView(scaled);
+    CheckImageStatus(emu_image_i420_scale(&crop_source, &scaled_view, EMU_IMAGE_FILTER_BILINEAR),
+                     "emu_image_i420_scale");
     rotated.Clear();
 
     if (mirror) {
         YUVImage mirrored(scaled.width, scaled.height);
-        libyuv::I420Mirror(YUV(scaled), YUV(mirrored), resolution.width, resolution.height);
+        const EmuImageI420 scaled_source = View(scaled);
+        const EmuImageI420Mut mirrored_view = MutableView(mirrored);
+        CheckImageStatus(emu_image_i420_mirror(&scaled_source, &mirrored_view),
+                         "emu_image_i420_mirror");
         scaled.Swap(mirrored);
     }
 
     std::vector<u16> output(resolution.width * resolution.height);
+    const EmuImageI420 output_source = View(scaled);
     if (format == Service::CAM::OutputFormat::RGB565) {
-        libyuv::I420ToRGB565(YUV(scaled), reinterpret_cast<u8*>(output.data()),
-                             resolution.width * 2, resolution.width,
-                             invert ? -resolution.height : resolution.height);
+        CheckImageStatus(emu_image_i420_to_rgb565(&output_source,
+                                                  reinterpret_cast<u8*>(output.data()),
+                                                  resolution.width * 2, invert),
+                         "emu_image_i420_to_rgb565");
     } else {
-        libyuv::I420ToYUY2(YUV(scaled), reinterpret_cast<u8*>(output.data()), resolution.width * 2,
-                           resolution.width, invert ? -resolution.height : resolution.height);
+        CheckImageStatus(emu_image_i420_to_yuy2(&output_source,
+                                                reinterpret_cast<u8*>(output.data()),
+                                                resolution.width * 2, invert),
+                         "emu_image_i420_to_yuy2");
     }
     return output;
 }
-
-#undef YUV
 
 bool Interface::IsPreviewAvailable() {
     if (!session) {
