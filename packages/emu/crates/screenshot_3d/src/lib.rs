@@ -14,8 +14,8 @@ mod view;
 
 pub use camera::{CameraData, Projection};
 pub use context::{
-    AlphaMode, ClipVertex, DrawData, Screenshot3dContext, ShaderData, ShaderProgram, TextureData,
-    VertexData,
+    AlphaMode, ClipVertex, DepthOrder, DrawData, PatchData, Screenshot3dContext, ShaderData, ShaderProgram,
+    TextureData, TriangleMode, VertexData, Viewport,
 };
 pub use error::{Result, Screenshot3dError};
 pub use mesh::MeshData;

@@ -34,9 +34,46 @@ pub struct DrawData {
     pub shader: usize,
     pub texture: Option<usize>,
     pub position_output: u32,
+    pub viewport: Viewport,
+    pub depth_order: DepthOrder,
+    pub w_buffer: bool,
     pub alpha_mode: AlphaMode,
     pub alpha_cutoff: f32,
     pub vertices: Vec<ClipVertex>,
+    pub modes: Vec<TriangleMode>,
+    pub patches: Vec<PatchData>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Viewport {
+    pub half_x: f32,
+    pub half_y: f32,
+    pub corner_x: f32,
+    pub corner_y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub depth_scale: f32,
+    pub depth_offset: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DepthOrder {
+    DrawOrder,
+    NearerSmaller,
+    NearerGreater,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TriangleMode {
+    Texture,
+    Color,
+    Patch,
+}
+
+#[derive(Debug, Clone)]
+pub struct PatchData {
+    pub size: u32,
+    pub rgba: Vec<u8>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

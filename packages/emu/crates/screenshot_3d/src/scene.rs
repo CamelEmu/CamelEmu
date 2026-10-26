@@ -1,8 +1,8 @@
 use crate::camera::CameraData;
-use crate::context::{Screenshot3dContext, TextureData};
+use crate::context::{AlphaMode, PatchData, Screenshot3dContext, TextureData};
 use crate::error::{Result, Screenshot3dError};
 use crate::mesh::MeshData;
-use crate::settings::ExportSettings;
+use crate::settings::{ExportSettings, ViewSettings};
 use crate::view::Frustum;
 
 #[derive(Debug, Clone, Default)]
@@ -92,39 +92,87 @@ impl From<&TextureData> for SceneImage {
     }
 }
 
+impl From<&PatchData> for SceneImage {
+    fn from(patch: &PatchData) -> Self {
+        let settings = ExportSettings::default();
+        Self {
+            width: patch.size,
+            height: patch.size,
+            rgba: patch.rgba.clone(),
+            wrap_s: settings.pica_clamp_to_edge,
+            wrap_t: settings.pica_clamp_to_edge,
+            magnify_linear: false,
+            minify_linear: false,
+        }
+    }
+}
+
 impl From<&Screenshot3dContext> for Scene {
     fn from(context: &Screenshot3dContext) -> Self {
+        let settings = ViewSettings::default();
         let frustum = Frustum::from_camera(&context.camera);
-        Self {
-            meshes: context
-                .vertices
-                .draws
-                .iter()
-                .enumerate()
-                .map(|(layer, draw)| {
-                    let texture = draw.texture.and_then(|index| context.textures.get(index));
-                    MeshData::from((draw, layer, frustum, texture))
-                })
-                .collect(),
+        let mut images: Vec<SceneImage> = context.textures.iter().map(SceneImage::from).collect();
+        let mut meshes = Vec::new();
+        for draw in &context.vertices.draws {
+            let texture = draw.texture.and_then(|index| context.textures.get(index));
+            let perspective = Frustum::probe(draw, &context.shaders, &settings);
+            meshes.extend(MeshData::split(
+                draw,
+                &frustum,
+                perspective,
+                texture,
+                &mut images,
+                &settings,
+            ));
+        }
+        let mut scene = Self {
+            meshes,
             camera: context.camera.into(),
-            images: context.textures.iter().map(SceneImage::from).collect(),
+            images,
+        };
+        scene.discard_opaque_alpha();
+        scene
+    }
+}
+
+impl Scene {
+    fn discard_opaque_alpha(&mut self) {
+        let mut translucent = vec![false; self.images.len()];
+        for mesh in &self.meshes {
+            if mesh.alpha_mode != AlphaMode::Opaque {
+                if let Some(slot) = mesh.texture.and_then(|texture| translucent.get_mut(texture)) {
+                    *slot = true;
+                }
+            }
+        }
+        for mesh in &mut self.meshes {
+            if mesh.alpha_mode == AlphaMode::Opaque {
+                for color in &mut mesh.colors {
+                    color[3] = 1.0;
+                }
+            }
+        }
+        for (image, translucent) in self.images.iter_mut().zip(translucent) {
+            if !translucent {
+                for pixel in image.rgba.chunks_exact_mut(4) {
+                    pixel[3] = u8::MAX;
+                }
+            }
         }
     }
 }
 
 impl From<(Scene, Scene)> for Scene {
     fn from((top, mut bottom): (Scene, Scene)) -> Self {
-        let gap = ExportSettings::default().stack_gap;
-        if let (Some((top_min, top_max)), Some((bottom_min, bottom_max))) =
-            (top.bounds(), bottom.bounds())
-        {
-            let offset = [
-                (top_min[0] + top_max[0] - bottom_min[0] - bottom_max[0]) / 2.0,
-                top_min[1] - gap - bottom_max[1],
-                0.0,
-            ];
+        let settings = ExportSettings::default();
+        let top_half = (top.camera.yfov / 2.0).tan();
+        let bottom_half = (bottom.camera.yfov / 2.0).tan();
+        let scale = top_half / bottom_half;
+        if scale.is_finite() && scale > 0.0 {
+            let offset = -(2.0 * top_half * settings.screen_plane_depth + settings.stack_gap);
             for mesh in &mut bottom.meshes {
-                mesh.translate(offset);
+                mesh.scale_xy(scale);
+                mesh.translate([0.0, offset, 0.0]);
             }
         }
 

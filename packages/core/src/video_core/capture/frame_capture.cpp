@@ -34,6 +34,19 @@ struct CaptureSettings {
     u32 alpha_opaque = 0;
     u32 alpha_mask = 1;
     u32 alpha_blend = 2;
+    u32 depth_order_none = 0;
+    u32 depth_order_smaller = 1;
+    u32 depth_order_greater = 2;
+    u8 mode_texture = 0;
+    u8 mode_color = 1;
+    u8 mode_patch = 2;
+    u32 patch_min_size = 2;
+    u32 patch_max_size = 256;
+    u64 patch_budget = 8'000'000;
+    s32 conflict_tolerance = 3;
+    s32 linear_tolerance = 4;
+    f32 min_patch_w = 0.0001f;
+    f32 ndc_clamp = 2.0f;
     f32 min_triangle_area = 0.000001f;
     f32 inside_tolerance = 0.0001f;
     f32 color_scale = 255.0f;
@@ -81,8 +94,9 @@ struct Texture {
     u32 source_height{};
     u32 magnify_linear{};
     u32 minify_linear{};
-    u32 baked_pixels{};
+    u32 uv_triangles{};
     std::vector<u8> rgba;
+    std::vector<u32> owner;
 
     bool Reserve(s32 s0, s32 t0, s32 s1, s32 t1) {
         if (width == 0) {
@@ -94,6 +108,7 @@ struct Texture {
             width = static_cast<u32>(s1 - s0);
             height = static_cast<u32>(t1 - t0);
             rgba.assign(std::size_t{width} * height * 4, 0);
+            owner.assign(std::size_t{width} * height, 0);
             return true;
         }
         const s32 new_s0 = std::min(origin_s, s0);
@@ -110,25 +125,30 @@ struct Texture {
         const u32 new_width = static_cast<u32>(new_s1 - new_s0);
         const u32 new_height = static_cast<u32>(new_t1 - new_t0);
         std::vector<u8> grown(std::size_t{new_width} * new_height * 4, 0);
+        std::vector<u32> grown_owner(std::size_t{new_width} * new_height, 0);
         for (u32 row = 0; row < height; ++row) {
             const s32 t = top_t - 1 - static_cast<s32>(row);
             const u32 new_row = static_cast<u32>(new_t1 - 1 - t);
             const u32 new_col = static_cast<u32>(origin_s - new_s0);
-            std::memcpy(&grown[(std::size_t{new_row} * new_width + new_col) * 4],
-                        &rgba[std::size_t{row} * width * 4], std::size_t{width} * 4);
+            const std::size_t target = std::size_t{new_row} * new_width + new_col;
+            std::memcpy(&grown[target * 4], &rgba[std::size_t{row} * width * 4],
+                        std::size_t{width} * 4);
+            std::memcpy(&grown_owner[target], &owner[std::size_t{row} * width],
+                        std::size_t{width} * sizeof(u32));
         }
         origin_s = new_s0;
         top_t = new_t1;
         width = new_width;
         height = new_height;
         rgba = std::move(grown);
+        owner = std::move(grown_owner);
         return true;
     }
 
-    u8* Pixel(s32 s, s32 t) {
+    std::size_t Index(s32 s, s32 t) const {
         const u32 col = static_cast<u32>(s - origin_s);
         const u32 row = static_cast<u32>(top_t - 1 - t);
-        return &rgba[(std::size_t{row} * width + col) * 4];
+        return std::size_t{row} * width + col;
     }
 
 private:
@@ -138,15 +158,36 @@ private:
     }
 };
 
+struct Patch {
+    u32 size{};
+    std::vector<u8> rgba;
+};
+
+struct Viewport {
+    f32 half_x{};
+    f32 half_y{};
+    f32 corner_x{};
+    f32 corner_y{};
+    f32 width{};
+    f32 height{};
+    f32 depth_scale{};
+    f32 depth_offset{};
+};
+
 struct Draw {
     PAddr color_address{};
     u32 sequence{};
     u32 shader{};
     u32 texture{kSettings.no_texture};
     u32 position_output{};
+    Viewport viewport;
+    u32 depth_order{};
+    u32 w_buffer{};
     u32 alpha_mode{};
     f32 alpha_cutoff{};
     std::vector<Vertex> vertices;
+    std::vector<u8> modes;
+    std::vector<Patch> patches;
 };
 
 struct Transfer {
@@ -173,6 +214,11 @@ struct Program {
         return code == other.code && swizzle == other.swizzle &&
                entry_point == other.entry_point && uniforms == other.uniforms;
     }
+};
+
+struct BakeResult {
+    bool painted{};
+    bool conflict{};
 };
 
 class FragmentShader {
@@ -233,12 +279,14 @@ public:
                                                    texture_color);
         }
 
-        return rasterizer.WriteTevConfig(texture_color, tev_stages, primary_color,
-                                         primary_fragment_color, secondary_fragment_color);
+        auto output = rasterizer.WriteTevConfig(texture_color, tev_stages, primary_color,
+                                                primary_fragment_color, secondary_fragment_color);
+        rasterizer.WriteFog(Depth(v0, v1, v2, l0, l1, l2), output);
+        return output;
     }
 
-    bool Bake(Texture& image, const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
-              const Pica::OutputVertex& v2) {
+    BakeResult Bake(Texture& image, u32 triangle_id, const Pica::OutputVertex& v0,
+                    const Pica::OutputVertex& v1, const Pica::OutputVertex& v2) {
         const f32 width = static_cast<f32>(image.source_width);
         const f32 height = static_cast<f32>(image.source_height);
         const std::array<std::array<f32, 2>, 3> corners = {{
@@ -252,7 +300,7 @@ public:
         const f32 e2t = corners[2][1] - corners[0][1];
         const f32 area = e1s * e2t - e1t * e2s;
         if (!(std::abs(area) > kSettings.min_triangle_area)) {
-            return false;
+            return {};
         }
 
         const f32 min_s = std::min({corners[0][0], corners[1][0], corners[2][0]});
@@ -260,16 +308,16 @@ public:
         const f32 min_t = std::min({corners[0][1], corners[1][1], corners[2][1]});
         const f32 max_t = std::max({corners[0][1], corners[1][1], corners[2][1]});
         const s32 s0 = static_cast<s32>(std::floor(min_s));
-        const s32 s1 = static_cast<s32>(std::ceil(max_s));
+        const s32 s1 = std::max(static_cast<s32>(std::ceil(max_s)), s0 + 1);
         const s32 t0 = static_cast<s32>(std::floor(min_t));
-        const s32 t1 = static_cast<s32>(std::ceil(max_t));
-        if (!image.Reserve(s0, t0, std::max(s1, s0 + 1), std::max(t1, t0 + 1))) {
-            return false;
+        const s32 t1 = std::max(static_cast<s32>(std::ceil(max_t)), t0 + 1);
+        if (!image.Reserve(s0, t0, s1, t1)) {
+            return {};
         }
 
-        bool painted = false;
-        for (s32 t = t0; t < std::max(t1, t0 + 1); ++t) {
-            for (s32 s = s0; s < std::max(s1, s0 + 1); ++s) {
+        BakeResult result;
+        for (s32 t = t0; t < t1; ++t) {
+            for (s32 s = s0; s < s1; ++s) {
                 const f32 ds = static_cast<f32>(s) + 0.5f - corners[0][0];
                 const f32 dt = static_cast<f32>(t) + 0.5f - corners[0][1];
                 const f32 l1 = (ds * e2t - dt * e2s) / area;
@@ -280,25 +328,134 @@ public:
                     continue;
                 }
                 const auto color = Shade(v0, v1, v2, l0, l1, l2);
-                u8* pixel = image.Pixel(s, t);
+                const std::size_t index = image.Index(s, t);
+                u8* pixel = &image.rgba[index * 4];
+                if (image.owner[index] == 0) {
+                    pixel[0] = color.r();
+                    pixel[1] = color.g();
+                    pixel[2] = color.b();
+                    pixel[3] = color.a();
+                    image.owner[index] = triangle_id;
+                    result.painted = true;
+                } else if (image.owner[index] != triangle_id) {
+                    if (Differs(pixel, color)) {
+                        result.conflict = true;
+                    } else {
+                        result.painted = true;
+                    }
+                } else {
+                    result.painted = true;
+                }
+            }
+        }
+        return result;
+    }
+
+    bool IsLinear(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                  const Pica::OutputVertex& v2,
+                  const std::array<Common::Vec4<u8>, 3>& colors) {
+        constexpr std::array<std::array<f32, 3>, 4> samples = {{
+            {1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f},
+            {0.5f, 0.5f, 0.0f},
+            {0.0f, 0.5f, 0.5f},
+            {0.5f, 0.0f, 0.5f},
+        }};
+        for (const auto& sample : samples) {
+            const auto actual = Shade(v0, v1, v2, sample[0], sample[1], sample[2]);
+            for (u32 channel = 0; channel < 4; ++channel) {
+                const f32 expected = sample[0] * colors[0][channel] +
+                                     sample[1] * colors[1][channel] +
+                                     sample[2] * colors[2][channel];
+                if (std::abs(static_cast<f32>(actual[channel]) - expected) >
+                    static_cast<f32>(kSettings.linear_tolerance)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    u32 PatchSize(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                  const Pica::OutputVertex& v2) const {
+        const auto& rasterizer_regs = pica.regs.internal.rasterizer;
+        const f32 half_x = Pica::f24::FromRaw(rasterizer_regs.viewport_size_x).ToFloat32();
+        const f32 half_y = Pica::f24::FromRaw(rasterizer_regs.viewport_size_y).ToFloat32();
+        std::array<std::array<f32, 2>, 3> ndc{};
+        const std::array<const Pica::OutputVertex*, 3> vertices = {&v0, &v1, &v2};
+        for (std::size_t i = 0; i < vertices.size(); ++i) {
+            const f32 w = vertices[i]->pos.w.ToFloat32();
+            if (!(w > kSettings.min_patch_w)) {
+                return 0;
+            }
+            ndc[i] = {std::clamp(vertices[i]->pos.x.ToFloat32() / w, -kSettings.ndc_clamp,
+                                 kSettings.ndc_clamp),
+                      std::clamp(vertices[i]->pos.y.ToFloat32() / w, -kSettings.ndc_clamp,
+                                 kSettings.ndc_clamp)};
+        }
+        const f32 area = 0.5f * std::abs((ndc[1][0] - ndc[0][0]) * (ndc[2][1] - ndc[0][1]) -
+                                         (ndc[2][0] - ndc[0][0]) * (ndc[1][1] - ndc[0][1]));
+        const f32 pixels = area * std::abs(half_x) * std::abs(half_y);
+        const u32 size = static_cast<u32>(std::ceil(std::sqrt(2.0f * pixels)));
+        return std::clamp(size, kSettings.patch_min_size, kSettings.patch_max_size);
+    }
+
+    std::vector<u8> BakePatch(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                              const Pica::OutputVertex& v2, u32 size) {
+        std::vector<u8> rgba(std::size_t{size} * size * 4);
+        for (u32 row = 0; row < size; ++row) {
+            for (u32 column = 0; column < size; ++column) {
+                f32 l1 = (static_cast<f32>(column) + 0.5f) / static_cast<f32>(size);
+                f32 l2 = (static_cast<f32>(row) + 0.5f) / static_cast<f32>(size);
+                if (l1 + l2 > 1.0f) {
+                    l1 = 1.0f - l1;
+                    l2 = 1.0f - l2;
+                }
+                const auto color = Shade(v0, v1, v2, 1.0f - l1 - l2, l1, l2);
+                u8* pixel = &rgba[(std::size_t{row} * size + column) * 4];
                 pixel[0] = color.r();
                 pixel[1] = color.g();
                 pixel[2] = color.b();
                 pixel[3] = color.a();
-                ++image.baked_pixels;
-                painted = true;
             }
         }
-        return painted;
+        return rgba;
     }
 
 private:
+    static bool Differs(const u8* pixel, const Common::Vec4<u8>& color) {
+        for (u32 channel = 0; channel < 4; ++channel) {
+            if (std::abs(static_cast<s32>(pixel[channel]) - static_cast<s32>(color[channel])) >
+                kSettings.conflict_tolerance) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    f32 Depth(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+              const Pica::OutputVertex& v2, f32 l0, f32 l1, f32 l2) const {
+        const auto& regs = pica.regs.internal.rasterizer;
+        const f32 z = l0 * v0.pos.z.ToFloat32() + l1 * v1.pos.z.ToFloat32() +
+                      l2 * v2.pos.z.ToFloat32();
+        const f32 w = l0 * v0.pos.w.ToFloat32() + l1 * v1.pos.w.ToFloat32() +
+                      l2 * v2.pos.w.ToFloat32();
+        if (!(w > 0.0f)) {
+            return 0.0f;
+        }
+        const f32 scale = Pica::f24::FromRaw(regs.viewport_depth_range).ToFloat32();
+        const f32 offset = Pica::f24::FromRaw(regs.viewport_depth_near_plane).ToFloat32();
+        f32 depth = z / w * scale + offset;
+        if (regs.depthmap_enable == Pica::RasterizerRegs::DepthBuffering::WBuffering) {
+            depth *= w;
+        }
+        return std::clamp(depth, 0.0f, 1.0f);
+    }
+
     Pica::PicaCore& pica;
     SwRenderer::RasterizerSoftware rasterizer;
 };
 
-Vertex ToVertex(FragmentShader& shader, const Pica::OutputVertex& vertex) {
-    const auto color = shader.Shade(vertex, vertex, vertex, 1.0f, 0.0f, 0.0f);
+Vertex MakeVertex(const Pica::OutputVertex& vertex, const Common::Vec4<u8>& color) {
     return {vertex.pos.x.ToFloat32(),  vertex.pos.y.ToFloat32(), vertex.pos.z.ToFloat32(),
             vertex.pos.w.ToFloat32(),  vertex.tc0.x.ToFloat32(), vertex.tc0.y.ToFloat32(),
             color.r() / kSettings.color_scale, color.g() / kSettings.color_scale,
@@ -315,6 +472,8 @@ struct FrameCapture::Snapshot {
     std::unique_ptr<FragmentShader> shader;
     u32 sequence{};
     u32 frames{};
+    u32 triangle_ids{};
+    u64 patch_texels{};
 };
 
 FrameCapture::FrameCapture(Core::System& system_) : system{system_} {}
@@ -358,12 +517,36 @@ void FrameCapture::OnTriangle(const Pica::PicaCore& core, const Pica::OutputVert
     }
     Draw& draw = snapshot->draws.back();
     FragmentShader& shader = *snapshot->shader;
-    draw.vertices.push_back(ToVertex(shader, v0));
-    draw.vertices.push_back(ToVertex(shader, v1));
-    draw.vertices.push_back(ToVertex(shader, v2));
+
+    const std::array<Common::Vec4<u8>, 3> colors = {
+        shader.Shade(v0, v0, v0, 1.0f, 0.0f, 0.0f),
+        shader.Shade(v1, v1, v1, 1.0f, 0.0f, 0.0f),
+        shader.Shade(v2, v2, v2, 1.0f, 0.0f, 0.0f),
+    };
+    draw.vertices.push_back(MakeVertex(v0, colors[0]));
+    draw.vertices.push_back(MakeVertex(v1, colors[1]));
+    draw.vertices.push_back(MakeVertex(v2, colors[2]));
+
+    u8 mode = kSettings.mode_color;
     if (draw.texture != kSettings.no_texture) {
-        shader.Bake(snapshot->textures[draw.texture], v0, v1, v2);
+        const auto baked = shader.Bake(snapshot->textures[draw.texture], ++snapshot->triangle_ids,
+                                       v0, v1, v2);
+        if (baked.painted && !baked.conflict) {
+            mode = kSettings.mode_texture;
+            ++snapshot->textures[draw.texture].uv_triangles;
+        }
     }
+    if (mode != kSettings.mode_texture) {
+        const u32 size = shader.PatchSize(v0, v1, v2);
+        const u64 texels = u64{size} * size;
+        if (size != 0 && snapshot->patch_texels + texels <= kSettings.patch_budget &&
+            !shader.IsLinear(v0, v1, v2, colors)) {
+            snapshot->patch_texels += texels;
+            draw.patches.push_back({size, shader.BakePatch(v0, v1, v2, size)});
+            mode = kSettings.mode_patch;
+        }
+    }
+    draw.modes.push_back(mode);
 }
 
 void FrameCapture::OnDisplayTransfer(const Pica::PicaCore& core,
@@ -394,6 +577,30 @@ void FrameCapture::BeginDraw(const Pica::PicaCore& core) {
     Draw draw;
     draw.color_address = regs.framebuffer.framebuffer.GetColorBufferPhysicalAddress();
     draw.sequence = snapshot->sequence++;
+    const auto& rasterizer_regs = regs.rasterizer;
+    const auto& framebuffer = regs.framebuffer.framebuffer;
+    draw.viewport = {Pica::f24::FromRaw(rasterizer_regs.viewport_size_x).ToFloat32(),
+                     Pica::f24::FromRaw(rasterizer_regs.viewport_size_y).ToFloat32(),
+                     static_cast<f32>(rasterizer_regs.viewport_corner.x),
+                     static_cast<f32>(rasterizer_regs.viewport_corner.y),
+                     static_cast<f32>(framebuffer.GetWidth()),
+                     static_cast<f32>(framebuffer.GetHeight()),
+                     Pica::f24::FromRaw(rasterizer_regs.viewport_depth_range).ToFloat32(),
+                     Pica::f24::FromRaw(rasterizer_regs.viewport_depth_near_plane).ToFloat32()};
+    draw.w_buffer = rasterizer_regs.depthmap_enable ==
+                            Pica::RasterizerRegs::DepthBuffering::WBuffering
+                        ? 1
+                        : 0;
+    draw.depth_order = kSettings.depth_order_none;
+    if (regs.framebuffer.output_merger.depth_test_enable) {
+        using Func = Pica::FramebufferRegs::CompareFunc;
+        const auto func = regs.framebuffer.output_merger.depth_test_func.Value();
+        if (func == Func::GreaterThan || func == Func::GreaterThanOrEqual) {
+            draw.depth_order = kSettings.depth_order_greater;
+        } else if (func == Func::LessThan || func == Func::LessThanOrEqual) {
+            draw.depth_order = kSettings.depth_order_smaller;
+        }
+    }
     for (u32 output = 0; output < kSettings.output_registers; ++output) {
         const auto& attributes = regs.rasterizer.vs_output_attributes[output];
         if (attributes.map_x.Value() == Pica::RasterizerRegs::VSOutputAttributes::POSITION_X) {
@@ -404,19 +611,21 @@ void FrameCapture::BeginDraw(const Pica::PicaCore& core) {
 
     const auto& merger = regs.framebuffer.output_merger;
     draw.alpha_mode = kSettings.alpha_opaque;
-    if (merger.alpha_test.enable) {
-        using Func = Pica::FramebufferRegs::CompareFunc;
-        const f32 ref = static_cast<f32>(merger.alpha_test.ref) / kSettings.color_scale;
-        if (merger.alpha_test.func == Func::GreaterThanOrEqual) {
-            draw.alpha_mode = kSettings.alpha_mask;
-            draw.alpha_cutoff = ref;
-        } else if (merger.alpha_test.func == Func::GreaterThan) {
-            draw.alpha_mode = kSettings.alpha_mask;
-            draw.alpha_cutoff = ref + 1.0f / kSettings.color_scale;
-        } else {
-            draw.alpha_mode = kSettings.alpha_blend;
-        }
-    } else if (merger.alphablend_enable) {
+    using Func = Pica::FramebufferRegs::CompareFunc;
+    using Factor = Pica::FramebufferRegs::BlendFactor;
+    const bool alpha_over =
+        merger.alphablend_enable &&
+        merger.alpha_blending.blend_equation_rgb == Pica::FramebufferRegs::BlendEquation::Add &&
+        merger.alpha_blending.factor_source_rgb == Factor::SourceAlpha &&
+        merger.alpha_blending.factor_dest_rgb == Factor::OneMinusSourceAlpha;
+    if (merger.alpha_test.enable && merger.alpha_test.func == Func::GreaterThanOrEqual) {
+        draw.alpha_mode = kSettings.alpha_mask;
+        draw.alpha_cutoff = static_cast<f32>(merger.alpha_test.ref) / kSettings.color_scale;
+    } else if (merger.alpha_test.enable && merger.alpha_test.func == Func::GreaterThan) {
+        draw.alpha_mode = kSettings.alpha_mask;
+        draw.alpha_cutoff = static_cast<f32>(merger.alpha_test.ref) / kSettings.color_scale +
+                            1.0f / kSettings.color_scale;
+    } else if (alpha_over) {
         draw.alpha_mode = kSettings.alpha_blend;
     }
 
@@ -502,7 +711,7 @@ void FrameCapture::OnFrameEnd() {
         for (const Resolved& screen : screens) {
             for (const Draw* draw : screen.draws) {
                 if (draw->texture != kSettings.no_texture &&
-                    snapshot->textures[draw->texture].baked_pixels != 0 &&
+                    snapshot->textures[draw->texture].uv_triangles != 0 &&
                     remap[draw->texture] == kSettings.no_texture) {
                     remap[draw->texture] = static_cast<u32>(texture_order.size());
                     texture_order.push_back(draw->texture);
@@ -526,10 +735,20 @@ void FrameCapture::OnFrameEnd() {
                 writer.U32(draw->texture == kSettings.no_texture ? kSettings.no_texture
                                                                  : remap[draw->texture]);
                 writer.U32(draw->position_output);
+                writer.Bytes(&draw->viewport, sizeof(Viewport));
+                writer.U32(draw->depth_order);
+                writer.U32(draw->w_buffer);
                 writer.U32(draw->alpha_mode);
                 writer.F32(draw->alpha_cutoff);
                 writer.U32(static_cast<u32>(draw->vertices.size()));
                 writer.Bytes(draw->vertices.data(), draw->vertices.size() * sizeof(Vertex));
+                writer.U32(static_cast<u32>(draw->modes.size()));
+                writer.Bytes(draw->modes.data(), draw->modes.size());
+                writer.U32(static_cast<u32>(draw->patches.size()));
+                for (const Patch& patch : draw->patches) {
+                    writer.U32(patch.size);
+                    writer.Bytes(patch.rgba.data(), patch.rgba.size());
+                }
             }
         }
         writer.U32(static_cast<u32>(snapshot->programs.size()));

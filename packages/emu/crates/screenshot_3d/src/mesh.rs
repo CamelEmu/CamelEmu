@@ -1,4 +1,5 @@
-use crate::context::{AlphaMode, ClipVertex, DrawData, TextureData};
+use crate::context::{AlphaMode, ClipVertex, DrawData, TextureData, TriangleMode, Viewport};
+use crate::scene::SceneImage;
 use crate::settings::ViewSettings;
 use crate::view::Frustum;
 
@@ -14,53 +15,162 @@ pub struct MeshData {
     pub alpha_cutoff: f32,
 }
 
-impl MeshData {
-    pub fn with_settings(
-        draw: &DrawData,
-        layer: usize,
-        frustum: &Frustum,
-        texture: Option<&TextureData>,
-        settings: &ViewSettings,
-    ) -> Self {
-        let depth_scale = 1.0 + layer as f32 * settings.layer_offset;
-        let horizontal = if draw.flip_vertically { 1.0 } else { -1.0 };
-        let textured = draw.texture.zip(texture);
+enum Attribute<'a> {
+    Texture(&'a TextureData),
+    Color,
+    Patch,
+}
 
-        let mut mesh = Self {
-            positions: Vec::new(),
-            texcoords: Vec::new(),
-            colors: Vec::new(),
-            indices: Vec::new(),
-            texture: textured.map(|(index, _)| index),
-            screen_width: draw.screen_width,
-            alpha_mode: draw.alpha_mode,
-            alpha_cutoff: draw.alpha_cutoff,
+struct Placement {
+    flip_vertically: bool,
+    viewport: Viewport,
+    perspective: Option<Frustum>,
+}
+
+impl Placement {
+    fn locate(&self, position: [f32; 4], screen_frustum: &Frustum) -> [f32; 3] {
+        let [x, y, _, w] = position;
+        if let Some(frustum) = &self.perspective {
+            let right = if self.flip_vertically { y } else { -y };
+            return [right * frustum.half_width, x * frustum.half_height, -w];
+        }
+        let viewport = &self.viewport;
+        let raster_x = x * viewport.half_x + w * (viewport.half_x + viewport.corner_x);
+        let raster_y = y * viewport.half_y + w * (viewport.half_y + viewport.corner_y);
+        let up = 2.0 * raster_x / viewport.width - w;
+        let right = if self.flip_vertically {
+            2.0 * raster_y / viewport.height - w
+        } else {
+            w - 2.0 * raster_y / viewport.height
         };
-        for triangle in draw.vertices.chunks_exact(3) {
-            let polygon = clip_w([triangle[0], triangle[1], triangle[2]], settings);
-            for corner in 1..polygon.len().saturating_sub(1) {
-                for vertex in [polygon[0], polygon[corner], polygon[corner + 1]] {
-                    let [x, y, _, w] = vertex.position;
-                    mesh.indices.push(mesh.positions.len() as u32);
-                    mesh.positions.push([
-                        horizontal * y * frustum.half_width * depth_scale,
-                        x * frustum.half_height * depth_scale,
-                        -w * depth_scale,
-                    ]);
-                    match textured {
-                        Some((_, texture)) => mesh.texcoords.push(texture.local_uv(vertex.texcoord)),
-                        None => mesh.colors.push(vertex.color),
+        [
+            right * screen_frustum.half_width,
+            up * screen_frustum.half_height,
+            -w,
+        ]
+    }
+}
+
+impl MeshData {
+    pub fn split(
+        draw: &DrawData,
+        frustum: &Frustum,
+        perspective: Option<Frustum>,
+        texture: Option<&TextureData>,
+        images: &mut Vec<SceneImage>,
+        settings: &ViewSettings,
+    ) -> Vec<MeshData> {
+        let placement = Placement {
+            flip_vertically: draw.flip_vertically,
+            viewport: draw.viewport,
+            perspective,
+        };
+        let textured = draw.texture.zip(texture);
+        let mut texture_mesh = Self::empty(draw, textured.map(|(index, _)| index));
+        let mut color_mesh = Self::empty(draw, None);
+        let mut patch_meshes = Vec::new();
+        let mut patches = draw.patches.iter();
+
+        for (index, triangle) in draw.vertices.chunks_exact(3).enumerate() {
+            let mut corners = [triangle[0], triangle[1], triangle[2]];
+            match draw.modes.get(index).copied().unwrap_or(TriangleMode::Color) {
+                TriangleMode::Texture => {
+                    if let Some((_, texture)) = textured {
+                        texture_mesh.push(
+                            clip_w(corners, settings),
+                            frustum,
+                            &placement,
+                            &Attribute::Texture(texture),
+                        );
                     }
+                }
+                TriangleMode::Color => {
+                    color_mesh.push(
+                        clip_w(corners, settings),
+                        frustum,
+                        &placement,
+                        &Attribute::Color,
+                    );
+                }
+                TriangleMode::Patch => {
+                    let Some(patch) = patches.next() else {
+                        continue;
+                    };
+                    for (corner, coordinate) in
+                        corners.iter_mut().zip([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
+                    {
+                        corner.texcoord = coordinate;
+                    }
+                    let mut mesh = Self::empty(draw, Some(images.len()));
+                    images.push(SceneImage::from(patch));
+                    mesh.push(
+                        clip_w(corners, settings),
+                        frustum,
+                        &placement,
+                        &Attribute::Patch,
+                    );
+                    patch_meshes.push(mesh);
                 }
             }
         }
-        mesh
+
+        let mut meshes = Vec::new();
+        for mesh in [texture_mesh, color_mesh] {
+            if !mesh.positions.is_empty() {
+                meshes.push(mesh);
+            }
+        }
+        meshes.extend(patch_meshes);
+        meshes
+    }
+
+    pub fn scale_xy(&mut self, factor: f32) {
+        for position in &mut self.positions {
+            position[0] *= factor;
+            position[1] *= factor;
+        }
     }
 
     pub fn translate(&mut self, offset: [f32; 3]) {
         for position in &mut self.positions {
             for (axis, value) in position.iter_mut().enumerate() {
                 *value += offset[axis];
+            }
+        }
+    }
+
+    fn empty(draw: &DrawData, texture: Option<usize>) -> Self {
+        Self {
+            positions: Vec::new(),
+            texcoords: Vec::new(),
+            colors: Vec::new(),
+            indices: Vec::new(),
+            texture,
+            screen_width: draw.screen_width,
+            alpha_mode: draw.alpha_mode,
+            alpha_cutoff: draw.alpha_cutoff,
+        }
+    }
+
+    fn push(
+        &mut self,
+        polygon: Vec<ClipVertex>,
+        frustum: &Frustum,
+        placement: &Placement,
+        attribute: &Attribute,
+    ) {
+        for corner in 1..polygon.len().saturating_sub(1) {
+            for vertex in [polygon[0], polygon[corner], polygon[corner + 1]] {
+                self.indices.push(self.positions.len() as u32);
+                self.positions
+                    .push(placement.locate(vertex.position, frustum));
+                match attribute {
+                    Attribute::Texture(texture) => {
+                        self.texcoords.push(texture.local_uv(vertex.texcoord))
+                    }
+                    Attribute::Color => self.colors.push(vertex.color),
+                    Attribute::Patch => self.texcoords.push(vertex.texcoord),
+                }
             }
         }
     }
@@ -72,14 +182,6 @@ impl TextureData {
             (texcoord[0] * self.source_width as f32 - self.origin_s as f32) / self.width as f32,
             (self.top_t as f32 - texcoord[1] * self.source_height as f32) / self.height as f32,
         ]
-    }
-}
-
-impl From<(&DrawData, usize, Frustum, Option<&TextureData>)> for MeshData {
-    fn from(
-        (draw, layer, frustum, texture): (&DrawData, usize, Frustum, Option<&TextureData>),
-    ) -> Self {
-        Self::with_settings(draw, layer, &frustum, texture, &ViewSettings::default())
     }
 }
 

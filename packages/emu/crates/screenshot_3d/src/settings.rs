@@ -2,6 +2,7 @@ use crate::camera::Projection;
 
 pub struct ExportSettings {
     pub stack_gap: f32,
+    pub screen_plane_depth: f32,
     pub atlas_max_extent: u32,
     pub atlas_padding: u32,
     pub pica_clamp_to_edge: u8,
@@ -40,6 +41,7 @@ impl Default for ExportSettings {
     fn default() -> Self {
         Self {
             stack_gap: 0.1,
+            screen_plane_depth: 1.0,
             atlas_max_extent: 4096,
             atlas_padding: 1,
             pica_clamp_to_edge: 0,
@@ -80,7 +82,6 @@ pub struct ViewSettings {
     pub yfov: f32,
     pub screen_height: f32,
     pub min_w: f32,
-    pub layer_offset: f32,
     pub near_margin: f32,
     pub far_margin: f32,
     pub fallback_projection: Projection,
@@ -107,7 +108,6 @@ impl Default for ViewSettings {
             yfov: 0.8,
             screen_height: 240.0,
             min_w: 0.0001,
-            layer_offset: 0.0001,
             near_margin: 0.9,
             far_margin: 1.1,
             fallback_projection: Projection {

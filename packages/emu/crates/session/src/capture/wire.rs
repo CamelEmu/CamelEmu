@@ -1,6 +1,6 @@
 use screenshot_3d::{
-    AlphaMode, ClipVertex, DrawData, Screenshot3dContext, ShaderData, ShaderProgram, TextureData,
-    VertexData,
+    AlphaMode, ClipVertex, DepthOrder, DrawData, PatchData, Screenshot3dContext, ShaderData, ShaderProgram,
+    TextureData, TriangleMode, VertexData, Viewport,
 };
 
 use super::screen::Screen;
@@ -9,6 +9,9 @@ struct WireSettings {
     no_texture: u32,
     uniform_components: usize,
     alpha_modes: [AlphaMode; 3],
+    triangle_modes: [TriangleMode; 3],
+    depth_orders: [DepthOrder; 3],
+    bytes_per_texel: usize,
 }
 
 impl Default for WireSettings {
@@ -17,6 +20,13 @@ impl Default for WireSettings {
             no_texture: u32::MAX,
             uniform_components: 4,
             alpha_modes: [AlphaMode::Opaque, AlphaMode::Mask, AlphaMode::Blend],
+            triangle_modes: [TriangleMode::Texture, TriangleMode::Color, TriangleMode::Patch],
+            depth_orders: [
+                DepthOrder::DrawOrder,
+                DepthOrder::NearerSmaller,
+                DepthOrder::NearerGreater,
+            ],
+            bytes_per_texel: 4,
         }
     }
 }
@@ -96,6 +106,18 @@ fn read_draw(reader: &mut Reader<'_>, settings: &WireSettings) -> Option<DrawDat
     let shader = reader.u32()? as usize;
     let texture = reader.u32()?;
     let position_output = reader.u32()?;
+    let viewport = Viewport {
+        half_x: reader.f32()?,
+        half_y: reader.f32()?,
+        corner_x: reader.f32()?,
+        corner_y: reader.f32()?,
+        width: reader.f32()?,
+        height: reader.f32()?,
+        depth_scale: reader.f32()?,
+        depth_offset: reader.f32()?,
+    };
+    let depth_order = *settings.depth_orders.get(reader.u32()? as usize)?;
+    let w_buffer = reader.u32()? != 0;
     let alpha_mode = *settings.alpha_modes.get(reader.u32()? as usize)?;
     let alpha_cutoff = reader.f32()?;
     let vertices = reader.items(|reader| {
@@ -105,6 +127,21 @@ fn read_draw(reader: &mut Reader<'_>, settings: &WireSettings) -> Option<DrawDat
             color: [reader.f32()?, reader.f32()?, reader.f32()?, reader.f32()?],
         })
     })?;
+    let modes = reader
+        .blob()?
+        .into_iter()
+        .map(|mode| settings.triangle_modes.get(usize::from(mode)).copied())
+        .collect::<Option<Vec<_>>>()?;
+    let patches = reader.items(|reader| {
+        let size = reader.u32()?;
+        let len = (size as usize)
+            .checked_mul(size as usize)?
+            .checked_mul(settings.bytes_per_texel)?;
+        Some(PatchData {
+            size,
+            rgba: reader.bytes(len)?.to_vec(),
+        })
+    })?;
     Some(DrawData {
         screen,
         screen_width,
@@ -112,9 +149,14 @@ fn read_draw(reader: &mut Reader<'_>, settings: &WireSettings) -> Option<DrawDat
         shader,
         texture: (texture != settings.no_texture).then_some(texture as usize),
         position_output,
+        viewport,
+        depth_order,
+        w_buffer,
         alpha_mode,
         alpha_cutoff,
         vertices,
+        modes,
+        patches,
     })
 }
 

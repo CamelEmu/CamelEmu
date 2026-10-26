@@ -46,6 +46,9 @@ public:
         Common::Vec4<u8> primary_color, Common::Vec4<u8> primary_fragment_color,
         Common::Vec4<u8> secondary_fragment_color);
 
+    /// Blends fog to the combiner output if enabled.
+    void WriteFog(float depth, Common::Vec4<u8>& combiner_output) const;
+
 private:
     /// Computes the screen coordinates of the provided vertex.
     void MakeScreenCoords(Vertex& vtx);
@@ -56,9 +59,6 @@ private:
 
     /// Returns the final pixel color with blending or logic ops applied.
     Common::Vec4<u8> PixelColor(u16 x, u16 y, Common::Vec4<u8> combiner_output) const;
-
-    /// Blends fog to the combiner output if enabled.
-    void WriteFog(float depth, Common::Vec4<u8>& combiner_output) const;
 
     /// Performs the alpha test. Returns false if the test failed.
     bool DoAlphaTest(u8 alpha) const;
