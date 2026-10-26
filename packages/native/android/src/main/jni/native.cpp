@@ -76,6 +76,8 @@
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
 #include "jni/util.h"
+#include "video_core/capture/frame_capture.h"
+#include "video_core/capture/screen_capture.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -1094,6 +1096,8 @@ struct EmuSession {
     std::mutex country_mutex;
     std::condition_variable country_cv;
     std::optional<int> country_answer;
+    std::mutex capture_mutex;
+    std::unique_ptr<VideoCore::FrameCapture> frame_capture;
 };
 
 namespace {
@@ -1346,6 +1350,50 @@ int32_t emu_session_read_fcram(EmuSession* session, size_t offset, uint8_t* out,
     return EMU_STATUS_OK;
 }
 
+int32_t emu_session_request_screenshot(EmuSession* session, uint64_t request_id,
+                                       int32_t secondary) {
+    if (session == nullptr) {
+        return EMU_STATUS_INVALID_ARGUMENT;
+    }
+    Core::System& system = Core::System::GetInstance();
+    if (stop_run || !system.IsPoweredOn()) {
+        return EMU_STATUS_NOT_RUNNING;
+    }
+    const EmuSessionCallbacks callbacks = session->callbacks;
+    const bool accepted = VideoCore::RequestScreenCapture(
+        system.GPU().Renderer(), secondary != 0,
+        [callbacks, request_id, secondary](u32 width, u32 height, const u8* bgra) {
+            if (callbacks.on_screenshot != nullptr) {
+                callbacks.on_screenshot(callbacks.user, request_id, secondary,
+                                        static_cast<int32_t>(width),
+                                        static_cast<int32_t>(height), bgra);
+            }
+        });
+    return accepted ? EMU_STATUS_OK : EMU_STATUS_NOT_RUNNING;
+}
+
+int32_t emu_session_request_capture_3d(EmuSession* session, uint64_t request_id) {
+    if (session == nullptr) {
+        return EMU_STATUS_INVALID_ARGUMENT;
+    }
+    Core::System& system = Core::System::GetInstance();
+    if (stop_run || !system.IsPoweredOn()) {
+        return EMU_STATUS_NOT_RUNNING;
+    }
+    std::lock_guard lock{session->capture_mutex};
+    if (!session->frame_capture) {
+        session->frame_capture = std::make_unique<VideoCore::FrameCapture>(system);
+    }
+    const EmuSessionCallbacks callbacks = session->callbacks;
+    const bool accepted =
+        session->frame_capture->Request([callbacks, request_id](std::vector<u8> data) {
+            if (callbacks.on_capture_3d != nullptr) {
+                callbacks.on_capture_3d(callbacks.user, request_id, data.data(), data.size());
+            }
+        });
+    return accepted ? EMU_STATUS_OK : EMU_STATUS_NOT_RUNNING;
+}
+
 static void DestroySessionUnguarded(EmuSession* session) {
     if (session == nullptr) {
         return;
@@ -1370,6 +1418,10 @@ static void DestroySessionUnguarded(EmuSession* session) {
         session->emulation_thread.join();
     }
 
+    {
+        std::lock_guard lock{session->capture_mutex};
+        session->frame_capture.reset();
+    }
     TryShutdown();
     Core::System::GetInstance().SetArticCountryMismatchHandler({});
     AudioCore::SetExternalAudioHandler({});

@@ -28,5 +28,6 @@ export 'src/native/rust_runtime.dart';
 export 'src/rust/api/session.dart';
 export 'src/rust/third_party/emu_app_scanner/api.dart';
 export 'src/rust/third_party/session/api/audio.dart';
+export 'src/rust/third_party/session/api/capture.dart';
 export 'src/rust/third_party/session/api/error.dart';
 export 'src/rust/third_party/session/api/session.dart';

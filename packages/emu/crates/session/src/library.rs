@@ -74,6 +74,12 @@ mod platform {
         ) -> i32;
         fn emu_session_destroy(session: *mut RawSession);
         fn emu_session_answer_artic_country(session: *mut RawSession, country: i32);
+        fn emu_session_request_screenshot(
+            session: *mut RawSession,
+            request_id: u64,
+            secondary: i32,
+        ) -> i32;
+        fn emu_session_request_capture_3d(session: *mut RawSession, request_id: u64) -> i32;
     }
 
     /// The core is part of the executable, so there is nothing to unload.
@@ -98,6 +104,8 @@ mod platform {
             read_fcram: emu_session_read_fcram,
             destroy: emu_session_destroy,
             answer_artic_country: emu_session_answer_artic_country,
+            request_screenshot: emu_session_request_screenshot,
+            request_capture_3d: emu_session_request_capture_3d,
         };
         Ok((api, Unload))
     }
@@ -230,6 +238,8 @@ mod platform {
                     handle,
                     c"emu_session_answer_artic_country",
                 )?),
+                request_screenshot: transmute(symbol(handle, c"emu_session_request_screenshot")?),
+                request_capture_3d: transmute(symbol(handle, c"emu_session_request_capture_3d")?),
             };
 
             let status = init(

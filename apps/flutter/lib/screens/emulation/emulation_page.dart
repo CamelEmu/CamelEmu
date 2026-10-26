@@ -9,7 +9,9 @@ import '../../app_services.dart';
 import '../../data/gamepad/gamepad_hub.dart';
 import '../../data/platform_provider.dart';
 import '../../data/repositories/cheat_repository.dart';
+import '../../data/screenshot/screenshot_service.dart';
 import '../../data/settings/country.dart';
+import '../../i18n/translations.g.dart';
 import '../../theme/extensions/emulation_focus_frame_theme.dart';
 import 'controller_motion_source.dart';
 import 'emulation_session_state.dart';
@@ -207,6 +209,24 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     }
   }
 
+  Future<void> _capture(CaptureKind kind, CaptureTarget target) async {
+    _scaffoldKey.currentState?.closeDrawer();
+    final outcome = await ref
+        .read(screenshotServiceProvider)
+        .takeAndSave(kind, target);
+    if (!mounted) return;
+    final t = context.t;
+    final message = switch (outcome.status) {
+      ScreenshotStatus.saved => t.emulation.screenshotSaved(
+        fileName: outcome.fileName ?? '',
+      ),
+      ScreenshotStatus.failed => t.emulation.screenshotFailed,
+      ScreenshotStatus.cancelled => null,
+    };
+    if (message == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Widget _screens(BoxConstraints constraints) {
     final isDesktop = ref.watch(isDesktopPlatformProvider);
     final layout = EmulationScreensLayout.fit(
@@ -298,6 +318,7 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
       onTogglePause: notifier.togglePause,
       onAdvanceFrame: notifier.advanceFrame,
       onCheats: widget.game == null ? null : _openCheats,
+      onCapture: (kind, target) => unawaited(_capture(kind, target)),
       onSaveAndExit: _saveAndExit,
       onExitWithoutSaving: _confirmExitWithoutSaving,
       isVirtualGamepadVisible: isDesktop ? null : isVirtualGamepadVisible,

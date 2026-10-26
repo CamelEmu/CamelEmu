@@ -1,6 +1,8 @@
+import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
+import 'capture_menu_item.dart';
 import 'emulation_menu_actions.dart';
 import 'emulation_menu_item.dart';
 import 'emulation_menu_section.dart';
@@ -56,6 +58,20 @@ class EmulationMenuSections extends StatelessWidget {
               iconsOnly: iconsOnly,
               enabled: actions.onCheats != null,
               onTap: actions.onCheats,
+            ),
+            CaptureMenuItem(
+              icon: Icons.screenshot_outlined,
+              title: t.emulation.screenshot,
+              iconsOnly: iconsOnly,
+              onCapture: (target) =>
+                  actions.onCapture(CaptureKind.screenshot, target),
+            ),
+            CaptureMenuItem(
+              icon: Icons.view_in_ar_outlined,
+              title: t.emulation.screenshot3d,
+              iconsOnly: iconsOnly,
+              onCapture: (target) =>
+                  actions.onCapture(CaptureKind.screenshot3D, target),
             ),
             if (actions.isVirtualGamepadVisible case final visible?)
               EmulationMenuItem(

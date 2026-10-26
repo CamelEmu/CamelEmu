@@ -38,6 +38,8 @@
 #include "input_common/main.h"
 #include "network/network.h"
 #include "user_directory.h"
+#include "video_core/capture/frame_capture.h"
+#include "video_core/capture/screen_capture.h"
 #include "video_core/gpu.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_base.h"
@@ -585,6 +587,9 @@ struct Session::Impl {
     std::thread emulation_thread;
     std::thread present_thread;
 
+    std::mutex capture_mutex;
+    std::unique_ptr<VideoCore::FrameCapture> frame_capture;
+
     EmuWindow_Flutter* GetTouchscreenWindow() {
         return secondary_window ? secondary_window.get() : window.get();
     }
@@ -759,6 +764,10 @@ void Session::Impl::TeardownOnEmulationThread() {
     if (secondary_window) {
         secondary_window->DoneCurrent();
     }
+    {
+        std::lock_guard<std::mutex> lock(capture_mutex);
+        frame_capture.reset();
+    }
     Core::System::GetInstance().Shutdown();
     AudioCore::SetExternalAudioHandler({});
     secondary_window.reset();
@@ -806,6 +815,10 @@ void Session::Impl::RunEmulation() {
 
     fcram_size = Settings::values.is_new_3ds.GetValue() ? Memory::FCRAM_N3DS_SIZE
                                                         : Memory::FCRAM_SIZE;
+    {
+        std::lock_guard<std::mutex> lock(capture_mutex);
+        frame_capture = std::make_unique<VideoCore::FrameCapture>(system);
+    }
     loaded = true;
     present_frames = true;
 
@@ -1026,6 +1039,28 @@ bool Session::ReadFcram(std::size_t offset, uint8_t* out, std::size_t length) {
     const uint8_t* fcram = Core::System::GetInstance().Memory().GetFCRAMPointer(0);
     std::memcpy(out, fcram + offset, length);
     return true;
+}
+
+bool Session::RequestScreenshot(bool secondary, ScreenshotCallback callback) {
+    if (!impl_->loaded) {
+        return false;
+    }
+    return VideoCore::RequestScreenCapture(
+        Core::System::GetInstance().GPU().Renderer(), secondary,
+        [callback = std::move(callback)](u32 width, u32 height, const u8* bgra) {
+            callback(static_cast<int32_t>(width), static_cast<int32_t>(height), bgra);
+        });
+}
+
+bool Session::RequestCapture3d(Capture3dCallback callback) {
+    std::lock_guard<std::mutex> lock(impl_->capture_mutex);
+    if (!impl_->loaded || !impl_->frame_capture) {
+        return false;
+    }
+    return impl_->frame_capture->Request(
+        [callback = std::move(callback)](std::vector<u8> data) {
+            callback(data.data(), data.size());
+        });
 }
 
 bool Session::OnTouchEvent(double x, double y, bool pressed) {

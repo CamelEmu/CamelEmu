@@ -1,6 +1,10 @@
 add_subdirectory(host_shaders)
 
 add_library(video_core STATIC
+    capture/frame_capture.cpp
+    capture/frame_capture.h
+    capture/screen_capture.cpp
+    capture/screen_capture.h
     custom_textures/custom_format.cpp
     custom_textures/custom_format.h
     custom_textures/custom_tex_manager.cpp
@@ -20,6 +24,7 @@ add_library(video_core STATIC
     rasterizer_interface.h
     renderer_base.cpp
     renderer_base.h
+    pica/draw_observer.h
     pica/geometry_pipeline.cpp
     pica/geometry_pipeline.h
     pica/pica_core.cpp

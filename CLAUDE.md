@@ -18,5 +18,7 @@
 - Do not chain commands that serve different concerns into one Bash call with `&&`, `;` or a loop, such as an edit with `sed` followed by a build, or a `git checkout` followed by a build. Run each concern as its own call.
 - Create a new crate with `cargo new`, and do not write a new `Cargo.toml` by hand from guesswork.
 - Add a dependency with `cargo add`, and do not write a crate version into `Cargo.toml` from guesswork.
+- Do not launch an agent only to check, wait or poll, such as a "Placeholder wait check" agent. When background agents are running, wait for their completion notifications.
+- Do not inspect the contents of build artifacts, such as listing the files inside an APK or the symbols of a shared library, on your own initiative. A successful build is the verification unless the user asks for more.
 - Do not add a test on your own initiative. Add a regression test only for a problem the user has reported, and not for a change that nobody has reported a problem with.
 - The rules in this file about signatures and attribution lines in commits and pull requests take precedence over the global rules in `~/.claude/CLAUDE.md`.

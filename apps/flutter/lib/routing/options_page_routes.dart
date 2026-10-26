@@ -32,6 +32,17 @@ class OptionsMediaSettingsRoute extends AppRouteData
   }
 }
 
+@TypedGoRoute<OptionsScreenshotSettingsRoute>(path: '/options/screenshot')
+class OptionsScreenshotSettingsRoute extends AppRouteData
+    with $OptionsScreenshotSettingsRoute {
+  const OptionsScreenshotSettingsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const ScreenshotSettingsPage();
+  }
+}
+
 @TypedGoRoute<OptionsEmulatedNetworkSettingsRoute>(
   path: '/options/networking/emulated-network',
 )

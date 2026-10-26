@@ -32,6 +32,9 @@ pub enum AzaharError {
     /// The audio output could not be opened.
     #[error("audio output failed: {0}")]
     Audio(String),
+    /// A screenshot or 3D capture could not be taken.
+    #[error("the capture failed: {0}")]
+    Capture(String),
     /// A folder of a user directory could not be created.
     #[error("the folder {0} could not be created")]
     Storage(String),

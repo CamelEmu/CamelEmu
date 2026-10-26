@@ -5,8 +5,9 @@ use std::sync::Arc;
 use crate::api::audio::AudioEngine;
 #[cfg(target_os = "android")]
 use crate::audio::AudioOutput;
+use crate::capture::{CaptureBroker, CoreCapture, ScreenImage};
 use crate::error::{AzaharError, SessionResult};
-use crate::ffi::{CallbackContext, CoreListener, SessionHandle};
+use crate::ffi::{CallbackContext, CoreListener, RawScreenshot, SessionHandle};
 use memory::Memory3ds;
 
 pub use crate::api::session::{SessionEvent, SessionOptions, SessionState, ShaderStage};
@@ -30,9 +31,22 @@ pub type EventSink = Arc<dyn Fn(SessionEvent) + Send + Sync>;
 struct Listener {
     events: EventSink,
     audio: Option<Arc<AudioOutput>>,
+    captures: Arc<CaptureBroker>,
 }
 
 impl CoreListener for Listener {
+    fn on_screenshot(&self, request_id: u64, screenshot: Option<RawScreenshot<'_>>) {
+        self.captures.deliver(
+            request_id,
+            CoreCapture::Screenshot(screenshot.map(ScreenImage::from)),
+        );
+    }
+
+    fn on_capture_3d(&self, request_id: u64, data: &[u8]) {
+        self.captures
+            .deliver(request_id, CoreCapture::Data(data.to_vec()));
+    }
+
     fn on_event(&self, event: SessionEvent) {
         (self.events)(event);
     }
@@ -55,6 +69,7 @@ pub struct GameSession {
     _context: Box<CallbackContext>,
     audio: Option<Arc<AudioOutput>>,
     events: EventSink,
+    captures: Arc<CaptureBroker>,
     state: SessionState,
 }
 
@@ -62,9 +77,11 @@ impl GameSession {
     /// Creates the session and starts emulation and shader preparation.
     pub fn start(game_path: &str, options: &SessionOptions, events: EventSink) -> SessionResult<Self> {
         let audio = open_audio(options.audio_engine.effective(), &events);
+        let captures = Arc::new(CaptureBroker::default());
         let context = CallbackContext::new(Arc::new(Listener {
             events: Arc::clone(&events),
             audio: audio.clone(),
+            captures: Arc::clone(&captures),
         }));
         let handle = SessionHandle::create(game_path, options, &context)?;
         handle.start()?;
@@ -74,6 +91,7 @@ impl GameSession {
             _context: context,
             audio,
             events,
+            captures,
             state: SessionState::Running,
         };
         session.notify_state();
@@ -108,6 +126,18 @@ impl GameSession {
         self.state = SessionState::Running;
         self.notify_state();
         Ok(())
+    }
+
+    pub fn captures(&self) -> Arc<CaptureBroker> {
+        Arc::clone(&self.captures)
+    }
+
+    pub fn request_screenshot(&self, request_id: u64, bottom: bool) -> SessionResult<()> {
+        self.handle.request_screenshot(request_id, bottom)
+    }
+
+    pub fn request_capture_3d(&self, request_id: u64) -> SessionResult<()> {
+        self.handle.request_capture_3d(request_id)
     }
 
     pub fn answer_artic_country(&self, country: Option<u32>) {

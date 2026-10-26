@@ -46,6 +46,9 @@ sealed class AzaharError with _$AzaharError implements FrbException {
   /// The audio output could not be opened.
   const factory AzaharError.audio(String field0) = AzaharError_Audio;
 
+  /// A screenshot or 3D capture could not be taken.
+  const factory AzaharError.capture(String field0) = AzaharError_Capture;
+
   /// A folder of a user directory could not be created.
   const factory AzaharError.storage(String field0) = AzaharError_Storage;
 

@@ -413,6 +413,8 @@ void GPU::MemoryTransfer() {
 }
 
 void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
+    impl->pica.NotifyFrameEnd();
+
     // Present renderered frame.
     impl->renderer->SwapBuffers();
 

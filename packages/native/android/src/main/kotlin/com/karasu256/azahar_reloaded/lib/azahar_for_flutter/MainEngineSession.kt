@@ -71,12 +71,17 @@ internal class MainEngineSession(
         "azahar_for_flutter.open_games_directory",
         ActivityResultContracts.OpenDocumentTree()
     ) { uri -> directoryController.onGamesDirectoryPicked(uri) }
+    private val openScreenshotDirectoryLauncher = activity.activityResultRegistry.register(
+        "azahar_for_flutter.open_screenshot_directory",
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri -> directoryController.onScreenshotDirectoryPicked(uri) }
 
     private val directoryController: DirectoryController = DirectoryController(
         activity,
         activity.contentResolver,
         openUserDirectoryLauncher,
-        openGamesDirectoryLauncher
+        openGamesDirectoryLauncher,
+        openScreenshotDirectoryLauncher
     )
     private val gameActionsController = GameActionsController(activity)
     private val settingsController = SettingsController()
@@ -220,6 +225,7 @@ internal class MainEngineSession(
         pickImageLauncher.unregister()
         openUserDirectoryLauncher.unregister()
         openGamesDirectoryLauncher.unregister()
+        openScreenshotDirectoryLauncher.unregister()
         methodChannel.setMethodCallHandler(null)
         eventChannels.forEach { it.setStreamHandler(null) }
         eventChannels.clear()

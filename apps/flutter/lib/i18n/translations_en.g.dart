@@ -420,6 +420,24 @@ class Translations$emulation$en {
   /// en: 'Tools'
   String get menuSectionTools => 'Tools';
 
+  /// en: 'Screenshot'
+  String get screenshot => 'Screenshot';
+
+  /// en: '3D Screenshot'
+  String get screenshot3d => '3D Screenshot';
+
+  /// en: 'Top screen'
+  String get captureTop => 'Top screen';
+
+  /// en: 'Bottom screen'
+  String get captureBottom => 'Bottom screen';
+
+  /// en: 'Saved ${fileName}'
+  String screenshotSaved({required Object fileName}) => 'Saved ${fileName}';
+
+  /// en: 'Could not save the screenshot'
+  String get screenshotFailed => 'Could not save the screenshot';
+
   /// en: 'Cheats'
   String get cheats => 'Cheats';
 
@@ -593,6 +611,26 @@ class Translations$options$en {
   /// en: 'Allows Azahar to populate the application list'
   String get selectGamesFolderDescription =>
       'Allows Azahar to populate the application list';
+
+  /// en: 'Screenshots'
+  String get screenshotSettings => 'Screenshots';
+
+  /// en: 'Where screenshots are saved'
+  String get screenshotSettingsDescription => 'Where screenshots are saved';
+
+  /// en: 'Save Location'
+  String get screenshotDirectory => 'Save Location';
+
+  /// en: 'Choose the folder that screenshots are saved to'
+  String get screenshotDirectoryDescription =>
+      'Choose the folder that screenshots are saved to';
+
+  /// en: 'Always Ask Where to Save'
+  String get screenshotAlwaysAsk => 'Always Ask Where to Save';
+
+  /// en: 'Choose a folder every time a screenshot is taken'
+  String get screenshotAlwaysAskDescription =>
+      'Choose a folder every time a screenshot is taken';
 
   /// en: 'Theme and Color'
   String get themeAndColor => 'Theme and Color';
@@ -1222,6 +1260,9 @@ class Translations$options$groups$en {
 
   /// en: 'Folder Settings'
   String get folderSettings => 'Folder Settings';
+
+  /// en: 'Data'
+  String get data => 'Data';
 
   /// en: 'Other'
   String get other => 'Other';
@@ -3246,6 +3287,13 @@ extension on Translations {
           'emulation.resumeEmulation' => 'Resume Emulation',
           'emulation.advanceFrame' => 'Advance Frame',
           'emulation.menuSectionTools' => 'Tools',
+          'emulation.screenshot' => 'Screenshot',
+          'emulation.screenshot3d' => '3D Screenshot',
+          'emulation.captureTop' => 'Top screen',
+          'emulation.captureBottom' => 'Bottom screen',
+          'emulation.screenshotSaved' =>
+            ({required Object fileName}) => 'Saved ${fileName}',
+          'emulation.screenshotFailed' => 'Could not save the screenshot',
           'emulation.cheats' => 'Cheats',
           'emulation.noCheats' => 'No cheats',
           'emulation.addCheat' => 'Add Cheat',
@@ -3313,6 +3361,15 @@ extension on Translations {
           'options.selectGamesFolder' => 'Select Applications Folder',
           'options.selectGamesFolderDescription' =>
             'Allows Azahar to populate the application list',
+          'options.screenshotSettings' => 'Screenshots',
+          'options.screenshotSettingsDescription' =>
+            'Where screenshots are saved',
+          'options.screenshotDirectory' => 'Save Location',
+          'options.screenshotDirectoryDescription' =>
+            'Choose the folder that screenshots are saved to',
+          'options.screenshotAlwaysAsk' => 'Always Ask Where to Save',
+          'options.screenshotAlwaysAskDescription' =>
+            'Choose a folder every time a screenshot is taken',
           'options.themeAndColor' => 'Theme and Color',
           'options.themeAndColorDescription' => 'Modify the look of the app',
           'options.media' => 'Media',
@@ -3368,6 +3425,7 @@ extension on Translations {
           'options.groups.controls' => 'Controls',
           'options.groups.tools' => 'Tools',
           'options.groups.folderSettings' => 'Folder Settings',
+          'options.groups.data' => 'Data',
           'options.groups.other' => 'Other',
           'options.groups.accessibility' => 'Accessibility',
           'systemFiles.title' => 'System Files',
@@ -3716,6 +3774,9 @@ extension on Translations {
           'settings.system.countries.unitedStates' => 'United States',
           'settings.system.countries.uruguay' => 'Uruguay',
           'settings.system.countries.usVirginIslands' => 'US Virgin Islands',
+          _ => null,
+        } ??
+        switch (path) {
           'settings.system.countries.venezuela' => 'Venezuela',
           'settings.system.countries.albania' => 'Albania',
           'settings.system.countries.australia' => 'Australia',
@@ -3730,9 +3791,6 @@ extension on Translations {
           'settings.system.countries.czechRepublic' => 'Czech Republic',
           'settings.system.countries.denmark' => 'Denmark',
           'settings.system.countries.estonia' => 'Estonia',
-          _ => null,
-        } ??
-        switch (path) {
           'settings.system.countries.finland' => 'Finland',
           'settings.system.countries.france' => 'France',
           'settings.system.countries.germany' => 'Germany',

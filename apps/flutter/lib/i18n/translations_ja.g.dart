@@ -372,6 +372,18 @@ class _Translations$emulation$ja extends Translations$emulation$en {
   @override
   String get menuSectionTools => 'ツール';
   @override
+  String get screenshot => 'スクリーンショット';
+  @override
+  String get screenshot3d => '3Dスクリーンショット';
+  @override
+  String get captureTop => '上画面';
+  @override
+  String get captureBottom => '下画面';
+  @override
+  String screenshotSaved({required Object fileName}) => '${fileName}を保存しました';
+  @override
+  String get screenshotFailed => 'スクリーンショットを保存できませんでした';
+  @override
   String get cheats => 'チート';
   @override
   String get noCheats => 'チートがありません';
@@ -492,6 +504,18 @@ class _Translations$options$ja extends Translations$options$en {
   String get selectGamesFolder => 'アプリケーションフォルダを選択';
   @override
   String get selectGamesFolderDescription => 'Azaharがアプリケーション一覧を作成できるようにします';
+  @override
+  String get screenshotSettings => 'スクリーンショット';
+  @override
+  String get screenshotSettingsDescription => 'スクリーンショットの保存先を設定します';
+  @override
+  String get screenshotDirectory => '保存先';
+  @override
+  String get screenshotDirectoryDescription => 'スクリーンショットを保存するフォルダを選択します';
+  @override
+  String get screenshotAlwaysAsk => '保存先を常に確認';
+  @override
+  String get screenshotAlwaysAskDescription => 'スクリーンショットを撮るたびに保存先のフォルダを選択します';
   @override
   String get themeAndColor => 'テーマと色';
   @override
@@ -1042,6 +1066,8 @@ class _Translations$options$groups$ja extends Translations$options$groups$en {
   String get tools => 'ツール';
   @override
   String get folderSettings => 'フォルダ設定';
+  @override
+  String get data => 'データ';
   @override
   String get other => 'その他';
   @override
@@ -2569,6 +2595,13 @@ extension on TranslationsJa {
           'emulation.resumeEmulation' => 'エミュレーションを再開',
           'emulation.advanceFrame' => 'フレーム送り',
           'emulation.menuSectionTools' => 'ツール',
+          'emulation.screenshot' => 'スクリーンショット',
+          'emulation.screenshot3d' => '3Dスクリーンショット',
+          'emulation.captureTop' => '上画面',
+          'emulation.captureBottom' => '下画面',
+          'emulation.screenshotSaved' =>
+            ({required Object fileName}) => '${fileName}を保存しました',
+          'emulation.screenshotFailed' => 'スクリーンショットを保存できませんでした',
           'emulation.cheats' => 'チート',
           'emulation.noCheats' => 'チートがありません',
           'emulation.addCheat' => 'チートを追加',
@@ -2629,6 +2662,14 @@ extension on TranslationsJa {
           'options.selectGamesFolder' => 'アプリケーションフォルダを選択',
           'options.selectGamesFolderDescription' =>
             'Azaharがアプリケーション一覧を作成できるようにします',
+          'options.screenshotSettings' => 'スクリーンショット',
+          'options.screenshotSettingsDescription' => 'スクリーンショットの保存先を設定します',
+          'options.screenshotDirectory' => '保存先',
+          'options.screenshotDirectoryDescription' =>
+            'スクリーンショットを保存するフォルダを選択します',
+          'options.screenshotAlwaysAsk' => '保存先を常に確認',
+          'options.screenshotAlwaysAskDescription' =>
+            'スクリーンショットを撮るたびに保存先のフォルダを選択します',
           'options.themeAndColor' => 'テーマと色',
           'options.themeAndColorDescription' => 'アプリの見た目を変更します',
           'options.media' => 'メディア',
@@ -2677,6 +2718,7 @@ extension on TranslationsJa {
           'options.groups.controls' => 'コントロール',
           'options.groups.tools' => 'ツール',
           'options.groups.folderSettings' => 'フォルダ設定',
+          'options.groups.data' => 'データ',
           'options.groups.other' => 'その他',
           'options.groups.accessibility' => 'アクセシビリティ',
           'systemFiles.title' => 'システムファイル',
@@ -3001,6 +3043,9 @@ extension on TranslationsJa {
           'settings.system.countries.usVirginIslands' => '米領ヴァージン諸島',
           'settings.system.countries.venezuela' => 'ベネズエラ',
           'settings.system.countries.albania' => 'アルバニア',
+          _ => null,
+        } ??
+        switch (path) {
           'settings.system.countries.australia' => 'オーストラリア',
           'settings.system.countries.austria' => 'オーストリア',
           'settings.system.countries.belgium' => 'ベルギー',
@@ -3014,9 +3059,6 @@ extension on TranslationsJa {
           'settings.system.countries.estonia' => 'エストニア',
           'settings.system.countries.finland' => 'フィンランド',
           'settings.system.countries.france' => 'フランス',
-          _ => null,
-        } ??
-        switch (path) {
           'settings.system.countries.germany' => 'ドイツ',
           'settings.system.countries.greece' => 'ギリシャ',
           'settings.system.countries.hungary' => 'ハンガリー',

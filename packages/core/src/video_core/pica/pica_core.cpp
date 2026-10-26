@@ -488,8 +488,22 @@ void PicaCore::DrawImmediate() {
     immediate.current_attribute = 0;
 }
 
+void PicaCore::SetDrawObserver(DrawObserver* observer) {
+    draw_observer.store(observer, std::memory_order_release);
+}
+
+void PicaCore::NotifyFrameEnd() {
+    if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+        observer->OnFrameEnd();
+    }
+}
+
 void PicaCore::DrawArrays(bool is_indexed) {
     MICROPROFILE_SCOPE(GPU_Drawing);
+
+    if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+        observer->OnDraw(*this, is_indexed);
+    }
 
     // Track vertex in the debug recorder.
     if (debug_context) {

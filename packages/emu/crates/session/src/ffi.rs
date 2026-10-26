@@ -21,6 +21,15 @@ use crate::session::{SessionEvent, SessionOptions, ShaderStage};
 pub trait CoreListener: Send + Sync {
     fn on_event(&self, event: SessionEvent);
     fn on_audio(&self, frames: &[i16]);
+    fn on_screenshot(&self, request_id: u64, screenshot: Option<RawScreenshot<'_>>);
+    fn on_capture_3d(&self, request_id: u64, data: &[u8]);
+}
+
+pub struct RawScreenshot<'a> {
+    pub secondary: bool,
+    pub width: u32,
+    pub height: u32,
+    pub bgra: &'a [u8],
 }
 
 /// Heap allocated state the core keeps a raw pointer to.
@@ -105,6 +114,47 @@ unsafe extern "C" fn trampoline_artic_country_mismatch(
     unsafe { context(user) }
         .listener
         .on_event(SessionEvent::ArticCountryMismatch { region, country });
+}
+
+unsafe extern "C" fn trampoline_screenshot(
+    user: *mut c_void,
+    request_id: u64,
+    secondary: i32,
+    width: i32,
+    height: i32,
+    pixels: *const u8,
+) {
+    let screenshot = match (u32::try_from(width), u32::try_from(height)) {
+        (Ok(width), Ok(height)) if !pixels.is_null() => {
+            let len = width as usize * height as usize * 4;
+            Some(RawScreenshot {
+                secondary: secondary != 0,
+                width,
+                height,
+                bgra: unsafe { std::slice::from_raw_parts(pixels, len) },
+            })
+        }
+        _ => None,
+    };
+    unsafe { context(user) }
+        .listener
+        .on_screenshot(request_id, screenshot);
+}
+
+unsafe extern "C" fn trampoline_capture_3d(
+    user: *mut c_void,
+    request_id: u64,
+    data: *const u8,
+    length: usize,
+) {
+    let data = if data.is_null() {
+        &[]
+    } else {
+        unsafe { std::slice::from_raw_parts(data, length) }
+    };
+    unsafe { context(user) }
+        .listener
+        .on_capture_3d(request_id, data);
 }
 
 type Job = Box<dyn FnOnce(&CoreLibrary) + Send>;
@@ -224,6 +274,8 @@ impl SessionHandle {
                 on_audio: plays_audio.then_some(trampoline_audio as _),
                 on_shutdown_requested: Some(trampoline_shutdown_requested),
                 on_artic_country_mismatch: Some(trampoline_artic_country_mismatch),
+                on_screenshot: Some(trampoline_screenshot),
+                on_capture_3d: Some(trampoline_capture_3d),
             };
             unsafe { (library.api.create)(path.as_ptr(), &raw_options, &callbacks) as usize }
         });
@@ -247,6 +299,20 @@ impl SessionHandle {
         self.worker.call(move |library| unsafe {
             (library.api.answer_artic_country)(raw as *mut RawSession, value)
         });
+    }
+
+    pub fn request_screenshot(&self, request_id: u64, secondary: bool) -> SessionResult<()> {
+        let raw = self.raw;
+        check(self.worker.call(move |library| unsafe {
+            (library.api.request_screenshot)(raw as *mut RawSession, request_id, secondary as i32)
+        }))
+    }
+
+    pub fn request_capture_3d(&self, request_id: u64) -> SessionResult<()> {
+        let raw = self.raw;
+        check(self.worker.call(move |library| unsafe {
+            (library.api.request_capture_3d)(raw as *mut RawSession, request_id)
+        }))
     }
 
     pub fn pause(&self) -> SessionResult<()> {

@@ -136,6 +136,25 @@ class NativeBridge {
     return _channel.invokeMethod<String>('openGamesDirectory');
   }
 
+  Future<String?> openScreenshotDirectory() {
+    return _channel.invokeMethod<String>('openScreenshotDirectory');
+  }
+
+  Future<bool> writeToDirectory({
+    required String treeUri,
+    required String fileName,
+    required String mimeType,
+    required Uint8List bytes,
+  }) async {
+    final result = await _channel.invokeMethod<bool>('writeToDirectory', {
+      'treeUri': treeUri,
+      'fileName': fileName,
+      'mimeType': mimeType,
+      'bytes': bytes,
+    });
+    return result ?? false;
+  }
+
   Future<void> confirmUserDirectory({
     required String uri,
     String? previousUri,

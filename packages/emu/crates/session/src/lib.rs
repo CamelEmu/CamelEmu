@@ -8,6 +8,7 @@
 pub mod api;
 #[cfg(target_os = "android")]
 pub mod audio;
+pub mod capture;
 pub mod error;
 mod ffi;
 pub mod json;
