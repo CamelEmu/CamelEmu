@@ -19,6 +19,7 @@ emu_app_scanner = { version = "0.1.0", path = "crates/app_scanner" }
 emu_audio = { version = "0.1.0", path = "crates/audio" }
 emu_crypto = { version = "0.1.0", path = "crates/crypto" }
 emu_http = { version = "0.1.0", path = "crates/http" }
+emu_image = { version = "0.1.0", path = "crates/image" }
 emu_random = { version = "0.1.0", path = "crates/random" }
 emu_storage = { version = "0.1.0", path = "crates/storage" }
 flutter_rust_bridge = "=2.13.0"

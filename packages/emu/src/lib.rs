@@ -8,6 +8,7 @@ pub use emu_app_scanner;
 pub use emu_audio;
 pub use emu_crypto;
 pub use emu_http;
+pub use emu_image;
 pub use emu_random;
 pub use emu_storage;
 pub use memory;
