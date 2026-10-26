@@ -1,0 +1,34 @@
+typed_instructions! {
+    op_any(operand) => Any;
+    op_all(operand) => All;
+    op_is_nan(operand) => IsNan;
+    op_is_inf(operand) => IsInf;
+    op_logical_equal(operand_1, operand_2) => LogicalEqual;
+    op_logical_not_equal(operand_1, operand_2) => LogicalNotEqual;
+    op_logical_or(operand_1, operand_2) => LogicalOr;
+    op_logical_and(operand_1, operand_2) => LogicalAnd;
+    op_logical_not(operand) => LogicalNot;
+    op_select(operand_1, operand_2, operand_3) => Select;
+    op_i_equal(operand_1, operand_2) => IEqual;
+    op_i_not_equal(operand_1, operand_2) => INotEqual;
+    op_u_greater_than(operand_1, operand_2) => UGreaterThan;
+    op_s_greater_than(operand_1, operand_2) => SGreaterThan;
+    op_u_greater_than_equal(operand_1, operand_2) => UGreaterThanEqual;
+    op_s_greater_than_equal(operand_1, operand_2) => SGreaterThanEqual;
+    op_u_less_than(operand_1, operand_2) => ULessThan;
+    op_s_less_than(operand_1, operand_2) => SLessThan;
+    op_u_less_than_equal(operand_1, operand_2) => ULessThanEqual;
+    op_s_less_than_equal(operand_1, operand_2) => SLessThanEqual;
+    op_f_ord_equal(operand_1, operand_2) => FOrdEqual;
+    op_f_unord_equal(operand_1, operand_2) => FUnordEqual;
+    op_f_ord_not_equal(operand_1, operand_2) => FOrdNotEqual;
+    op_f_unord_not_equal(operand_1, operand_2) => FUnordNotEqual;
+    op_f_ord_less_than(operand_1, operand_2) => FOrdLessThan;
+    op_f_unord_less_than(operand_1, operand_2) => FUnordLessThan;
+    op_f_ord_greater_than(operand_1, operand_2) => FOrdGreaterThan;
+    op_f_unord_greater_than(operand_1, operand_2) => FUnordGreaterThan;
+    op_f_ord_less_than_equal(operand_1, operand_2) => FOrdLessThanEqual;
+    op_f_unord_less_than_equal(operand_1, operand_2) => FUnordLessThanEqual;
+    op_f_ord_greater_than_equal(operand_1, operand_2) => FOrdGreaterThanEqual;
+    op_f_unord_greater_than_equal(operand_1, operand_2) => FUnordGreaterThanEqual;
+}

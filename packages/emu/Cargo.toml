@@ -21,6 +21,8 @@ emu_crypto = { version = "0.1.0", path = "crates/crypto" }
 emu_http = { version = "0.1.0", path = "crates/http" }
 emu_image = { version = "0.1.0", path = "crates/image" }
 emu_random = { version = "0.1.0", path = "crates/random" }
+emu_shader = { version = "0.1.0", path = "crates/shader" }
+emu_spirv = { version = "0.1.0", path = "crates/spirv" }
 emu_storage = { version = "0.1.0", path = "crates/storage" }
 flutter_rust_bridge = "=2.13.0"
 memory = { version = "0.1.0", path = "crates/memory" }

@@ -297,9 +297,6 @@ if (ENABLE_VULKAN)
         add_subdirectory(glslang)
     endif()
 
-    # sirit
-    add_subdirectory(sirit EXCLUDE_FROM_ALL)
-
     # VMA
     if(USE_SYSTEM_VMA)
         add_library(vma INTERFACE)

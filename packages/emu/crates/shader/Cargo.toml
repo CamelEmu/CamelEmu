@@ -1,0 +1,12 @@
+[package]
+name = "emu_shader"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+emu_spirv = { version = "0.1.0", path = "../spirv" }
+spirv = "0.4.0"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+sha2 = "0.11.1"

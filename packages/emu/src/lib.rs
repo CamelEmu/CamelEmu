@@ -10,6 +10,8 @@ pub use emu_crypto;
 pub use emu_http;
 pub use emu_image;
 pub use emu_random;
+pub use emu_shader;
+pub use emu_spirv;
 pub use emu_storage;
 pub use memory;
 pub use session;
