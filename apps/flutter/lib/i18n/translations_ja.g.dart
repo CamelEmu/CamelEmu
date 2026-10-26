@@ -380,10 +380,6 @@ class _Translations$emulation$ja extends Translations$emulation$en {
   @override
   String get captureBottom => '下画面';
   @override
-  String screenshotSaved({required Object fileName}) => '${fileName}を保存しました';
-  @override
-  String get screenshotFailed => 'スクリーンショットを保存できませんでした';
-  @override
   String get cheats => 'チート';
   @override
   String get noCheats => 'チートがありません';
@@ -2599,9 +2595,6 @@ extension on TranslationsJa {
           'emulation.screenshot3d' => '3Dスクリーンショット',
           'emulation.captureTop' => '上画面',
           'emulation.captureBottom' => '下画面',
-          'emulation.screenshotSaved' =>
-            ({required Object fileName}) => '${fileName}を保存しました',
-          'emulation.screenshotFailed' => 'スクリーンショットを保存できませんでした',
           'emulation.cheats' => 'チート',
           'emulation.noCheats' => 'チートがありません',
           'emulation.addCheat' => 'チートを追加',
@@ -3043,11 +3036,11 @@ extension on TranslationsJa {
           'settings.system.countries.usVirginIslands' => '米領ヴァージン諸島',
           'settings.system.countries.venezuela' => 'ベネズエラ',
           'settings.system.countries.albania' => 'アルバニア',
+          'settings.system.countries.australia' => 'オーストラリア',
+          'settings.system.countries.austria' => 'オーストリア',
           _ => null,
         } ??
         switch (path) {
-          'settings.system.countries.australia' => 'オーストラリア',
-          'settings.system.countries.austria' => 'オーストリア',
           'settings.system.countries.belgium' => 'ベルギー',
           'settings.system.countries.bosniaAndHerzegovina' => 'ボスニア・ヘルツェゴビナ',
           'settings.system.countries.botswana' => 'ボツワナ',

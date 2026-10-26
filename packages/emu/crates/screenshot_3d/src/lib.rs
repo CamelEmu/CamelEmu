@@ -4,6 +4,7 @@ mod camera;
 mod context;
 mod error;
 mod gltf;
+mod merge;
 mod mesh;
 mod obj;
 mod pipeline;

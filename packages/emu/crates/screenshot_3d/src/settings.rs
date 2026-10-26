@@ -2,6 +2,9 @@ use crate::camera::Projection;
 
 pub struct ExportSettings {
     pub stack_gap: f32,
+    pub atlas_max_extent: u32,
+    pub atlas_padding: u32,
+    pub pica_clamp_to_edge: u8,
     pub glb_magic: u32,
     pub glb_version: u32,
     pub json_chunk_type: u32,
@@ -37,6 +40,9 @@ impl Default for ExportSettings {
     fn default() -> Self {
         Self {
             stack_gap: 0.1,
+            atlas_max_extent: 4096,
+            atlas_padding: 1,
+            pica_clamp_to_edge: 0,
             glb_magic: 0x4654_6c67,
             glb_version: 2,
             json_chunk_type: 0x4e4f_534a,

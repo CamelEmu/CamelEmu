@@ -16,12 +16,14 @@ impl Screenshot3dPipeline {
 
     pub fn to_glb(&self) -> Result<Vec<u8>> {
         self.ensure_geometry()?;
-        self.scene.to_glb(&self.settings)
+        self.scene.merged(&self.settings).to_glb(&self.settings)
     }
 
     pub fn to_obj(&self, mtl_name: &str) -> Result<ObjExport> {
         self.ensure_geometry()?;
-        self.scene.to_obj(mtl_name, &self.settings)
+        self.scene
+            .merged(&self.settings)
+            .to_obj(mtl_name, &self.settings)
     }
 
     fn ensure_geometry(&self) -> Result<()> {

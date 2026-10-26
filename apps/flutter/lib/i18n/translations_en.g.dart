@@ -432,12 +432,6 @@ class Translations$emulation$en {
   /// en: 'Bottom screen'
   String get captureBottom => 'Bottom screen';
 
-  /// en: 'Saved ${fileName}'
-  String screenshotSaved({required Object fileName}) => 'Saved ${fileName}';
-
-  /// en: 'Could not save the screenshot'
-  String get screenshotFailed => 'Could not save the screenshot';
-
   /// en: 'Cheats'
   String get cheats => 'Cheats';
 
@@ -3291,9 +3285,6 @@ extension on Translations {
           'emulation.screenshot3d' => '3D Screenshot',
           'emulation.captureTop' => 'Top screen',
           'emulation.captureBottom' => 'Bottom screen',
-          'emulation.screenshotSaved' =>
-            ({required Object fileName}) => 'Saved ${fileName}',
-          'emulation.screenshotFailed' => 'Could not save the screenshot',
           'emulation.cheats' => 'Cheats',
           'emulation.noCheats' => 'No cheats',
           'emulation.addCheat' => 'Add Cheat',
@@ -3774,11 +3765,11 @@ extension on Translations {
           'settings.system.countries.unitedStates' => 'United States',
           'settings.system.countries.uruguay' => 'Uruguay',
           'settings.system.countries.usVirginIslands' => 'US Virgin Islands',
+          'settings.system.countries.venezuela' => 'Venezuela',
+          'settings.system.countries.albania' => 'Albania',
           _ => null,
         } ??
         switch (path) {
-          'settings.system.countries.venezuela' => 'Venezuela',
-          'settings.system.countries.albania' => 'Albania',
           'settings.system.countries.australia' => 'Australia',
           'settings.system.countries.austria' => 'Austria',
           'settings.system.countries.belgium' => 'Belgium',

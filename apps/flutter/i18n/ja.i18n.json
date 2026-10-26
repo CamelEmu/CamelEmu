@@ -180,8 +180,6 @@
     "screenshot3d": "3Dスクリーンショット",
     "captureTop": "上画面",
     "captureBottom": "下画面",
-    "screenshotSaved": "${fileName}を保存しました",
-    "screenshotFailed": "スクリーンショットを保存できませんでした",
     "cheats": "チート",
     "noCheats": "チートがありません",
     "addCheat": "チートを追加",

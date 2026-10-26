@@ -163,7 +163,10 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
     await togglePause();
   }
 
-  Future<T> completeWhilePaused<T>(Future<T> Function() task) async {
+  Future<T?> completeWhilePaused<T>(
+    Future<T> Function() task, {
+    required bool Function() isCancelled,
+  }) async {
     final wasRunning = await pauseForDialog();
     try {
       final pending = task();
@@ -173,11 +176,11 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
             .then<void>((_) {}, onError: (_) {})
             .whenComplete(() => completed = true),
       );
-      while (!completed) {
+      while (!completed && !isCancelled()) {
         await advanceFrame();
         await Future<void>.delayed(_frameStepInterval);
       }
-      return await pending;
+      return completed ? await pending : null;
     } finally {
       await resumeAfterDialog(wasRunning: wasRunning);
     }

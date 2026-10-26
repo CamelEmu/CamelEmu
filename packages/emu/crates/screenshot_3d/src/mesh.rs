@@ -43,8 +43,8 @@ impl MeshData {
                     let [x, y, _, w] = vertex.position;
                     mesh.indices.push(mesh.positions.len() as u32);
                     mesh.positions.push([
-                        horizontal * y * frustum.half_width,
-                        x * frustum.half_height,
+                        horizontal * y * frustum.half_width * depth_scale,
+                        x * frustum.half_height * depth_scale,
                         -w * depth_scale,
                     ]);
                     match textured {

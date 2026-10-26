@@ -1,3 +1,4 @@
+use crate::camera::CameraData;
 use crate::context::{DrawData, ShaderData, ShaderProgram};
 use crate::settings::ViewSettings;
 
@@ -24,23 +25,20 @@ impl Frustum {
             .max_by_key(|(count, _)| *count)
             .map(|(_, frustum)| frustum)
             .unwrap_or_else(|| {
-                Self::with_half_height(
-                    (settings.yfov / 2.0).tan(),
-                    settings.reference_width,
-                    settings,
-                )
+                let width = draws
+                    .iter()
+                    .max_by_key(|draw| draw.vertices.len())
+                    .map_or(settings.reference_width, |draw| draw.screen_width);
+                Self::with_half_height((settings.yfov / 2.0).tan(), width, settings)
             })
     }
 
-    pub fn of(
-        draw: &DrawData,
-        shaders: &ShaderData,
-        settings: &ViewSettings,
-        reference_half_height: f32,
-    ) -> Self {
-        Self::probe(draw, shaders, settings).unwrap_or_else(|| {
-            Self::with_half_height(reference_half_height, draw.screen_width, settings)
-        })
+    pub fn from_camera(camera: &CameraData) -> Self {
+        let half_height = (camera.projection.yfov / 2.0).tan();
+        Self {
+            half_width: half_height * camera.projection.aspect,
+            half_height,
+        }
     }
 
     fn with_half_height(half_height: f32, screen_width: u32, settings: &ViewSettings) -> Self {

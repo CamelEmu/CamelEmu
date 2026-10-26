@@ -180,8 +180,6 @@
     "screenshot3d": "3D Screenshot",
     "captureTop": "Top screen",
     "captureBottom": "Bottom screen",
-    "screenshotSaved": "Saved ${fileName}",
-    "screenshotFailed": "Could not save the screenshot",
     "cheats": "Cheats",
     "noCheats": "No cheats",
     "addCheat": "Add Cheat",

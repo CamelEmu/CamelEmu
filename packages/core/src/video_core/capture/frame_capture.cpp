@@ -492,8 +492,8 @@ void FrameCapture::OnFrameEnd() {
             resolved[transfer.screen] = true;
         }
 
-        const bool any_resolved = resolved[0] || resolved[1];
-        if (!any_resolved && ++snapshot->frames < kSettings.max_frames) {
+        const bool all_resolved = resolved[0] && resolved[1];
+        if (!all_resolved && ++snapshot->frames < kSettings.max_frames) {
             return;
         }
 
