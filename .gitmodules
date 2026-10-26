@@ -64,9 +64,6 @@
 [submodule "vulkan-headers"]
 	path = packages/core/externals/vulkan-headers
     url = https://github.com/KhronosGroup/Vulkan-Headers
-[submodule "sirit"]
-	path = packages/core/externals/sirit
-    url = https://github.com/azahar-emu/sirit
 [submodule "faad2"]
 	path = packages/core/externals/faad2/faad2
     url = https://github.com/knik0/faad2

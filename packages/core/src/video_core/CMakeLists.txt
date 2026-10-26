@@ -199,7 +199,11 @@ if (ENABLE_VULKAN)
         shader/generator/spv_fs_shader_gen.cpp
         shader/generator/spv_fs_shader_gen.h
     )
-    target_link_libraries(video_core PRIVATE vulkan-headers vma sirit SPIRV glslang)
+    target_link_libraries(video_core PRIVATE vulkan-headers vma SPIRV glslang)
+    target_include_directories(video_core PRIVATE "${AZAHAR_REPO_ROOT}/packages/native/include")
+    if (NOT ANDROID)
+        target_link_libraries(video_core PRIVATE emu)
+    endif()
 endif()
 
 add_dependencies(video_core host_shaders)

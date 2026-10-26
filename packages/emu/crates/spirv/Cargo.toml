@@ -1,0 +1,7 @@
+[package]
+name = "emu_spirv"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+spirv = "0.4.0"
