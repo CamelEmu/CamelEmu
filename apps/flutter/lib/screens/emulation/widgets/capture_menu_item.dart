@@ -2,7 +2,6 @@ import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
-import '../../../widgets/app_widgets.dart';
 import 'emulation_menu_item.dart';
 
 class CaptureMenuItem extends StatefulWidget {
@@ -24,8 +23,6 @@ class CaptureMenuItem extends StatefulWidget {
 }
 
 class _CaptureMenuItemState extends State<CaptureMenuItem> {
-  static const _iconOnlyButtonExtent = 48.0;
-
   final _controller = OverlayPortalController();
   final _link = LayerLink();
   Size _itemSize = Size.zero;
@@ -62,38 +59,13 @@ class _CaptureMenuItemState extends State<CaptureMenuItem> {
     final t = context.t;
     final choices = [
       (CaptureTarget.top, Icons.vertical_align_top, t.emulation.captureTop),
+      (CaptureTarget.both, widget.icon, widget.title),
       (
         CaptureTarget.bottom,
         Icons.vertical_align_bottom,
         t.emulation.captureBottom,
       ),
     ];
-    final children = [
-      for (final (target, icon, label) in choices)
-        widget.iconsOnly
-            ? AppIconButton(
-                icon: Icon(icon),
-                tooltip: label,
-                onPressed: () => _select(target),
-              )
-            : Expanded(
-                child: AppTextButton(
-                  icon: Icon(icon),
-                  onPressed: () => _select(target),
-                  child: Text(label),
-                ),
-              ),
-    ];
-    final chooser = widget.iconsOnly
-        ? SizedBox(
-            width: _iconOnlyButtonExtent,
-            child: Column(mainAxisSize: MainAxisSize.min, children: children),
-          )
-        : SizedBox(
-            width: _itemSize.width,
-            height: _itemSize.height,
-            child: Row(children: children),
-          );
     return Stack(
       children: [
         Positioned.fill(
@@ -106,12 +78,29 @@ class _CaptureMenuItemState extends State<CaptureMenuItem> {
           link: _link,
           targetAnchor: Alignment.topLeft,
           followerAnchor: Alignment.topLeft,
+          offset: Offset(0, -_itemSize.height),
           child: Align(
             alignment: Alignment.topLeft,
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
-              child: chooser,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (target, icon, label) in choices)
+                    SizedBox(
+                      width: _itemSize.width,
+                      height: _itemSize.height,
+                      child: EmulationMenuItem(
+                        icon: icon,
+                        title: label,
+                        iconsOnly: widget.iconsOnly,
+                        onTap: () => _select(target),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

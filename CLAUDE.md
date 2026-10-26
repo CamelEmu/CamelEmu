@@ -20,5 +20,6 @@
 - Add a dependency with `cargo add`, and do not write a crate version into `Cargo.toml` from guesswork.
 - Do not launch an agent only to check, wait or poll, such as a "Placeholder wait check" agent. When background agents are running, wait for their completion notifications.
 - Do not inspect the contents of build artifacts, such as listing the files inside an APK or the symbols of a shared library, on your own initiative. A successful build is the verification unless the user asks for more.
+- Do not mention launching the app or verifying its behavior at run time in a report, such as saying that the game was or was not started, or that the output was or was not checked. State only what was changed and what the build and analysis commands verified.
 - Do not add a test on your own initiative. Add a regression test only for a problem the user has reported, and not for a change that nobody has reported a problem with.
 - The rules in this file about signatures and attribution lines in commits and pull requests take precedence over the global rules in `~/.claude/CLAUDE.md`.

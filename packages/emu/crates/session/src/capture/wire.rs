@@ -1,31 +1,22 @@
 use screenshot_3d::{
-    AttributeFormat, DrawData, IndexData, IndexFormat, Screenshot3dContext, ShaderData,
-    ShaderProgram, TextureData, Topology, VertexAttribute, VertexBuffer, VertexData,
+    AlphaMode, ClipVertex, DrawData, Screenshot3dContext, ShaderData, ShaderProgram, TextureData,
+    VertexData,
 };
 
 use super::screen::Screen;
 
 struct WireSettings {
     no_texture: u32,
-    topologies: [Topology; 3],
-    formats: [AttributeFormat; 4],
-    index_formats: [Option<IndexFormat>; 3],
     uniform_components: usize,
+    alpha_modes: [AlphaMode; 3],
 }
 
 impl Default for WireSettings {
     fn default() -> Self {
         Self {
             no_texture: u32::MAX,
-            topologies: [Topology::List, Topology::Strip, Topology::Fan],
-            formats: [
-                AttributeFormat::Byte,
-                AttributeFormat::UnsignedByte,
-                AttributeFormat::Short,
-                AttributeFormat::Float,
-            ],
-            index_formats: [None, Some(IndexFormat::Byte), Some(IndexFormat::Short)],
             uniform_components: 4,
+            alpha_modes: [AlphaMode::Opaque, AlphaMode::Mask, AlphaMode::Blend],
         }
     }
 }
@@ -93,50 +84,37 @@ impl RawCapture {
 
     pub fn context_for(&self, screen: &dyn Screen) -> Screenshot3dContext {
         let mut vertices = self.vertices.clone();
-        vertices
-            .draws
-            .retain(|draw| screen.owns_draw(draw.screen_width));
+        vertices.draws.retain(|draw| screen.owns_draw(draw.screen));
         Screenshot3dContext::new(vertices, self.shaders.clone(), self.textures.clone())
     }
 }
 
 fn read_draw(reader: &mut Reader<'_>, settings: &WireSettings) -> Option<DrawData> {
+    let screen = reader.u32()?;
     let screen_width = reader.u32()?;
-    let topology = *settings.topologies.get(reader.u32()? as usize)?;
-    let vertex_count = reader.u32()?;
-    let vertex_offset = reader.u32()?;
+    let flip_vertically = reader.u32()? != 0;
     let shader = reader.u32()? as usize;
     let texture = reader.u32()?;
-    let buffers = reader.items(|reader| {
-        let stride = reader.u32()?;
-        Some(VertexBuffer {
-            stride,
-            data: reader.blob()?,
+    let position_output = reader.u32()?;
+    let alpha_mode = *settings.alpha_modes.get(reader.u32()? as usize)?;
+    let alpha_cutoff = reader.f32()?;
+    let vertices = reader.items(|reader| {
+        Some(ClipVertex {
+            position: [reader.f32()?, reader.f32()?, reader.f32()?, reader.f32()?],
+            texcoord: [reader.f32()?, reader.f32()?],
+            color: [reader.f32()?, reader.f32()?, reader.f32()?, reader.f32()?],
         })
     })?;
-    let attributes = reader.items(|reader| {
-        Some(VertexAttribute {
-            buffer: reader.u32()? as usize,
-            offset: reader.u32()?,
-            format: *settings.formats.get(reader.u32()? as usize)?,
-            components: u8::try_from(reader.u32()?).ok()?,
-        })
-    })?;
-    let index_format = *settings.index_formats.get(reader.u32()? as usize)?;
-    let index_data = reader.blob()?;
     Some(DrawData {
+        screen,
         screen_width,
-        topology,
-        vertex_count,
-        vertex_offset,
-        buffers,
-        attributes,
-        indices: index_format.map(|format| IndexData {
-            format,
-            data: index_data,
-        }),
+        flip_vertically,
         shader,
         texture: (texture != settings.no_texture).then_some(texture as usize),
+        position_output,
+        alpha_mode,
+        alpha_cutoff,
+        vertices,
     })
 }
 
@@ -165,6 +143,10 @@ fn read_program(reader: &mut Reader<'_>, settings: &WireSettings) -> Option<Shad
 fn read_texture(reader: &mut Reader<'_>) -> Option<TextureData> {
     let width = reader.u32()?;
     let height = reader.u32()?;
+    let origin_s = reader.u32()? as i32;
+    let top_t = reader.u32()? as i32;
+    let source_width = reader.u32()?;
+    let source_height = reader.u32()?;
     let wrap_s = u8::try_from(reader.u32()?).ok()?;
     let wrap_t = u8::try_from(reader.u32()?).ok()?;
     let magnify_linear = reader.u32()? != 0;
@@ -172,6 +154,10 @@ fn read_texture(reader: &mut Reader<'_>) -> Option<TextureData> {
     Some(TextureData {
         width,
         height,
+        origin_s,
+        top_t,
+        source_width,
+        source_height,
         wrap_s,
         wrap_t,
         magnify_linear,

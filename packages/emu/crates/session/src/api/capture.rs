@@ -1,5 +1,5 @@
 use std::sync::mpsc::Receiver;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use flutter_rust_bridge::frb;
 use screenshot_3d::Screenshot3dPipeline;
@@ -71,7 +71,7 @@ fn screenshot_3d(
         broker.cancel(id);
         return Err(error);
     }
-    let CoreCapture::Data(data) = wait(broker, id, &receiver, settings)? else {
+    let CoreCapture::Data(data) = wait(broker, id, &receiver, settings.timeout_3d)? else {
         return Err(AzaharError::Capture("the core sent an unexpected result".into()));
     };
     let raw = RawCapture::parse(&data)
@@ -104,7 +104,7 @@ fn take_screen(
         broker.cancel(id);
         return Err(error);
     }
-    match wait(broker, id, &receiver, settings)? {
+    match wait(broker, id, &receiver, settings.timeout)? {
         CoreCapture::Screenshot(Some(image)) => Ok(image),
         _ => Err(AzaharError::Capture("the screenshot failed".into())),
     }
@@ -114,9 +114,9 @@ fn wait(
     broker: &CaptureBroker,
     id: u64,
     receiver: &Receiver<CoreCapture>,
-    settings: &CaptureSettings,
+    timeout: Duration,
 ) -> Result<CoreCapture, AzaharError> {
-    receiver.recv_timeout(settings.timeout).map_err(|_| {
+    receiver.recv_timeout(timeout).map_err(|_| {
         broker.cancel(id);
         AzaharError::Capture("no frame arrived in time".into())
     })

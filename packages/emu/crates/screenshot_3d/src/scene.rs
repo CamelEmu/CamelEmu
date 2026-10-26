@@ -2,7 +2,8 @@ use crate::camera::CameraData;
 use crate::context::{Screenshot3dContext, TextureData};
 use crate::error::{Result, Screenshot3dError};
 use crate::mesh::MeshData;
-use crate::settings::ExportSettings;
+use crate::settings::{ExportSettings, ViewSettings};
+use crate::view::Frustum;
 
 #[derive(Debug, Clone, Default)]
 pub struct Scene {
@@ -93,8 +94,21 @@ impl From<&TextureData> for SceneImage {
 
 impl From<&Screenshot3dContext> for Scene {
     fn from(context: &Screenshot3dContext) -> Self {
+        let settings = ViewSettings::default();
+        let reference_half_height = (context.camera.projection.yfov / 2.0).tan();
         Self {
-            meshes: context.vertices.draws.iter().map(MeshData::from).collect(),
+            meshes: context
+                .vertices
+                .draws
+                .iter()
+                .enumerate()
+                .map(|(layer, draw)| {
+                    let frustum =
+                        Frustum::of(draw, &context.shaders, &settings, reference_half_height);
+                    let texture = draw.texture.and_then(|index| context.textures.get(index));
+                    MeshData::from((draw, layer, frustum, texture))
+                })
+                .collect(),
             camera: context.camera.into(),
             images: context.textures.iter().map(SceneImage::from).collect(),
         }

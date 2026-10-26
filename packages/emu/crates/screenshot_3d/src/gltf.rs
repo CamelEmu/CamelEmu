@@ -1,5 +1,6 @@
 use serde_json::{Value, json};
 
+use crate::context::AlphaMode;
 use crate::error::Result;
 use crate::scene::{Scene, SceneImage};
 use crate::settings::ExportSettings;
@@ -61,22 +62,7 @@ impl Scene {
             images.push(json!({ "bufferView": view, "mimeType": settings.png_mime_type }));
             samplers.push(sampler(image, settings));
             textures.push(json!({ "sampler": index, "source": index }));
-            materials.push(json!({
-                "name": format!("{}{index}", settings.material_name_prefix),
-                "pbrMetallicRoughness": {
-                    "baseColorTexture": { "index": index },
-                    "metallicFactor": 0.0,
-                },
-                "alphaMode": "BLEND",
-                "doubleSided": true,
-            }));
         }
-        let default_material = materials.len();
-        materials.push(json!({
-            "name": settings.material_name_prefix,
-            "pbrMetallicRoughness": { "metallicFactor": 0.0 },
-            "doubleSided": true,
-        }));
 
         let mut meshes = Vec::new();
         for (index, mesh) in self.meshes.iter().enumerate() {
@@ -116,6 +102,50 @@ impl Scene {
                     "VEC2",
                 ));
             }
+            if !mesh.colors.is_empty() && mesh.colors.len() == mesh.positions.len() {
+                let bytes: Vec<u8> = mesh
+                    .colors
+                    .iter()
+                    .flat_map(|color| {
+                        [
+                            srgb_to_linear(color[0], settings),
+                            srgb_to_linear(color[1], settings),
+                            srgb_to_linear(color[2], settings),
+                            color[3],
+                        ]
+                    })
+                    .flat_map(|value| value.to_le_bytes())
+                    .collect();
+                let view = binary.push_view(&bytes, Some(settings.target_array_buffer));
+                attributes["COLOR_0"] = json!(binary.push_accessor(
+                    view,
+                    settings.component_float,
+                    mesh.colors.len(),
+                    "VEC4",
+                ));
+            }
+
+            let mut pbr = json!({ "metallicFactor": 0.0, "roughnessFactor": 1.0 });
+            if let Some(texture) = mesh.texture {
+                pbr["baseColorTexture"] = json!({ "index": texture });
+            }
+            let mut material = json!({
+                "name": format!("{}{index}", settings.material_name_prefix),
+                "pbrMetallicRoughness": pbr,
+                "doubleSided": true,
+                "extensions": {},
+            });
+            material["extensions"][settings.unlit_extension] = json!({});
+            match mesh.alpha_mode {
+                AlphaMode::Opaque => {}
+                AlphaMode::Mask => {
+                    material["alphaMode"] = json!("MASK");
+                    material["alphaCutoff"] = json!(mesh.alpha_cutoff);
+                }
+                AlphaMode::Blend => material["alphaMode"] = json!("BLEND"),
+            }
+            let material_index = materials.len();
+            materials.push(material);
 
             let index_bytes: Vec<u8> = mesh
                 .indices
@@ -135,7 +165,7 @@ impl Scene {
                 "primitives": [{
                     "attributes": attributes,
                     "indices": indices,
-                    "material": mesh.texture.unwrap_or(default_material),
+                    "material": material_index,
                     "mode": settings.mode_triangles,
                 }],
             }));
@@ -151,6 +181,7 @@ impl Scene {
 
         let mut root = json!({
             "asset": { "version": "2.0", "generator": settings.generator },
+            "extensionsUsed": [settings.unlit_extension],
             "scene": 0,
             "scenes": [{ "nodes": (0..nodes.len()).collect::<Vec<_>>() }],
             "nodes": nodes,
@@ -194,6 +225,14 @@ impl Scene {
         out.extend_from_slice(&settings.bin_chunk_type.to_le_bytes());
         out.extend_from_slice(&bin_chunk);
         Ok(out)
+    }
+}
+
+fn srgb_to_linear(value: f32, settings: &ExportSettings) -> f32 {
+    if value <= settings.srgb_threshold {
+        value / settings.srgb_linear_divisor
+    } else {
+        ((value + settings.srgb_offset) / settings.srgb_scale).powf(settings.srgb_gamma)
     }
 }
 

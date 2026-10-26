@@ -1,70 +1,60 @@
-use crate::context::{
-    AttributeFormat, DrawData, IndexFormat, Topology, VertexAttribute, VertexBuffer,
-};
-use crate::settings::MeshSettings;
+use crate::context::{AlphaMode, ClipVertex, DrawData, TextureData};
+use crate::settings::ViewSettings;
+use crate::view::Frustum;
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MeshData {
     pub positions: Vec<[f32; 3]>,
     pub texcoords: Vec<[f32; 2]>,
+    pub colors: Vec<[f32; 4]>,
     pub indices: Vec<u32>,
     pub texture: Option<usize>,
     pub screen_width: u32,
+    pub alpha_mode: AlphaMode,
+    pub alpha_cutoff: f32,
 }
 
 impl MeshData {
-    pub fn with_settings(draw: &DrawData, settings: &MeshSettings) -> Self {
-        let position = draw
-            .attributes
-            .iter()
-            .position(|attribute| attribute.components >= settings.position_min_components);
-        let texcoord = position.and_then(|position| {
-            draw.attributes
-                .iter()
-                .skip(position + 1)
-                .position(|attribute| {
-                    attribute.components == settings.texcoord_components
-                        && attribute.format == AttributeFormat::Float
-                })
-                .map(|offset| position + 1 + offset)
-        });
+    pub fn with_settings(
+        draw: &DrawData,
+        layer: usize,
+        frustum: &Frustum,
+        texture: Option<&TextureData>,
+        settings: &ViewSettings,
+    ) -> Self {
+        let depth_scale = 1.0 + layer as f32 * settings.layer_offset;
+        let horizontal = if draw.flip_vertically { 1.0 } else { -1.0 };
+        let textured = draw.texture.zip(texture);
 
-        let ids = vertex_ids(draw);
-        let read = |attribute: Option<usize>, id: u32| {
-            attribute
-                .and_then(|attribute| draw.attributes.get(attribute))
-                .and_then(|attribute| {
-                    let buffer = draw.buffers.get(attribute.buffer)?;
-                    read_attribute(buffer, attribute, id)
-                })
-                .unwrap_or_default()
-        };
-
-        let positions = ids
-            .iter()
-            .map(|&id| {
-                let value = read(position, id);
-                [value[0], value[1], value[2]]
-            })
-            .collect();
-        let texcoords = texcoord
-            .map(|texcoord| {
-                ids.iter()
-                    .map(|&id| {
-                        let value = read(Some(texcoord), id);
-                        [value[0], value[1]]
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        Self {
-            positions,
-            texcoords,
-            indices: triangulate(draw.topology, ids.len() as u32),
-            texture: draw.texture,
+        let mut mesh = Self {
+            positions: Vec::new(),
+            texcoords: Vec::new(),
+            colors: Vec::new(),
+            indices: Vec::new(),
+            texture: textured.map(|(index, _)| index),
             screen_width: draw.screen_width,
+            alpha_mode: draw.alpha_mode,
+            alpha_cutoff: draw.alpha_cutoff,
+        };
+        for triangle in draw.vertices.chunks_exact(3) {
+            let polygon = clip_w([triangle[0], triangle[1], triangle[2]], settings);
+            for corner in 1..polygon.len().saturating_sub(1) {
+                for vertex in [polygon[0], polygon[corner], polygon[corner + 1]] {
+                    let [x, y, _, w] = vertex.position;
+                    mesh.indices.push(mesh.positions.len() as u32);
+                    mesh.positions.push([
+                        horizontal * y * frustum.half_width,
+                        x * frustum.half_height,
+                        -w * depth_scale,
+                    ]);
+                    match textured {
+                        Some((_, texture)) => mesh.texcoords.push(texture.local_uv(vertex.texcoord)),
+                        None => mesh.colors.push(vertex.color),
+                    }
+                }
+            }
         }
+        mesh
     }
 
     pub fn translate(&mut self, offset: [f32; 3]) {
@@ -76,9 +66,20 @@ impl MeshData {
     }
 }
 
-impl From<&DrawData> for MeshData {
-    fn from(draw: &DrawData) -> Self {
-        Self::with_settings(draw, &MeshSettings::default())
+impl TextureData {
+    pub fn local_uv(&self, texcoord: [f32; 2]) -> [f32; 2] {
+        [
+            (texcoord[0] * self.source_width as f32 - self.origin_s as f32) / self.width as f32,
+            (self.top_t as f32 - texcoord[1] * self.source_height as f32) / self.height as f32,
+        ]
+    }
+}
+
+impl From<(&DrawData, usize, Frustum, Option<&TextureData>)> for MeshData {
+    fn from(
+        (draw, layer, frustum, texture): (&DrawData, usize, Frustum, Option<&TextureData>),
+    ) -> Self {
+        Self::with_settings(draw, layer, &frustum, texture, &ViewSettings::default())
     }
 }
 
@@ -102,59 +103,34 @@ impl From<&MeshData> for Vec<u8> {
     }
 }
 
-fn vertex_ids(draw: &DrawData) -> Vec<u32> {
-    let Some(indices) = &draw.indices else {
-        return (draw.vertex_offset..draw.vertex_offset + draw.vertex_count).collect();
+fn clip_w(triangle: [ClipVertex; 3], settings: &ViewSettings) -> Vec<ClipVertex> {
+    let inside = |vertex: &ClipVertex| {
+        vertex.position[3] + settings.clip_w_bias >= -settings.clip_tolerance
     };
-    let count = draw.vertex_count as usize;
-    match indices.format {
-        IndexFormat::Byte => indices.data.iter().take(count).map(|&i| u32::from(i)).collect(),
-        IndexFormat::Short => indices
-            .data
-            .chunks_exact(2)
-            .take(count)
-            .map(|chunk| u32::from(u16::from_le_bytes([chunk[0], chunk[1]])))
-            .collect(),
-    }
-}
+    let intersection = |v0: &ClipVertex, v1: &ClipVertex| {
+        let dp = v0.position[3] + settings.clip_w_bias;
+        let dp_prev = v1.position[3] + settings.clip_w_bias;
+        let factor = dp_prev / (dp_prev - dp);
+        let mix = |a: f32, b: f32| a * factor + b * (1.0 - factor);
+        ClipVertex {
+            position: std::array::from_fn(|i| mix(v0.position[i], v1.position[i])),
+            texcoord: std::array::from_fn(|i| mix(v0.texcoord[i], v1.texcoord[i])),
+            color: std::array::from_fn(|i| mix(v0.color[i], v1.color[i])),
+        }
+    };
 
-fn read_attribute(buffer: &VertexBuffer, attribute: &VertexAttribute, id: u32) -> Option<[f32; 4]> {
-    let size = attribute.format.size();
-    let start = attribute.offset as usize + id as usize * buffer.stride as usize;
-    let mut value = [0.0; 4];
-    for (component, slot) in value
-        .iter_mut()
-        .enumerate()
-        .take(usize::from(attribute.components))
-    {
-        let at = start + component * size;
-        let bytes = buffer.data.get(at..at + size)?;
-        *slot = match attribute.format {
-            AttributeFormat::Byte => f32::from(bytes[0] as i8),
-            AttributeFormat::UnsignedByte => f32::from(bytes[0]),
-            AttributeFormat::Short => f32::from(i16::from_le_bytes([bytes[0], bytes[1]])),
-            AttributeFormat::Float => {
-                f32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
+    let mut polygon = Vec::with_capacity(4);
+    let mut reference = triangle[2];
+    for vertex in triangle {
+        if inside(&vertex) {
+            if !inside(&reference) {
+                polygon.push(intersection(&vertex, &reference));
             }
-        };
+            polygon.push(vertex);
+        } else if inside(&reference) {
+            polygon.push(intersection(&vertex, &reference));
+        }
+        reference = vertex;
     }
-    Some(value)
-}
-
-fn triangulate(topology: Topology, count: u32) -> Vec<u32> {
-    match topology {
-        Topology::List => (0..count / 3 * 3).collect(),
-        Topology::Strip => (0..count.saturating_sub(2))
-            .flat_map(|i| {
-                if i % 2 == 0 {
-                    [i, i + 1, i + 2]
-                } else {
-                    [i + 1, i, i + 2]
-                }
-            })
-            .collect(),
-        Topology::Fan => (1..count.saturating_sub(1))
-            .flat_map(|i| [0, i, i + 1])
-            .collect(),
-    }
+    polygon
 }

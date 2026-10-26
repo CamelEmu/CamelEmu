@@ -399,6 +399,7 @@ void GPU::MemoryTransfer() {
             impl->sw_blitter->TextureCopy(config);
         }
     } else {
+        impl->pica.NotifyDisplayTransfer(config);
         if (right_eye_disabler->ShouldAllowDisplayTransfer(config.GetPhysicalInputAddress(),
                                                            config.input_height)) {
             if (!impl->rasterizer->AccelerateDisplayTransfer(config)) {

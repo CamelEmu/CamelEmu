@@ -43,6 +43,8 @@ public:
 
     void SetDrawObserver(DrawObserver* observer);
 
+    void NotifyDisplayTransfer(const DisplayTransferConfig& config);
+
     void NotifyFrameEnd();
 
 private:

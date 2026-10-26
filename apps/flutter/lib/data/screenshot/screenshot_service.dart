@@ -22,14 +22,16 @@ class ScreenshotService {
   ScreenshotSettingsNotifier get _settings =>
       _ref.read(screenshotSettingsProvider.notifier);
 
-  Future<ScreenshotOutcome> takeAndSave(
-    CaptureKind kind,
-    CaptureTarget target,
-  ) async {
-    final CaptureResult result;
+  Future<CaptureResult?> take(CaptureKind kind, CaptureTarget target) async {
     try {
-      result = await capture(kind: kind, target: target);
+      return await capture(kind: kind, target: target);
     } on Object {
+      return null;
+    }
+  }
+
+  Future<ScreenshotOutcome> save(CaptureResult? result) async {
+    if (result == null) {
       return (status: ScreenshotStatus.failed, fileName: null);
     }
 

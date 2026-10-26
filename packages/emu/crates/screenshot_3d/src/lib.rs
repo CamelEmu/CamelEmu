@@ -9,15 +9,17 @@ mod obj;
 mod pipeline;
 mod scene;
 mod settings;
+mod view;
 
-pub use camera::{CameraData, CameraSettings, Projection};
+pub use camera::{CameraData, Projection};
 pub use context::{
-    AttributeFormat, DrawData, IndexData, IndexFormat, Screenshot3dContext, ShaderData,
-    ShaderProgram, TextureData, Topology, VertexAttribute, VertexBuffer, VertexData,
+    AlphaMode, ClipVertex, DrawData, Screenshot3dContext, ShaderData, ShaderProgram, TextureData,
+    VertexData,
 };
 pub use error::{Result, Screenshot3dError};
 pub use mesh::MeshData;
 pub use obj::ObjExport;
 pub use pipeline::Screenshot3dPipeline;
 pub use scene::{Scene, SceneCamera, SceneImage};
-pub use settings::{ExportSettings, MeshSettings};
+pub use settings::{ExportSettings, ViewSettings};
+pub use view::Frustum;

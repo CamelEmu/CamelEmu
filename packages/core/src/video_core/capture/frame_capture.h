@@ -27,17 +27,23 @@ public:
 
     bool Request(Callback callback);
 
+    bool WantsOutputVertices() const override;
     void OnDraw(const Pica::PicaCore& pica, bool is_indexed) override;
+    void OnTriangle(const Pica::PicaCore& pica, const Pica::OutputVertex& v0,
+                    const Pica::OutputVertex& v1, const Pica::OutputVertex& v2) override;
+    void OnDisplayTransfer(const Pica::PicaCore& pica,
+                           const Pica::DisplayTransferConfig& config) override;
     void OnFrameEnd() override;
 
 private:
     enum class State : u32 {
         Idle,
-        Armed,
         Collecting,
     };
 
     struct Snapshot;
+
+    void BeginDraw(const Pica::PicaCore& pica);
 
     Core::System& system;
     std::mutex mutex;

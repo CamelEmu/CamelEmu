@@ -2,15 +2,15 @@ use crate::api::capture::CaptureTarget;
 
 pub trait Screen: Sync {
     fn is_bottom(&self) -> bool;
-    fn owns_draw(&self, screen_width: u32) -> bool;
+    fn owns_draw(&self, screen: u32) -> bool;
 }
 
 pub struct TopScreen {
-    pub widths: &'static [u32],
+    pub index: u32,
 }
 
 pub struct BottomScreen {
-    pub widths: &'static [u32],
+    pub index: u32,
 }
 
 impl Screen for TopScreen {
@@ -18,8 +18,8 @@ impl Screen for TopScreen {
         false
     }
 
-    fn owns_draw(&self, screen_width: u32) -> bool {
-        self.widths.contains(&screen_width)
+    fn owns_draw(&self, screen: u32) -> bool {
+        screen == self.index
     }
 }
 
@@ -28,13 +28,13 @@ impl Screen for BottomScreen {
         true
     }
 
-    fn owns_draw(&self, screen_width: u32) -> bool {
-        self.widths.contains(&screen_width)
+    fn owns_draw(&self, screen: u32) -> bool {
+        screen == self.index
     }
 }
 
-static TOP: TopScreen = TopScreen { widths: &[400, 800] };
-static BOTTOM: BottomScreen = BottomScreen { widths: &[320] };
+static TOP: TopScreen = TopScreen { index: 0 };
+static BOTTOM: BottomScreen = BottomScreen { index: 1 };
 
 impl CaptureTarget {
     pub fn screens(self) -> Vec<&'static dyn Screen> {

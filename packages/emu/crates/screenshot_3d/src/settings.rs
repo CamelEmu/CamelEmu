@@ -1,3 +1,5 @@
+use crate::camera::Projection;
+
 pub struct ExportSettings {
     pub stack_gap: f32,
     pub glb_magic: u32,
@@ -19,6 +21,12 @@ pub struct ExportSettings {
     pub pica_wrap_repeat: u8,
     pub pica_wrap_mirrored_repeat: u8,
     pub png_mime_type: &'static str,
+    pub unlit_extension: &'static str,
+    pub srgb_threshold: f32,
+    pub srgb_linear_divisor: f32,
+    pub srgb_offset: f32,
+    pub srgb_scale: f32,
+    pub srgb_gamma: f32,
     pub generator: &'static str,
     pub texture_file_prefix: &'static str,
     pub material_name_prefix: &'static str,
@@ -48,6 +56,12 @@ impl Default for ExportSettings {
             pica_wrap_repeat: 2,
             pica_wrap_mirrored_repeat: 3,
             png_mime_type: "image/png",
+            unlit_extension: "KHR_materials_unlit",
+            srgb_threshold: 0.04045,
+            srgb_linear_divisor: 12.92,
+            srgb_offset: 0.055,
+            srgb_scale: 1.055,
+            srgb_gamma: 2.4,
             generator: "CamelEmu screenshot_3d",
             texture_file_prefix: "texture_",
             material_name_prefix: "material_",
@@ -56,16 +70,61 @@ impl Default for ExportSettings {
     }
 }
 
-pub struct MeshSettings {
-    pub position_min_components: u8,
-    pub texcoord_components: u8,
+pub struct ViewSettings {
+    pub yfov: f32,
+    pub screen_height: f32,
+    pub min_w: f32,
+    pub layer_offset: f32,
+    pub near_margin: f32,
+    pub far_margin: f32,
+    pub fallback_projection: Projection,
+    pub opcode_shift: u32,
+    pub dp4_opcode: u32,
+    pub dph_opcode: u32,
+    pub dest_shift: u32,
+    pub dest_mask: u32,
+    pub src1_shift: u32,
+    pub src1_mask: u32,
+    pub descriptor_mask: u32,
+    pub first_float_uniform: u32,
+    pub component_mask: u32,
+    pub component_top_bit: u32,
+    pub min_row_length: f32,
+    pub reference_width: u32,
+    pub clip_w_bias: f32,
+    pub clip_tolerance: f32,
 }
 
-impl Default for MeshSettings {
+impl Default for ViewSettings {
     fn default() -> Self {
         Self {
-            position_min_components: 3,
-            texcoord_components: 2,
+            yfov: 0.8,
+            screen_height: 240.0,
+            min_w: 0.0001,
+            layer_offset: 0.0001,
+            near_margin: 0.9,
+            far_margin: 1.1,
+            fallback_projection: Projection {
+                yfov: 0.8,
+                aspect: 400.0 / 240.0,
+                near: 0.1,
+                far: 1000.0,
+            },
+            opcode_shift: 26,
+            dp4_opcode: 0x02,
+            dph_opcode: 0x03,
+            dest_shift: 21,
+            dest_mask: 0x1f,
+            src1_shift: 12,
+            src1_mask: 0x7f,
+            descriptor_mask: 0x7f,
+            first_float_uniform: 0x20,
+            component_mask: 0xf,
+            component_top_bit: 0x8,
+            min_row_length: 1e-6,
+            reference_width: 400,
+            clip_w_bias: 0.00001,
+            clip_tolerance: 0.00000001,
         }
     }
 }

@@ -211,9 +211,11 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
 
   Future<void> _capture(CaptureKind kind, CaptureTarget target) async {
     _scaffoldKey.currentState?.closeDrawer();
-    final outcome = await ref
-        .read(screenshotServiceProvider)
-        .takeAndSave(kind, target);
+    final service = ref.read(screenshotServiceProvider);
+    final captured = await ref
+        .read(emulationSessionProvider.notifier)
+        .completeWhilePaused(() => service.take(kind, target));
+    final outcome = await service.save(captured);
     if (!mounted) return;
     final t = context.t;
     final message = switch (outcome.status) {
