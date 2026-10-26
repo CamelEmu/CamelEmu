@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -399,6 +399,7 @@ void GPU::MemoryTransfer() {
             impl->sw_blitter->TextureCopy(config);
         }
     } else {
+        impl->pica.NotifyDisplayTransfer(config);
         if (right_eye_disabler->ShouldAllowDisplayTransfer(config.GetPhysicalInputAddress(),
                                                            config.input_height)) {
             if (!impl->rasterizer->AccelerateDisplayTransfer(config)) {
@@ -413,6 +414,8 @@ void GPU::MemoryTransfer() {
 }
 
 void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
+    impl->pica.NotifyFrameEnd();
+
     // Present renderered frame.
     impl->renderer->SwapBuffers();
 

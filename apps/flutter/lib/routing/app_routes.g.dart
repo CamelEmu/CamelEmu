@@ -15,6 +15,7 @@ List<RouteBase> get $appRoutes => [
   $optionsHistoryRoute,
   $optionsGeneralSettingsRoute,
   $optionsMediaSettingsRoute,
+  $optionsScreenshotSettingsRoute,
   $optionsEmulatedNetworkSettingsRoute,
   $optionsCameraSettingsRoute,
   $optionsControlsSettingsRoute,
@@ -307,6 +308,33 @@ mixin $OptionsMediaSettingsRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/options/media');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $optionsScreenshotSettingsRoute => GoRouteData.$route(
+  path: '/options/screenshot',
+  hasOverriddenOnExit: false,
+  factory: $OptionsScreenshotSettingsRoute._fromState,
+);
+
+mixin $OptionsScreenshotSettingsRoute on GoRouteData {
+  static OptionsScreenshotSettingsRoute _fromState(GoRouterState state) =>
+      const OptionsScreenshotSettingsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/options/screenshot');
 
   @override
   void go(BuildContext context) => context.go(location);

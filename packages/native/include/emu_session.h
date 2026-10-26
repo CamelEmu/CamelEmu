@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #ifndef EMU_SESSION_H
 #define EMU_SESSION_H
 
@@ -51,6 +55,14 @@ typedef struct EmuSessionCallbacks {
    */
   void (*on_shutdown_requested)(void* user);
   void (*on_artic_country_mismatch)(void* user, uint32_t region, uint32_t country);
+  /**
+   * Delivers a requested screenshot as `width` x `height` BGRA pixels, bottom row first.
+   * `pixels` is NULL when the screenshot failed, and valid only during the call.
+   */
+  void (*on_screenshot)(void* user, uint64_t request_id, int32_t secondary, int32_t width,
+                        int32_t height, const uint8_t* pixels);
+  /** Delivers the serialized draw data of one frame. `data` is valid only during the call. */
+  void (*on_capture_3d)(void* user, uint64_t request_id, const uint8_t* data, size_t length);
 } EmuSessionCallbacks;
 
 #define EMU_AUDIO_SAMPLE_RATE 32728
@@ -91,6 +103,20 @@ int32_t emu_session_read_memory(EmuSession* session, uint32_t address, uint8_t* 
  * Returns EMU_STATUS_INVALID_ADDRESS when the range exceeds the FCRAM size.
  */
 int32_t emu_session_read_fcram(EmuSession* session, size_t offset, uint8_t* out, size_t len);
+
+/**
+ * Requests a screenshot of the top (`secondary` == 0) or bottom screen. The result arrives through
+ * on_screenshot with the same `request_id`.
+ * Returns EMU_STATUS_NOT_RUNNING when no game is running or a screenshot is already pending.
+ */
+int32_t emu_session_request_screenshot(EmuSession* session, uint64_t request_id,
+                                       int32_t secondary);
+
+/**
+ * Requests the draw data of the next complete frame. The result arrives through on_capture_3d.
+ * Returns EMU_STATUS_NOT_RUNNING when no game is running or a capture is already pending.
+ */
+int32_t emu_session_request_capture_3d(EmuSession* session, uint64_t request_id);
 
 /**
  * Stops the session, joins every thread it owns and frees every resource,

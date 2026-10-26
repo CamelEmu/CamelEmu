@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -39,6 +39,9 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
     const auto submit_vertex = [this](const AttributeBuffer& buffer) {
         const auto add_triangle = [this](const OutputVertex& v0, const OutputVertex& v1,
                                          const OutputVertex& v2) {
+            if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+                observer->OnTriangle(*this, v0, v1, v2);
+            }
             rasterizer->AddTriangle(v0, v1, v2);
         };
         const auto vertex = OutputVertex(regs.internal.rasterizer, buffer);
@@ -488,8 +491,28 @@ void PicaCore::DrawImmediate() {
     immediate.current_attribute = 0;
 }
 
+void PicaCore::SetDrawObserver(DrawObserver* observer) {
+    draw_observer.store(observer, std::memory_order_release);
+}
+
+void PicaCore::NotifyDisplayTransfer(const DisplayTransferConfig& config) {
+    if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+        observer->OnDisplayTransfer(*this, config);
+    }
+}
+
+void PicaCore::NotifyFrameEnd() {
+    if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+        observer->OnFrameEnd();
+    }
+}
+
 void PicaCore::DrawArrays(bool is_indexed) {
     MICROPROFILE_SCOPE(GPU_Drawing);
+
+    if (DrawObserver* observer = draw_observer.load(std::memory_order_acquire)) {
+        observer->OnDraw(*this, is_indexed);
+    }
 
     // Track vertex in the debug recorder.
     if (debug_context) {
@@ -499,6 +522,11 @@ void PicaCore::DrawArrays(bool is_indexed) {
     }
 
     const bool accelerate_draw = [this] {
+        const DrawObserver* observer = draw_observer.load(std::memory_order_acquire);
+        if (observer != nullptr && observer->WantsOutputVertices()) {
+            return false;
+        }
+
         // Geometry shaders cannot be accelerated due to register preservation.
         if (regs.internal.pipeline.use_gs == PipelineRegs::UseGS::Yes) {
             return false;

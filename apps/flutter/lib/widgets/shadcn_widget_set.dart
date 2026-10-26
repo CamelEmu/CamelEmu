@@ -152,8 +152,9 @@ class ShadcnWidgetSet extends AppWidgetSet {
   }
 
   @override
-  Widget? circularProgress({double? size, double? strokeWidth}) {
+  Widget? circularProgress({double? value, double? size, double? strokeWidth}) {
     return shadcn.CircularProgressIndicator(
+      value: value,
       size: size,
       strokeWidth: strokeWidth,
     );

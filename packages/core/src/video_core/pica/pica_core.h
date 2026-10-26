@@ -1,11 +1,13 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
+#include <atomic>
 #include "common/common_types.h"
 #include "core/hle/service/gsp/gsp_interrupt.h"
+#include "video_core/pica/draw_observer.h"
 #include "video_core/pica/geometry_pipeline.h"
 #include "video_core/pica/packed_attribute.h"
 #include "video_core/pica/primitive_assembly.h"
@@ -38,6 +40,12 @@ public:
     void SetInterruptHandler(Service::GSP::InterruptHandler& signal_interrupt);
 
     void ProcessCmdList(PAddr list, u32 size, bool ignore_list);
+
+    void SetDrawObserver(DrawObserver* observer);
+
+    void NotifyDisplayTransfer(const DisplayTransferConfig& config);
+
+    void NotifyFrameEnd();
 
 private:
     void InitializeRegs();
@@ -286,6 +294,7 @@ private:
     Memory::MemorySystem& memory;
     VideoCore::RasterizerInterface* rasterizer;
     std::shared_ptr<DebugContext> debug_context;
+    std::atomic<DrawObserver*> draw_observer{};
     Service::GSP::InterruptHandler signal_interrupt;
     GeometryPipeline geometry_pipeline;
     PrimitiveAssembler primitive_assembler;

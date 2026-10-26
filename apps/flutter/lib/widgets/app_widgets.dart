@@ -67,7 +67,8 @@ class AppWidgetSet {
     ValueChanged<double>? onChangeEnd,
   }) => null;
 
-  Widget? circularProgress({double? size, double? strokeWidth}) => null;
+  Widget? circularProgress({double? value, double? size, double? strokeWidth}) =>
+      null;
 
   Widget? linearProgress({
     double? value,
@@ -285,8 +286,9 @@ class AppSlider extends StatelessWidget {
 }
 
 class AppCircularProgress extends StatelessWidget {
-  const AppCircularProgress({super.key, this.size, this.strokeWidth});
+  const AppCircularProgress({super.key, this.value, this.size, this.strokeWidth});
 
+  final double? value;
   final double? size;
   final double? strokeWidth;
 
@@ -294,11 +296,12 @@ class AppCircularProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final custom = AppWidgets.of(
       context,
-    ).circularProgress(size: size, strokeWidth: strokeWidth);
+    ).circularProgress(value: value, size: size, strokeWidth: strokeWidth);
     if (custom != null) return custom;
-    final indicator = strokeWidth == null
-        ? const CircularProgressIndicator()
-        : CircularProgressIndicator(strokeWidth: strokeWidth!);
+    final indicator = CircularProgressIndicator(
+      value: value,
+      strokeWidth: strokeWidth ?? 4.0,
+    );
     if (size == null) return indicator;
     return SizedBox.square(dimension: size, child: indicator);
   }

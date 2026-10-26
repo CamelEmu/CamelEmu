@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #ifndef RUNNER_NATIVE_BRIDGE_EMULATION_H_
 #define RUNNER_NATIVE_BRIDGE_EMULATION_H_
 
@@ -29,6 +33,9 @@ struct SessionCallbacks {
   std::function<void(const int16_t* frames, std::size_t frame_count)> on_audio;
   std::function<void()> on_shutdown_requested;
 };
+
+using ScreenshotCallback = std::function<void(int32_t width, int32_t height, const uint8_t* bgra)>;
+using Capture3dCallback = std::function<void(const uint8_t* data, std::size_t length)>;
 
 struct SessionOptions {
   int primary_width = 400;
@@ -81,6 +88,9 @@ class Session {
    * Copies FCRAM. Returns false when the range exceeds the FCRAM size.
    */
   bool ReadFcram(std::size_t offset, uint8_t* out, std::size_t length);
+
+  bool RequestScreenshot(bool secondary, ScreenshotCallback callback);
+  bool RequestCapture3d(Capture3dCallback callback);
 
   bool OnTouchEvent(double x, double y, bool pressed);
   void OnTouchMoved(double x, double y);

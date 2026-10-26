@@ -14,6 +14,8 @@ ringbuf = "0.4"
 thiserror = "2"
 emu_crypto = { version = "0.1.0", path = "../crypto" }
 emu_storage = { version = "0.1.0", path = "../storage" }
+screenshot_3d = { version = "0.1.0", path = "../screenshot_3d" }
+png = "0.18.1"
 
 [features]
 default = []

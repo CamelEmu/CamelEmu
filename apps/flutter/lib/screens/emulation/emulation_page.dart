@@ -9,6 +9,8 @@ import '../../app_services.dart';
 import '../../data/gamepad/gamepad_hub.dart';
 import '../../data/platform_provider.dart';
 import '../../data/repositories/cheat_repository.dart';
+import '../../data/screenshot/capture_feedback_provider.dart';
+import '../../data/screenshot/screenshot_service.dart';
 import '../../data/settings/country.dart';
 import '../../theme/extensions/emulation_focus_frame_theme.dart';
 import 'controller_motion_source.dart';
@@ -20,6 +22,7 @@ import 'motion_input_source.dart';
 import 'virtual_gamepad_visibility_provider.dart';
 import 'widgets/bottom_screen.dart';
 import 'widgets/artic_country_mismatch_dialog.dart';
+import 'widgets/capture_feedback_overlay.dart';
 import 'widgets/cheats_dialog.dart';
 import 'widgets/emulation_failure_dialog.dart';
 import 'widgets/emulation_drawer.dart';
@@ -73,7 +76,9 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     if (scaffold == null || ref.read(isDesktopPlatformProvider)) return;
     switch (focus) {
       case EmulationFocus.menu:
-        if (!scaffold.isDrawerOpen) scaffold.openDrawer();
+        final isCapturing =
+            ref.read(captureFeedbackProvider) != CaptureFeedback.idle;
+        if (!scaffold.isDrawerOpen && !isCapturing) scaffold.openDrawer();
       case EmulationFocus.game:
         if (scaffold.isDrawerOpen) scaffold.closeDrawer();
     }
@@ -133,6 +138,10 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
   }
 
   void _handleBackPressed() {
+    if (ref.read(captureFeedbackProvider) != CaptureFeedback.idle) {
+      ref.read(captureFeedbackProvider.notifier).cancel();
+      return;
+    }
     final state = ref.read(emulationSessionProvider);
     if (!state.emulationStarted || state.isTerminating) return;
     final scaffold = _scaffoldKey.currentState;
@@ -205,6 +214,27 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     } finally {
       await notifier.resumeAfterDialog(wasRunning: wasRunning);
     }
+  }
+
+  Future<void> _capture(CaptureKind kind, CaptureTarget target) async {
+    final feedback = ref.read(captureFeedbackProvider.notifier);
+    if (!feedback.begin()) return;
+    _scaffoldKey.currentState?.closeDrawer();
+    final service = ref.read(screenshotServiceProvider);
+    final captured = await ref
+        .read(emulationSessionProvider.notifier)
+        .completeWhilePaused(
+          () => service.take(
+            kind,
+            target,
+            onProgress: ref.read(captureProgressProvider.notifier).update,
+          ),
+          isCancelled: () => feedback.isCancelled,
+        );
+    if (!mounted || feedback.isCancelled) return;
+    final outcome = await service.save(captured);
+    if (!mounted) return;
+    await feedback.finish(outcome.status);
   }
 
   Widget _screens(BoxConstraints constraints) {
@@ -298,6 +328,7 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
       onTogglePause: notifier.togglePause,
       onAdvanceFrame: notifier.advanceFrame,
       onCheats: widget.game == null ? null : _openCheats,
+      onCapture: (kind, target) => unawaited(_capture(kind, target)),
       onSaveAndExit: _saveAndExit,
       onExitWithoutSaving: _confirmExitWithoutSaving,
       isVirtualGamepadVisible: isDesktop ? null : isVirtualGamepadVisible,
@@ -356,13 +387,19 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
             : screens,
       ),
     );
-    // The loading overlay sits above the whole scaffold, including the side panel and the drawer,
-    // and is fully opaque so that neither the emulator screens nor the menus can be seen or used
-    // until it is gone.
     final showLoadingOverlay = !state.emulationStarted || state.isTerminating;
+    final captureFeedback = ref.watch(captureFeedbackProvider);
+    final captureProgress = ref.watch(captureProgressProvider);
     final content = Stack(
       children: [
         page,
+        if (captureFeedback != CaptureFeedback.idle)
+          Positioned.fill(
+            child: CaptureFeedbackOverlay(
+              feedback: captureFeedback,
+              progress: captureProgress,
+            ),
+          ),
         if (showLoadingOverlay)
           Positioned.fill(
             child: AbsorbPointer(

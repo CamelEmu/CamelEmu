@@ -1,6 +1,10 @@
 add_subdirectory(host_shaders)
 
 add_library(video_core STATIC
+    capture/frame_capture.cpp
+    capture/frame_capture.h
+    capture/screen_capture.cpp
+    capture/screen_capture.h
     custom_textures/custom_format.cpp
     custom_textures/custom_format.h
     custom_textures/custom_tex_manager.cpp
@@ -20,6 +24,7 @@ add_library(video_core STATIC
     rasterizer_interface.h
     renderer_base.cpp
     renderer_base.h
+    pica/draw_observer.h
     pica/geometry_pipeline.cpp
     pica/geometry_pipeline.h
     pica/pica_core.cpp
@@ -64,6 +69,18 @@ add_library(video_core STATIC
     # Needed as a fallback regardless of enabled renderers.
     renderer_software/sw_blitter.cpp
     renderer_software/sw_blitter.h
+    renderer_software/sw_clipper.cpp
+    renderer_software/sw_clipper.h
+    renderer_software/sw_framebuffer.cpp
+    renderer_software/sw_framebuffer.h
+    renderer_software/sw_lighting.cpp
+    renderer_software/sw_lighting.h
+    renderer_software/sw_proctex.cpp
+    renderer_software/sw_proctex.h
+    renderer_software/sw_rasterizer.cpp
+    renderer_software/sw_rasterizer.h
+    renderer_software/sw_texturing.cpp
+    renderer_software/sw_texturing.h
     right_eye_disabler.cpp
     right_eye_disabler.h
     shader/debug_data.h
@@ -103,18 +120,6 @@ if (ENABLE_SOFTWARE_RENDERER)
     target_sources(video_core PRIVATE
         renderer_software/renderer_software.cpp
         renderer_software/renderer_software.h
-        renderer_software/sw_clipper.cpp
-        renderer_software/sw_clipper.h
-        renderer_software/sw_framebuffer.cpp
-        renderer_software/sw_framebuffer.h
-        renderer_software/sw_lighting.cpp
-        renderer_software/sw_lighting.h
-        renderer_software/sw_proctex.cpp
-        renderer_software/sw_proctex.h
-        renderer_software/sw_rasterizer.cpp
-        renderer_software/sw_rasterizer.h
-        renderer_software/sw_texturing.cpp
-        renderer_software/sw_texturing.h
     )
 endif()
 if (ENABLE_OPENGL)

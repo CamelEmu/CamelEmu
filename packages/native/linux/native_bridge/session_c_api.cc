@@ -108,6 +108,36 @@ int32_t emu_session_read_fcram(EmuSession* session, size_t offset, uint8_t* out,
                                                        : EMU_STATUS_INVALID_ADDRESS;
 }
 
+int32_t emu_session_request_screenshot(EmuSession* session, uint64_t request_id,
+                                       int32_t secondary) {
+  if (session == nullptr) {
+    return EMU_STATUS_INVALID_ARGUMENT;
+  }
+  const EmuSessionCallbacks callbacks = session->callbacks;
+  const bool accepted = session->session->RequestScreenshot(
+      secondary != 0, [callbacks, request_id, secondary](int32_t width, int32_t height,
+                                                         const uint8_t* bgra) {
+        if (callbacks.on_screenshot != nullptr) {
+          callbacks.on_screenshot(callbacks.user, request_id, secondary, width, height, bgra);
+        }
+      });
+  return accepted ? EMU_STATUS_OK : EMU_STATUS_NOT_RUNNING;
+}
+
+int32_t emu_session_request_capture_3d(EmuSession* session, uint64_t request_id) {
+  if (session == nullptr) {
+    return EMU_STATUS_INVALID_ARGUMENT;
+  }
+  const EmuSessionCallbacks callbacks = session->callbacks;
+  const bool accepted = session->session->RequestCapture3d(
+      [callbacks, request_id](const uint8_t* data, std::size_t length) {
+        if (callbacks.on_capture_3d != nullptr) {
+          callbacks.on_capture_3d(callbacks.user, request_id, data, length);
+        }
+      });
+  return accepted ? EMU_STATUS_OK : EMU_STATUS_NOT_RUNNING;
+}
+
 // TODO: Linux does not raise the Artic country mismatch callback yet, so there is no pending
 // question to answer. Implement this together with the callback.
 void emu_session_answer_artic_country(EmuSession*, int32_t) {}

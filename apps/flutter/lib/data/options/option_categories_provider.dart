@@ -7,6 +7,7 @@ import 'categories/camera_page_options.dart';
 import 'categories/clock_options.dart';
 import 'categories/controls_options.dart';
 import 'categories/controls_settings_options.dart';
+import 'categories/data_options.dart';
 import 'categories/debug_options.dart';
 import 'categories/emulation_options.dart';
 import 'categories/folder_settings_options.dart';
@@ -19,6 +20,7 @@ import 'categories/networking_options.dart';
 import 'categories/other_options.dart';
 import 'categories/profile_options.dart';
 import 'categories/renderer_options.dart';
+import 'categories/screenshot_options.dart';
 import 'categories/theme_options.dart';
 import 'categories/tools_options.dart';
 import 'option_category.dart';
@@ -35,6 +37,7 @@ final optionCategoriesProvider = Provider<List<OptionCategory>>(
     ref.watch(controlsOptionsProvider),
     ref.watch(toolsOptionsProvider),
     ref.watch(folderSettingsOptionsProvider),
+    ref.watch(dataOptionsProvider),
     ref.watch(accessibilityOptionsProvider),
     ref.watch(otherOptionsProvider),
   ],
@@ -48,6 +51,7 @@ final optionPageCategoriesProvider = Provider<List<OptionCategory>>(
     ref.watch(languageOptionsProvider),
     ref.watch(themeOptionsProvider),
     ref.watch(mediaOptionsProvider),
+    ref.watch(screenshotOptionsProvider),
     ref.watch(rendererOptionsProvider),
     ref.watch(layoutPageOptionsProvider),
     ref.watch(customLandscapeLayoutPageOptionsProvider),

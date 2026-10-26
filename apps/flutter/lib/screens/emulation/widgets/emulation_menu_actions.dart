@@ -1,3 +1,4 @@
+import 'package:azahar_for_flutter/azahar_for_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 /// The actions offered by the in-game menu, shared by [EmulationDrawer] and [EmulationSidePanel].
@@ -7,6 +8,7 @@ class EmulationMenuActions {
     required this.onTogglePause,
     required this.onAdvanceFrame,
     required this.onCheats,
+    required this.onCapture,
     required this.onSaveAndExit,
     required this.onExitWithoutSaving,
     this.isVirtualGamepadVisible,
@@ -18,6 +20,8 @@ class EmulationMenuActions {
 
   /// Null while the running game is not known yet, which disables the entry.
   final VoidCallback? onCheats;
+
+  final void Function(CaptureKind kind, CaptureTarget target) onCapture;
 
   /// Stops the game and writes what it changed to the storage.
   final VoidCallback onSaveAndExit;

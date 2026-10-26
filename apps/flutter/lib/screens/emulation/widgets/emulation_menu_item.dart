@@ -10,6 +10,7 @@ class EmulationMenuItem extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.onLongPress,
     this.iconsOnly = false,
     this.enabled = true,
   });
@@ -17,6 +18,7 @@ class EmulationMenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool iconsOnly;
   final bool enabled;
 
@@ -24,10 +26,13 @@ class EmulationMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     if (iconsOnly) {
       return Align(
-        child: AppIconButton(
-          icon: Icon(icon),
-          tooltip: title,
-          onPressed: enabled ? onTap : null,
+        child: GestureDetector(
+          onLongPress: enabled ? onLongPress : null,
+          child: AppIconButton(
+            icon: Icon(icon),
+            tooltip: title,
+            onPressed: enabled ? onTap : null,
+          ),
         ),
       );
     }
@@ -36,6 +41,7 @@ class EmulationMenuItem extends StatelessWidget {
       leading: Icon(icon),
       title: Text(title),
       onTap: onTap,
+      onLongPress: onLongPress,
     );
   }
 }

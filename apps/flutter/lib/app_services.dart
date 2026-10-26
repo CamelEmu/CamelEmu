@@ -32,6 +32,7 @@ import 'data/user/repositories/legacy_settings_ui_repository.dart';
 import 'data/user/repositories/media_settings_repository.dart';
 import 'data/user/repositories/option_history_repository.dart';
 import 'data/user/repositories/pinned_options_repository.dart';
+import 'data/user/repositories/screenshot_settings_repository.dart';
 import 'data/user/repositories/selected_tags_repository.dart';
 import 'data/user/repositories/tag_repository.dart';
 import 'data/user/repositories/theme_settings_repository.dart';
@@ -137,6 +138,8 @@ abstract final class AppServices {
       userSessions.current.languageCodeRepository;
   static ArticBaseAddressRepository get articBaseAddressRepository =>
       userSessions.current.articBaseAddressRepository;
+  static ScreenshotSettingsRepository get screenshotSettingsRepository =>
+      userSessions.current.screenshotSettingsRepository;
   static LegacySettingsUiRepository get legacySettingsUiRepository =>
       userSessions.current.legacySettingsUiRepository;
   static PinnedOptionsRepository get pinnedOptionsRepository =>

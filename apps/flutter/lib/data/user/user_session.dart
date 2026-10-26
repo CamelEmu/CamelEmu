@@ -20,6 +20,7 @@ import 'repositories/legacy_settings_ui_repository.dart';
 import 'repositories/media_settings_repository.dart';
 import 'repositories/option_history_repository.dart';
 import 'repositories/pinned_options_repository.dart';
+import 'repositories/screenshot_settings_repository.dart';
 import 'repositories/selected_tags_repository.dart';
 import 'repositories/tag_repository.dart';
 import 'repositories/theme_settings_repository.dart';
@@ -56,6 +57,7 @@ class UserSession {
     virtualAccessPointsRepository = VirtualAccessPointsRepository(database);
     languageCodeRepository = LanguageCodeRepository(database);
     articBaseAddressRepository = ArticBaseAddressRepository(database);
+    screenshotSettingsRepository = ScreenshotSettingsRepository(database);
     legacySettingsUiRepository = LegacySettingsUiRepository(database);
     pinnedOptionsRepository = PinnedOptionsRepository(database);
     optionHistoryRepository = OptionHistoryRepository(database);
@@ -80,6 +82,7 @@ class UserSession {
   late final VirtualAccessPointsRepository virtualAccessPointsRepository;
   late final LanguageCodeRepository languageCodeRepository;
   late final ArticBaseAddressRepository articBaseAddressRepository;
+  late final ScreenshotSettingsRepository screenshotSettingsRepository;
   late final LegacySettingsUiRepository legacySettingsUiRepository;
   late final PinnedOptionsRepository pinnedOptionsRepository;
   late final OptionHistoryRepository optionHistoryRepository;

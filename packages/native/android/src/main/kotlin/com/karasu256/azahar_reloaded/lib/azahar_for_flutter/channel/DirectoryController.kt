@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.result.ActivityResultLauncher
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.profiles.ProfileStore
 import com.karasu256.azahar_reloaded.lib.azahar_for_flutter.profiles.ProfilesDocumentsProvider
@@ -24,10 +25,12 @@ class DirectoryController(
     private val activity: Activity,
     private val contentResolver: ContentResolver,
     private val openUserDirectoryLauncher: ActivityResultLauncher<Uri?>,
-    private val openGamesDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private val openGamesDirectoryLauncher: ActivityResultLauncher<Uri?>,
+    private val openScreenshotDirectoryLauncher: ActivityResultLauncher<Uri?>
 ) {
     private var pendingUserDirectoryResult: MethodChannel.Result? = null
     private var pendingGamesDirectoryResult: MethodChannel.Result? = null
+    private var pendingScreenshotDirectoryResult: MethodChannel.Result? = null
     var copyProgressSink: EventChannel.EventSink? = null
 
     fun onUserDirectoryPicked(uri: Uri?) {
@@ -55,11 +58,27 @@ class DirectoryController(
         result?.success(uri.toString())
     }
 
+    fun onScreenshotDirectoryPicked(uri: Uri?) {
+        val result = pendingScreenshotDirectoryResult
+        pendingScreenshotDirectoryResult = null
+        if (uri == null) {
+            result?.success(null)
+            return
+        }
+        contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+        result?.success(uri.toString())
+    }
+
     val handlers: List<AzaharMethodHandler> = listOf(
         OpenUserDirectory(),
         ConfirmUserDirectory(),
         HasUserDirectoryWriteAccess(),
         OpenGamesDirectory(),
+        OpenScreenshotDirectory(),
+        WriteToDirectory(),
         SetProfiles(),
         ProfileTreeUri()
     )
@@ -104,6 +123,45 @@ class DirectoryController(
         override fun execute(call: MethodCall, result: MethodChannel.Result) {
             pendingGamesDirectoryResult = result
             openGamesDirectoryLauncher.launch(null)
+        }
+    }
+
+    private inner class OpenScreenshotDirectory : AzaharMethodHandler {
+        override val name = "openScreenshotDirectory"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            pendingScreenshotDirectoryResult = result
+            openScreenshotDirectoryLauncher.launch(null)
+        }
+    }
+
+    private inner class WriteToDirectory : AzaharMethodHandler {
+        override val name = "writeToDirectory"
+        override fun execute(call: MethodCall, result: MethodChannel.Result) {
+            val treeUri = Uri.parse(call.argument<String>("treeUri")!!)
+            val fileName = call.argument<String>("fileName")!!
+            val mimeType = call.argument<String>("mimeType")!!
+            val bytes = call.argument<ByteArray>("bytes")!!
+            Thread {
+                val written = try {
+                    val parent = DocumentsContract.buildDocumentUriUsingTree(
+                        treeUri,
+                        DocumentsContract.getTreeDocumentId(treeUri)
+                    )
+                    val document = DocumentsContract.createDocument(
+                        contentResolver,
+                        parent,
+                        mimeType,
+                        fileName
+                    )
+                    document != null && contentResolver.openOutputStream(document)?.use {
+                        it.write(bytes)
+                        true
+                    } == true
+                } catch (exception: Exception) {
+                    false
+                }
+                activity.runOnUiThread { result.success(written) }
+            }.start()
         }
     }
 

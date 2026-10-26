@@ -25,6 +25,8 @@ final emulationSessionProvider =
     >(EmulationSessionNotifier.new);
 
 class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
+  static const _frameStepInterval = Duration(milliseconds: 50);
+
   NativeBridge get _bridge => AppServices.nativeBridge;
   final EmulationBackend _backend = EmulationBackend();
   StreamSubscription<void>? _closeRequestSubscription;
@@ -159,6 +161,29 @@ class EmulationSessionNotifier extends Notifier<EmulationSessionState> {
   Future<void> resumeAfterDialog({required bool wasRunning}) async {
     if (!wasRunning || !state.isPaused) return;
     await togglePause();
+  }
+
+  Future<T?> completeWhilePaused<T>(
+    Future<T> Function() task, {
+    required bool Function() isCancelled,
+  }) async {
+    final wasRunning = await pauseForDialog();
+    try {
+      final pending = task();
+      var completed = false;
+      unawaited(
+        pending
+            .then<void>((_) {}, onError: (_) {})
+            .whenComplete(() => completed = true),
+      );
+      while (!completed && !isCancelled()) {
+        await advanceFrame();
+        await Future<void>.delayed(_frameStepInterval);
+      }
+      return completed ? await pending : null;
+    } finally {
+      await resumeAfterDialog(wasRunning: wasRunning);
+    }
   }
 
   Future<void> handleAppBackground() async {

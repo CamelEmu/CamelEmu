@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/capture.dart';
 import 'api/session.dart';
 
 import 'dart:async';
@@ -15,6 +16,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 import 'third_party/emu_app_scanner/api.dart';
 import 'third_party/session/api/audio.dart';
+import 'third_party/session/api/capture.dart';
 import 'third_party/session/api/error.dart';
 import 'third_party/session/api/session.dart';
 import 'third_party/session/api/storage.dart';
@@ -29,6 +31,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  RustStreamSink<CaptureEvent> dco_decode_StreamSink_capture_event_Sse(
+    dynamic raw,
+  );
 
   @protected
   RustStreamSink<SessionEvent> dco_decode_StreamSink_session_event_Sse(
@@ -48,6 +55,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  CaptureProgress dco_decode_box_autoadd_capture_progress(dynamic raw);
+
+  @protected
+  CaptureResult dco_decode_box_autoadd_capture_result(dynamic raw);
+
+  @protected
   ScanRequest dco_decode_box_autoadd_scan_request(dynamic raw);
 
   @protected
@@ -57,7 +70,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
+  CaptureEvent dco_decode_capture_event(dynamic raw);
+
+  @protected
+  CaptureKind dco_decode_capture_kind(dynamic raw);
+
+  @protected
+  CaptureProgress dco_decode_capture_progress(dynamic raw);
+
+  @protected
+  CaptureResult dco_decode_capture_result(dynamic raw);
+
+  @protected
+  CaptureTarget dco_decode_capture_target(dynamic raw);
+
+  @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
 
   @protected
   Game dco_decode_game(dynamic raw);
@@ -117,6 +148,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<CaptureEvent> sse_decode_StreamSink_capture_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<SessionEvent> sse_decode_StreamSink_session_event_Sse(
     SseDeserializer deserializer,
   );
@@ -134,6 +170,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  CaptureProgress sse_decode_box_autoadd_capture_progress(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CaptureResult sse_decode_box_autoadd_capture_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ScanRequest sse_decode_box_autoadd_scan_request(SseDeserializer deserializer);
 
   @protected
@@ -145,7 +191,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
+  CaptureEvent sse_decode_capture_event(SseDeserializer deserializer);
+
+  @protected
+  CaptureKind sse_decode_capture_kind(SseDeserializer deserializer);
+
+  @protected
+  CaptureProgress sse_decode_capture_progress(SseDeserializer deserializer);
+
+  @protected
+  CaptureResult sse_decode_capture_result(SseDeserializer deserializer);
+
+  @protected
+  CaptureTarget sse_decode_capture_target(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
   Game sse_decode_game(SseDeserializer deserializer);
@@ -208,6 +272,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_capture_event_Sse(
+    RustStreamSink<CaptureEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_session_event_Sse(
     RustStreamSink<SessionEvent> self,
     SseSerializer serializer,
@@ -226,6 +296,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_capture_progress(
+    CaptureProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_capture_result(
+    CaptureResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_scan_request(
     ScanRequest self,
     SseSerializer serializer,
@@ -241,7 +323,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_capture_event(CaptureEvent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_capture_kind(CaptureKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_capture_progress(
+    CaptureProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_capture_result(CaptureResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_capture_target(CaptureTarget self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_game(Game self, SseSerializer serializer);

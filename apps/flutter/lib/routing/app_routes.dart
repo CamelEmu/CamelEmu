@@ -28,6 +28,7 @@ import '../screens/settings/sections/graphics_settings_page.dart';
 import '../screens/settings/sections/language_settings_page.dart';
 import '../screens/settings/sections/layout_settings_page.dart';
 import '../screens/settings/sections/media_settings_page.dart';
+import '../screens/settings/sections/screenshot_settings_page.dart';
 import '../screens/settings/sections/theme_settings_page.dart';
 import '../screens/setup/setup_wizard_page.dart';
 import 'app_route_data.dart';
