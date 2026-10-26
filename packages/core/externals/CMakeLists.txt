@@ -176,15 +176,6 @@ if (NOT FOUND_FFMPEG_HEADERS)
     target_include_directories(library-headers SYSTEM INTERFACE ./library-headers/ffmpeg/include)
 endif()
 
-# SoundTouch
-if(NOT USE_SYSTEM_SOUNDTOUCH)
-    set(INTEGER_SAMPLES ON CACHE BOOL "")
-    set(SOUNDSTRETCH OFF CACHE BOOL "")
-    set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
-    add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
-    target_compile_definitions(SoundTouch PUBLIC SOUNDTOUCH_INTEGER_SAMPLES)
-endif()
-
 # Teakra
 set(BUILD_TESTING OFF CACHE BOOL "")
 add_subdirectory(teakra EXCLUDE_FROM_ALL)

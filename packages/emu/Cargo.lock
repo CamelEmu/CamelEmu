@@ -589,6 +589,7 @@ name = "emu"
 version = "0.1.0"
 dependencies = [
  "emu_app_scanner",
+ "emu_audio",
  "emu_crypto",
  "emu_http",
  "emu_random",
@@ -611,6 +612,14 @@ dependencies = [
  "png",
  "sha2 0.11.1",
  "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "emu_audio"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.1",
  "thiserror 2.0.21",
 ]
 

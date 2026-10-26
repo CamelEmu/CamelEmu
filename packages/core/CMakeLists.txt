@@ -462,14 +462,6 @@ if (ENABLE_LIBUSB AND USE_SYSTEM_LIBUSB)
     find_package(LibUSB)
 endif()
 
-if (USE_SYSTEM_SOUNDTOUCH)
-    include(FindPkgConfig)
-    find_package(SoundTouch REQUIRED)
-    add_library(SoundTouch INTERFACE)
-    target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
-    target_include_directories(SoundTouch INTERFACE "${SOUNDTOUCH_INCLUDE_DIRS}")
-endif()
-
 add_subdirectory(src)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra_meta)
