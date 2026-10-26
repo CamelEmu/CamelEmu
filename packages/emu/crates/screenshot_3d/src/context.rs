@@ -21,6 +21,16 @@ impl Screenshot3dContext {
     }
 }
 
+impl Screenshot3dContext {
+    pub fn triangle_count(&self) -> u64 {
+        self.vertices
+            .draws
+            .iter()
+            .map(|draw| (draw.vertices.len() / 3) as u64)
+            .sum()
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct VertexData {
     pub draws: Vec<DrawData>,

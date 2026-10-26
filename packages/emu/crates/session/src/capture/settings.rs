@@ -2,7 +2,6 @@ use std::time::Duration;
 
 pub struct CaptureSettings {
     pub timeout: Duration,
-    pub timeout_3d: Duration,
     pub screenshot_prefix: &'static str,
     pub screenshot_3d_prefix: &'static str,
     pub png_extension: &'static str,
@@ -17,7 +16,6 @@ impl Default for CaptureSettings {
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(5),
-            timeout_3d: Duration::from_secs(120),
             screenshot_prefix: "screenshot_",
             screenshot_3d_prefix: "screenshot_3d_",
             png_extension: "png",

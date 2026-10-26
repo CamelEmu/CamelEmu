@@ -224,7 +224,11 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     final captured = await ref
         .read(emulationSessionProvider.notifier)
         .completeWhilePaused(
-          () => service.take(kind, target),
+          () => service.take(
+            kind,
+            target,
+            onProgress: ref.read(captureProgressProvider.notifier).update,
+          ),
           isCancelled: () => feedback.isCancelled,
         );
     if (!mounted || feedback.isCancelled) return;
@@ -385,12 +389,16 @@ class _EmulationPageState extends ConsumerState<EmulationPage>
     );
     final showLoadingOverlay = !state.emulationStarted || state.isTerminating;
     final captureFeedback = ref.watch(captureFeedbackProvider);
+    final captureProgress = ref.watch(captureProgressProvider);
     final content = Stack(
       children: [
         page,
         if (captureFeedback != CaptureFeedback.idle)
           Positioned.fill(
-            child: CaptureFeedbackOverlay(feedback: captureFeedback),
+            child: CaptureFeedbackOverlay(
+              feedback: captureFeedback,
+              progress: captureProgress,
+            ),
           ),
         if (showLoadingOverlay)
           Positioned.fill(

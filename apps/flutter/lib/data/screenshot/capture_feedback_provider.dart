@@ -9,6 +9,20 @@ final captureFeedbackProvider =
       CaptureFeedbackNotifier.new,
     );
 
+final captureProgressProvider =
+    NotifierProvider<CaptureProgressNotifier, double?>(
+      CaptureProgressNotifier.new,
+    );
+
+class CaptureProgressNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+
+  void update(double fraction) => state = fraction;
+
+  void reset() => state = null;
+}
+
 class CaptureFeedbackNotifier extends Notifier<CaptureFeedback> {
   static const _resultDuration = Duration(milliseconds: 1200);
 
@@ -22,6 +36,7 @@ class CaptureFeedbackNotifier extends Notifier<CaptureFeedback> {
   bool begin() {
     if (state != CaptureFeedback.idle) return false;
     _cancelled = false;
+    ref.read(captureProgressProvider.notifier).reset();
     state = CaptureFeedback.working;
     return true;
   }

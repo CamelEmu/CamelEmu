@@ -4,20 +4,26 @@ import '../../../data/screenshot/capture_feedback_provider.dart';
 import '../../../widgets/app_widgets.dart';
 
 class CaptureFeedbackOverlay extends StatelessWidget {
-  const CaptureFeedbackOverlay({super.key, required this.feedback});
+  const CaptureFeedbackOverlay({
+    super.key,
+    required this.feedback,
+    this.progress,
+  });
 
   static const _extent = 72.0;
   static const _indicatorExtent = 32.0;
   static const _radius = 16.0;
 
   final CaptureFeedback feedback;
+  final double? progress;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final child = switch (feedback) {
-      CaptureFeedback.working => const AppCircularProgress(
-        key: ValueKey('working'),
+      CaptureFeedback.working => AppCircularProgress(
+        key: const ValueKey('working'),
+        value: progress,
         size: _indicatorExtent,
       ),
       CaptureFeedback.succeeded => Icon(

@@ -2,6 +2,7 @@ use serde_json::{Value, json};
 
 use crate::context::AlphaMode;
 use crate::error::Result;
+use crate::progress::{Exporting, Progress};
 use crate::scene::{Scene, SceneImage};
 use crate::settings::ExportSettings;
 
@@ -49,7 +50,8 @@ impl<'a> BinaryBuilder<'a> {
 }
 
 impl Scene {
-    pub fn to_glb(&self, settings: &ExportSettings) -> Result<Vec<u8>> {
+    pub fn to_glb(&self, settings: &ExportSettings, progress: &mut Progress) -> Result<Vec<u8>> {
+        progress.begin(&Exporting, (self.images.len() + self.meshes.len()) as u64);
         let mut binary = BinaryBuilder::new(settings);
 
         let mut images = Vec::new();
@@ -62,10 +64,12 @@ impl Scene {
             images.push(json!({ "bufferView": view, "mimeType": settings.png_mime_type }));
             samplers.push(sampler(image, settings));
             textures.push(json!({ "sampler": index, "source": index }));
+            progress.advance(1);
         }
 
         let mut meshes = Vec::new();
         for (index, mesh) in self.meshes.iter().enumerate() {
+            progress.advance(1);
             if mesh.indices.is_empty() || mesh.positions.is_empty() {
                 continue;
             }

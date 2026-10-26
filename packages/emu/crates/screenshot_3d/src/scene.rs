@@ -2,6 +2,7 @@ use crate::camera::CameraData;
 use crate::context::{AlphaMode, PatchData, Screenshot3dContext, TextureData};
 use crate::error::{Result, Screenshot3dError};
 use crate::mesh::MeshData;
+use crate::progress::{Meshes, Progress, Shaders};
 use crate::settings::{ExportSettings, ViewSettings};
 use crate::view::Frustum;
 
@@ -109,20 +110,48 @@ impl From<&PatchData> for SceneImage {
 
 impl From<&Screenshot3dContext> for Scene {
     fn from(context: &Screenshot3dContext) -> Self {
+        let mut progress = Progress::silent();
+        progress.begin(&Shaders, context.vertices.draws.len() as u64);
+        let frustums = Scene::frustums(context, &mut progress);
+        progress.begin(&Meshes, context.triangle_count());
+        Scene::build(context, &frustums, &mut progress)
+    }
+}
+
+impl Scene {
+    pub fn frustums(context: &Screenshot3dContext, progress: &mut Progress) -> Vec<Option<Frustum>> {
+        let settings = ViewSettings::default();
+        context
+            .vertices
+            .draws
+            .iter()
+            .map(|draw| {
+                let frustum = Frustum::probe(draw, &context.shaders, &settings);
+                progress.advance(1);
+                frustum
+            })
+            .collect()
+    }
+
+    pub fn build(
+        context: &Screenshot3dContext,
+        perspectives: &[Option<Frustum>],
+        progress: &mut Progress,
+    ) -> Self {
         let settings = ViewSettings::default();
         let frustum = Frustum::from_camera(&context.camera);
         let mut images: Vec<SceneImage> = context.textures.iter().map(SceneImage::from).collect();
         let mut meshes = Vec::new();
-        for draw in &context.vertices.draws {
+        for (draw, perspective) in context.vertices.draws.iter().zip(perspectives) {
             let texture = draw.texture.and_then(|index| context.textures.get(index));
-            let perspective = Frustum::probe(draw, &context.shaders, &settings);
             meshes.extend(MeshData::split(
                 draw,
                 &frustum,
-                perspective,
+                *perspective,
                 texture,
                 &mut images,
                 &settings,
+                progress,
             ));
         }
         let mut scene = Self {
@@ -133,9 +162,7 @@ impl From<&Screenshot3dContext> for Scene {
         scene.discard_opaque_alpha();
         scene
     }
-}
 
-impl Scene {
     fn discard_opaque_alpha(&mut self) {
         let mut translucent = vec![false; self.images.len()];
         for mesh in &self.meshes {

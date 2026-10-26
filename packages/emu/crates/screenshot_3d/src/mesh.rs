@@ -1,4 +1,5 @@
 use crate::context::{AlphaMode, ClipVertex, DrawData, TextureData, TriangleMode, Viewport};
+use crate::progress::Progress;
 use crate::scene::SceneImage;
 use crate::settings::ViewSettings;
 use crate::view::Frustum;
@@ -59,6 +60,7 @@ impl MeshData {
         texture: Option<&TextureData>,
         images: &mut Vec<SceneImage>,
         settings: &ViewSettings,
+        progress: &mut Progress,
     ) -> Vec<MeshData> {
         let placement = Placement {
             flip_vertically: draw.flip_vertically,
@@ -72,6 +74,7 @@ impl MeshData {
         let mut patches = draw.patches.iter();
 
         for (index, triangle) in draw.vertices.chunks_exact(3).enumerate() {
+            progress.advance(1);
             let mut corners = [triangle[0], triangle[1], triangle[2]];
             match draw.modes.get(index).copied().unwrap_or(TriangleMode::Color) {
                 TriangleMode::Texture => {

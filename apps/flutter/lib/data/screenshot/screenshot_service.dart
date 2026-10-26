@@ -22,9 +22,21 @@ class ScreenshotService {
   ScreenshotSettingsNotifier get _settings =>
       _ref.read(screenshotSettingsProvider.notifier);
 
-  Future<CaptureResult?> take(CaptureKind kind, CaptureTarget target) async {
+  Future<CaptureResult?> take(
+    CaptureKind kind,
+    CaptureTarget target, {
+    required void Function(double fraction) onProgress,
+  }) async {
     try {
-      return await capture(kind: kind, target: target);
+      await for (final event in capture(kind: kind, target: target)) {
+        switch (event) {
+          case CaptureEvent_Progress(:final field0):
+            onProgress(field0.fraction);
+          case CaptureEvent_Finished(:final field0):
+            return field0;
+        }
+      }
+      return null;
     } on Object {
       return null;
     }

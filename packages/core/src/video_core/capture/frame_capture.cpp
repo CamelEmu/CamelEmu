@@ -43,6 +43,7 @@ struct CaptureSettings {
     u32 patch_min_size = 2;
     u32 patch_max_size = 256;
     u64 patch_budget = 8'000'000;
+    u64 bake_budget = 8'000'000;
     s32 conflict_tolerance = 3;
     s32 linear_tolerance = 4;
     f32 min_patch_w = 0.0001f;
@@ -226,6 +227,8 @@ public:
     FragmentShader(Memory::MemorySystem& memory, Pica::PicaCore& pica_)
         : pica{pica_}, rasterizer{memory, pica_} {}
 
+    u64 baked_texels{};
+
     Common::Vec4<u8> Shade(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
                            const Pica::OutputVertex& v2, f32 l0, f32 l1, f32 l2) {
         using Pica::f24;
@@ -311,7 +314,7 @@ public:
         const s32 s1 = std::max(static_cast<s32>(std::ceil(max_s)), s0 + 1);
         const s32 t0 = static_cast<s32>(std::floor(min_t));
         const s32 t1 = std::max(static_cast<s32>(std::ceil(max_t)), t0 + 1);
-        if (!image.Reserve(s0, t0, s1, t1)) {
+        if (baked_texels >= kSettings.bake_budget || !image.Reserve(s0, t0, s1, t1)) {
             return {};
         }
 
@@ -327,6 +330,11 @@ public:
                     l2 < -kSettings.inside_tolerance) {
                     continue;
                 }
+                if (baked_texels >= kSettings.bake_budget) {
+                    result.conflict = true;
+                    return result;
+                }
+                ++baked_texels;
                 const auto color = Shade(v0, v1, v2, l0, l1, l2);
                 const std::size_t index = image.Index(s, t);
                 u8* pixel = &image.rgba[index * 4];

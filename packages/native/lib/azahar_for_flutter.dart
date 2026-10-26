@@ -25,6 +25,7 @@ export 'src/models/wifi_channel.dart';
 export 'src/native/applet_channel.dart';
 export 'src/native/native_bridge.dart';
 export 'src/native/rust_runtime.dart';
+export 'src/rust/api/capture.dart';
 export 'src/rust/api/session.dart';
 export 'src/rust/third_party/emu_app_scanner/api.dart';
 export 'src/rust/third_party/session/api/audio.dart';

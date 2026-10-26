@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 205686495;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1666784969;
 
 // Section: executor
 
@@ -109,7 +109,7 @@ fn wire__session__api__audio__available_audio_engines_impl(
         },
     )
 }
-fn wire__session__api__capture__capture_impl(
+fn wire__crate__api__capture__capture_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -133,10 +133,14 @@ fn wire__session__api__capture__capture_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_kind = <session::api::capture::CaptureKind>::sse_decode(&mut deserializer);
             let api_target = <session::api::capture::CaptureTarget>::sse_decode(&mut deserializer);
+            let api_events = <StreamSink<
+                session::api::capture::CaptureEvent,
+                flutter_rust_bridge::for_generated::SseCodec,
+            >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, session::api::error::AzaharError>((move || {
-                    let output_ok = session::api::capture::capture(api_kind, api_target)?;
+                    let output_ok = crate::api::capture::capture(api_kind, api_target, api_events)?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -607,6 +611,18 @@ const _: fn() = || {
             let _: Vec<String> = field0;
         }
     }
+    match None::<session::api::capture::CaptureEvent>.unwrap() {
+        session::api::capture::CaptureEvent::Progress(field0) => {
+            let _: session::api::capture::CaptureProgress = field0;
+        }
+        session::api::capture::CaptureEvent::Finished(field0) => {
+            let _: session::api::capture::CaptureResult = field0;
+        }
+    }
+    {
+        let CaptureProgress = None::<session::api::capture::CaptureProgress>.unwrap();
+        let _: f64 = CaptureProgress.fraction;
+    }
     {
         let CaptureResult = None::<session::api::capture::CaptureResult>.unwrap();
         let _: Vec<u8> = CaptureResult.bytes;
@@ -682,6 +698,19 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
+    }
+}
+
+impl SseDecode
+    for StreamSink<
+        session::api::capture::CaptureEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
     }
 }
 
@@ -784,6 +813,28 @@ impl SseDecode for bool {
     }
 }
 
+impl SseDecode for session::api::capture::CaptureEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 =
+                    <session::api::capture::CaptureProgress>::sse_decode(deserializer);
+                return session::api::capture::CaptureEvent::Progress(var_field0);
+            }
+            1 => {
+                let mut var_field0 =
+                    <session::api::capture::CaptureResult>::sse_decode(deserializer);
+                return session::api::capture::CaptureEvent::Finished(var_field0);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for session::api::capture::CaptureKind {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -792,6 +843,16 @@ impl SseDecode for session::api::capture::CaptureKind {
             0 => session::api::capture::CaptureKind::Screenshot,
             1 => session::api::capture::CaptureKind::Screenshot3d,
             _ => unreachable!("Invalid variant for CaptureKind: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for session::api::capture::CaptureProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fraction = <f64>::sse_decode(deserializer);
+        return session::api::capture::CaptureProgress {
+            fraction: var_fraction,
         };
     }
 }
@@ -827,6 +888,13 @@ impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
     }
 }
 
@@ -1101,7 +1169,7 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        3 => wire__session__api__capture__capture_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__capture__capture_impl(port, ptr, rust_vec_len, data_len),
         5 => wire__session__api__session__dump_fcram_impl(port, ptr, rust_vec_len, data_len),
         6 => wire__session__api__session__fcram_size_impl(port, ptr, rust_vec_len, data_len),
         7 => wire__session__api__session__init_app_impl(port, ptr, rust_vec_len, data_len),
@@ -1208,6 +1276,33 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::error::AzaharErr
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::capture::CaptureEvent> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            session::api::capture::CaptureEvent::Progress(field0) => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            session::api::capture::CaptureEvent::Finished(field0) => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<session::api::capture::CaptureEvent>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::capture::CaptureEvent>>
+    for session::api::capture::CaptureEvent
+{
+    fn into_into_dart(self) -> FrbWrapper<session::api::capture::CaptureEvent> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::capture::CaptureKind> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
@@ -1225,6 +1320,23 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::capture::Capture
     for session::api::capture::CaptureKind
 {
     fn into_into_dart(self) -> FrbWrapper<session::api::capture::CaptureKind> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<session::api::capture::CaptureProgress> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.0.fraction.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<session::api::capture::CaptureProgress>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<session::api::capture::CaptureProgress>>
+    for session::api::capture::CaptureProgress
+{
+    fn into_into_dart(self) -> FrbWrapper<session::api::capture::CaptureProgress> {
         self.into()
     }
 }
@@ -1460,6 +1572,18 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
 
 impl SseEncode
     for StreamSink<
+        session::api::capture::CaptureEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
+impl SseEncode
+    for StreamSink<
         session::api::session::SessionEvent,
         flutter_rust_bridge::for_generated::SseCodec,
     >
@@ -1555,6 +1679,25 @@ impl SseEncode for bool {
     }
 }
 
+impl SseEncode for session::api::capture::CaptureEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            session::api::capture::CaptureEvent::Progress(field0) => {
+                <i32>::sse_encode(0, serializer);
+                <session::api::capture::CaptureProgress>::sse_encode(field0, serializer);
+            }
+            session::api::capture::CaptureEvent::Finished(field0) => {
+                <i32>::sse_encode(1, serializer);
+                <session::api::capture::CaptureResult>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for session::api::capture::CaptureKind {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1568,6 +1711,13 @@ impl SseEncode for session::api::capture::CaptureKind {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for session::api::capture::CaptureProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.fraction, serializer);
     }
 }
 
@@ -1601,6 +1751,13 @@ impl SseEncode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
     }
 }
 

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::context::AlphaMode;
 use crate::mesh::MeshData;
+use crate::progress::{Atlas, Merging, Progress};
 use crate::scene::{Scene, SceneImage};
 use crate::settings::ExportSettings;
 
@@ -71,9 +72,11 @@ impl Page {
 }
 
 impl Scene {
-    pub fn merged(&self, settings: &ExportSettings) -> Scene {
+    pub fn merged(&self, settings: &ExportSettings, progress: &mut Progress) -> Scene {
+        progress.begin(&Merging, self.meshes.len() as u64);
         let mut groups: Vec<(GroupKey, Vec<usize>)> = Vec::new();
         for (index, mesh) in self.meshes.iter().enumerate() {
+            progress.advance(1);
             let filters = mesh
                 .texture
                 .and_then(|texture| self.images.get(texture))
@@ -89,6 +92,15 @@ impl Scene {
             }
         }
 
+        progress.complete();
+
+        let packed: usize = groups
+            .iter()
+            .filter(|(key, _)| key.filters.is_some())
+            .map(|(_, members)| self.used_textures(members).len())
+            .sum();
+        progress.begin(&Atlas, packed as u64);
+
         let mut meshes = Vec::new();
         let mut images: Vec<SceneImage> = Vec::new();
         for (key, members) in groups {
@@ -98,13 +110,8 @@ impl Scene {
                 continue;
             };
 
-            let mut used: Vec<usize> = members
-                .iter()
-                .filter_map(|&index| self.meshes[index].texture)
-                .collect();
-            used.sort_unstable();
-            used.dedup();
-            let (pages, placements) = pack(&used, &self.images, settings);
+            let used = self.used_textures(&members);
+            let (pages, placements) = pack(&used, &self.images, settings, progress);
 
             for (page_index, page) in pages.iter().enumerate() {
                 let parts = members
@@ -127,11 +134,23 @@ impl Scene {
             }));
         }
 
+        progress.complete();
+
         Scene {
             meshes,
             camera: self.camera.clone(),
             images,
         }
+    }
+
+    fn used_textures(&self, members: &[usize]) -> Vec<usize> {
+        let mut used: Vec<usize> = members
+            .iter()
+            .filter_map(|&index| self.meshes[index].texture)
+            .collect();
+        used.sort_unstable();
+        used.dedup();
+        used
     }
 }
 
@@ -186,6 +205,7 @@ fn pack(
     used: &[usize],
     images: &[SceneImage],
     settings: &ExportSettings,
+    progress: &mut Progress,
 ) -> (Vec<SceneImage>, HashMap<usize, Placement>) {
     let padding = settings.atlas_padding;
     let mut order: Vec<usize> = used
@@ -218,6 +238,7 @@ fn pack(
         for &(index, x, y) in &page.items {
             let image = &images[index];
             blit(&mut rgba, width, image, x, y, padding);
+            progress.advance(1);
             placements.insert(
                 index,
                 Placement {

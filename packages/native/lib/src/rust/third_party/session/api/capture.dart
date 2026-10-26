@@ -4,18 +4,42 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
-import 'error.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'capture.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Forward`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `notify`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `capture_with`
 
-Future<CaptureResult> capture({
-  required CaptureKind kind,
-  required CaptureTarget target,
-}) => RustLib.instance.api.sessionApiCaptureCapture(kind: kind, target: target);
+@freezed
+sealed class CaptureEvent with _$CaptureEvent {
+  const CaptureEvent._();
+
+  const factory CaptureEvent.progress(CaptureProgress field0) =
+      CaptureEvent_Progress;
+  const factory CaptureEvent.finished(CaptureResult field0) =
+      CaptureEvent_Finished;
+}
 
 enum CaptureKind { screenshot, screenshot3D }
+
+class CaptureProgress {
+  final double fraction;
+
+  const CaptureProgress({required this.fraction});
+
+  @override
+  int get hashCode => fraction.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CaptureProgress &&
+          runtimeType == other.runtimeType &&
+          fraction == other.fraction;
+}
 
 class CaptureResult {
   final Uint8List bytes;
