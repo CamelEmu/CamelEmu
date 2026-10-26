@@ -18,7 +18,7 @@ file(CREATE_LINK "${PROJECT_BINARY_DIR}/externals/libressl/crypto/libcrypto.a"
 
 # The frontends of the platforms that do not go through the plugins link the crate directly. The
 # Android library builds it for its own ABI.
-if (ENABLE_WEB_SERVICE AND NOT ANDROID)
+if (NOT ANDROID)
     find_program(CARGO_EXECUTABLE cargo REQUIRED)
     find_package(Threads REQUIRED)
     set(EMU_LIB "${EMU_DIR}/target/release/libemu.a")

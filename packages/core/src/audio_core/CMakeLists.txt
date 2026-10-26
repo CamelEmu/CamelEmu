@@ -46,7 +46,11 @@ add_library(audio_core STATIC
 create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC citra_common citra_core)
-target_link_libraries(audio_core PRIVATE faad2 SoundTouch teakra)
+target_link_libraries(audio_core PRIVATE faad2 teakra)
+target_include_directories(audio_core PRIVATE "${AZAHAR_REPO_ROOT}/packages/native/include")
+if (NOT ANDROID)
+    target_link_libraries(audio_core PRIVATE emu)
+endif()
 
 if(ENABLE_SDL2)
     target_link_libraries(audio_core PRIVATE SDL2::SDL2)

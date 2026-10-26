@@ -4,14 +4,11 @@
 
 #pragma once
 
-#include <array>
 #include <cstddef>
 #include <memory>
 #include "common/common_types.h"
 
-namespace soundtouch {
-class SoundTouch;
-}
+struct EmuTimeStretcher;
 
 namespace AudioCore {
 
@@ -34,8 +31,11 @@ public:
     void Flush();
 
 private:
-    std::unique_ptr<soundtouch::SoundTouch> sound_touch;
-    double stretch_ratio = 1.0;
+    struct Deleter {
+        void operator()(EmuTimeStretcher* handle) const;
+    };
+
+    std::unique_ptr<EmuTimeStretcher, Deleter> handle;
 };
 
 } // namespace AudioCore
